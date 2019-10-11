@@ -31,15 +31,15 @@ public class CommunityResource {
 	private static final String COSMOS_DB_DATABASE = "scc1920-48043";
 	
 	//private static final String CommunitiesCollection = Microsoft.Azure.Documents.Client.UriFactory.CreateDocumentCollectionUri(COSMOS_DB_DATABASE, "Communities");//"/dbs/cosmos-48043/colls/Communities/";
-	private static final String CommunitiesCollection = "/dbs/scc1920-48043/colls/Communities/";
+	// private static final String CommunitiesCollection = "/dbs/scc1920-48043/colls/Communities/";
+	private static final String CommunitiesCollection = String.format("/dbs/%s/colls/%s", COSMOS_DB_DATABASE, "Communities");
 
-	
 	private AsyncDocumentClient cosmos_client;
 
 	public CommunityResource() throws Exception {
-		//ConnectionPolicy connectionPolicy = new ConnectionPolicy(); //ConnectionPolitcy.getDefault()
-		ConnectionPolicy connectionPolicy = ConnectionPolicy.GetDefault();
-		//connectionPolicy.setConnectionMode(ConnectionMode.Direct);
+		ConnectionPolicy connectionPolicy = new ConnectionPolicy(); //ConnectionPolitcy.getDefault()
+		//ConnectionPolicy connectionPolicy = ConnectionPolicy.GetDefault();
+		connectionPolicy.setConnectionMode(ConnectionMode.Direct);
 		cosmos_client = new AsyncDocumentClient.Builder()
 				.withServiceEndpoint(COSMOS_DB_ENDPOINT)
 				.withMasterKeyOrResourceToken(COSMOS_DB_MASTER_KEY)
