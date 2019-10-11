@@ -1,4 +1,4 @@
-package scc.srv;
+package scc.controllers;
 
 import java.io.ByteArrayOutputStream;
 
@@ -15,6 +15,7 @@ import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import scc.helpers.Util;
 
 @Path("/media")
 public class MediaResource {

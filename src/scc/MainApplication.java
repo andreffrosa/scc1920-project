@@ -1,4 +1,6 @@
-package scc.srv;
+package scc;
+
+import scc.controllers.MediaResource;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
