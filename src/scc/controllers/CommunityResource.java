@@ -28,10 +28,12 @@ public class CommunityResource {
 
 	private static final String COSMOS_DB_ENDPOINT = "https://cosmos-48043.documents.azure.com:443/";
 	private static final String COSMOS_DB_MASTER_KEY = "cmqCzSEYRX5E2GLF2kxF3ftlEXZnZLLCRA4nZvb4jpH5gLZN6oWiPtGpLWx2l2iRvQ0IHwA8DmKPq33KqdNwog==";
-	private static final String COSMOS_DB_DATABASE = "cosmos-48043";
+	private static final String COSMOS_DB_DATABASE = "scc1920-48043";
 	
-	private static final String CommunitiesCollection = UriFactory.CreateDocumentCollectionUri(COSMOS_DB_DATABASE, "Communities");//"/dbs/cosmos-48043/colls/Communities/";
+	//private static final String CommunitiesCollection = Microsoft.Azure.Documents.Client.UriFactory.CreateDocumentCollectionUri(COSMOS_DB_DATABASE, "Communities");//"/dbs/cosmos-48043/colls/Communities/";
+	private static final String CommunitiesCollection = "/dbs/scc1920-48043/colls/Communities/";
 
+	
 	private AsyncDocumentClient cosmos_client;
 
 	public CommunityResource() throws Exception {
