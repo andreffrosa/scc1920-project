@@ -12,6 +12,6 @@ public class Post {
     public String message;
     private String multiMediaObject;
 
-    public Post
+    public Post(){}
 
 }
