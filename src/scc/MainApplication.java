@@ -1,5 +1,6 @@
 package scc;
 
+import scc.controllers.CommunityResource;
 import scc.controllers.MediaResource;
 
 import javax.ws.rs.ApplicationPath;
@@ -14,6 +15,7 @@ public class MainApplication extends Application {
     public Set<Class<?>> getClasses() {
         Set<Class<?>> set = new HashSet<>();
         set.add( MediaResource.class );
+        set.add( CommunityResource.class );
         return set;
     }
     
