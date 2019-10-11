@@ -1,4 +1,4 @@
-package scc.helpers;
+package scc.controllers;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
