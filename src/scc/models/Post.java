@@ -2,8 +2,6 @@ package scc.models;
 
 public class Post {
 
-    public static final String DataType = "Posts";
-
     private String id;
     private String title;
     private String author;
@@ -14,6 +12,44 @@ public class Post {
     private int likes;
     private String parent;
 
-    public Post(){}
+    public Post() {
+    	
+    }
+
+	public String getId() {
+		return id;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public String getAuthor() {
+		return author;
+	}
+
+	public String getCommunity() {
+		return community;
+	}
+
+	public long getCreationTine() {
+		return creationTine;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public String getMultiMediaObject() {
+		return multiMediaObject;
+	}
+
+	public int getLikes() {
+		return likes;
+	}
+
+	public String getParent() {
+		return parent;
+	}
 
 }

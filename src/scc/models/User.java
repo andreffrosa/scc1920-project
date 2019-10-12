@@ -2,8 +2,6 @@ package scc.models;
 
 public class User {
 
-    public static final String DataType = "Users";
-
     private String id;
     private String name;
 
@@ -16,8 +14,8 @@ public class User {
         return name;
     }
 
-    public void setName(String name){
-        this.name = name;
-    }
+	public String getId() {
+		return id;
+	}
 
 }
