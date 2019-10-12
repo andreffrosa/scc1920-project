@@ -2,6 +2,8 @@ package scc.models;
 
 public class Post {
 
+    public static final String DataType = "Posts";
+
     private String id;
     private String title;
     private String author;
