@@ -72,7 +72,10 @@
                 <includes> 
                   <include>*.war</include> 
                 </includes> 
-              </resource> 
+              </resource>
+              <resource>
+                <directory>${project.basedir}/config</directory>
+              </resource>
             </resources> 
           </deployment>  
           <resourceGroup>Cloud-1920</resourceGroup>  

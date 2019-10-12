@@ -3,9 +3,9 @@ package scc.controllers;
 import com.microsoft.azure.cosmosdb.*;
 import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 import rx.Observable;
-import scc.Config.Exceptions.CosmosDatabaseIdNotFound;
-import scc.Config.Exceptions.EndpointURLNotFound;
-import scc.Config.Exceptions.MasterKeyNotFound;
+import scc.config.Exceptions.CosmosDatabaseIdNotFound;
+import scc.config.Exceptions.EndpointURLNotFound;
+import scc.config.Exceptions.MasterKeyNotFound;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -15,11 +15,11 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static scc.Config.Config.loadConfig;
+import static scc.config.Config.loadConfig;
 
 public class Resource {
 
-	private static final String COSMOS_CONFIG_FILE_PATH = "./config/Cosmos.conf";
+	private static final String COSMOS_CONFIG_FILE_PATH = "config/Cosmos.conf";
 
 	private static final String COSMOS_DB_ENDPOINT = "cosmos_db_endpoint";
 	private static final String COSMOS_DB_MASTER_KEY = "cosmos_db_master_key";
