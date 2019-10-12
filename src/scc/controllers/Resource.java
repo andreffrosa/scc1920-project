@@ -1,9 +1,8 @@
 package scc.controllers;
 
-import  com.microsoft.azure.cosmosdb.*;
+import com.microsoft.azure.cosmosdb.*;
 import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 import rx.Observable;
-import scc.models.Community;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
