@@ -75,11 +75,12 @@
               </resource>
               <resource>
                 <directory>${project.basedir}/config</directory>
+                <targetPath>config/</targetPath>
               </resource>
             </resources> 
           </deployment>  
-          <resourceGroup>Cloud-1920</resourceGroup>  
-          <appName>cloud-1920</appName> 
+          <resourceGroup>cloud-48043-rg</resourceGroup>  
+          <appName>cloud-48043</appName> 
         </configuration> 
       </plugin> 
     </plugins> 
