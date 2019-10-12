@@ -1,6 +1,6 @@
 package scc.controllers;
 
-import com.microsoft.azure.cosmosdb.*;
+import  com.microsoft.azure.cosmosdb.*;
 import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 import rx.Observable;
 import scc.models.Community;
@@ -19,7 +19,7 @@ public class Resource {
     private String collectionLink;
     private AsyncDocumentClient cosmos_client;
 
-    public Resource(String collection) throws Exception {
+    Resource(String collection) {
         this.collection = collection;
         collectionLink = String.format("/dbs/%s/colls/%s", COSMOS_DB_DATABASE, collection);
         ConnectionPolicy connectionPolicy = new ConnectionPolicy();
@@ -32,7 +32,7 @@ public class Resource {
                 .build();
     }
 
-    public Response create(Object o){
+    Response create(Object o){
         try {
             Observable<ResourceResponse<Document>> resp =
                     cosmos_client.createDocument(collectionLink, o, null, false);
@@ -41,7 +41,6 @@ public class Resource {
         } catch(Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getStackTrace()).build();
         }
-
     }
 
     public Response findByName(String name){
@@ -52,7 +51,7 @@ public class Resource {
             queryOptions.setMaxDegreeOfParallelism(-1);
             Iterator<FeedResponse<Document>> it =
                     cosmos_client.queryDocuments(collectionLink,
-                            "SELECT * FROM" +   collection + " c WHERE c.name = '" + name + "'",
+                            "SELECT * FROM " +   collection + " c WHERE c.name = '" + name + "'",
                             queryOptions).toBlocking().getIterator();
 
             // NOTE: multiple documents can be returned or none
@@ -68,7 +67,7 @@ public class Resource {
 
     }
 
-    public Response update(Object o){
+    Response update(Object o){
         return null;
     }
 
@@ -81,11 +80,13 @@ public class Resource {
                 .subscribe(
                         documentResourceResponse -> {
                             System.out.println(documentResourceResponse.getResource().getId());
+
                          },
                         error -> {
+
                             System.err.println("an error happened: " + error.getMessage());
                         });
-
+        return null;
     }
 
 }

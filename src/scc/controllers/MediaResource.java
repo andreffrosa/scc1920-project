@@ -15,6 +15,7 @@ import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import scc.utils.Encryption;
 
 @Path("/media")
 public class MediaResource {
@@ -36,7 +37,7 @@ public class MediaResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response upload(byte[] contents) {
 		try {
-			String hash = Util.computeHash(contents);
+			String hash = Encryption.computeHash(contents);
 			
 			// Get reference to blob
 			CloudBlob blob = container.getBlockBlobReference(hash);

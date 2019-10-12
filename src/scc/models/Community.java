@@ -2,6 +2,8 @@ package scc.models;
 
 public class Community {
 
+	public static final String DataType = "Communities";
+
 	private String id;
 	private String name;
 	

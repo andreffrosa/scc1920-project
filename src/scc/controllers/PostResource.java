@@ -1,29 +1,24 @@
 package scc.controllers;
 
-import scc.models.User;
+import scc.models.Post;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static scc.models.User.DataType;
+@Path("/post")
+public class PostResource extends Resource{
 
-@Path("/user")
-public class UserResouce extends Resource{
-
-    public UserResouce() throws Exception {
-        super(DataType);
+    public PostResource() {
+        super(Post.DataType);
     }
 
     @POST
-    @Path("/{name}")
+    @Path("/")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response create(@PathParam("name") String name){
-        try {
-            return super.create(new User(name));
-        }catch (Exception e){
-            return Response.serverError().entity(e).build();
-        }
+    public Response create(Post u){
+        return super.create(u);
     }
 
     @GET
@@ -37,7 +32,7 @@ public class UserResouce extends Resource{
     @Path("/{name}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response update(User u){
+    public Response update(Post u){
         return super.update(u);
     }
 

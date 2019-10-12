@@ -1,9 +1,9 @@
-package scc.controllers;
+package scc.utils;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class Util {
+public class Encryption {
 
 	private static final String DIGEST_ALGORITHM = "SHA256";
 
