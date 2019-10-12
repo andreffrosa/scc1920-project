@@ -26,9 +26,9 @@ import scc.models.Community;
 @Path("/community")
 public class CommunityResource {
 
-	private static final String COSMOS_DB_ENDPOINT = "https://cosmos-48043.documents.azure.com:443/";
-	private static final String COSMOS_DB_MASTER_KEY = "cmqCzSEYRX5E2GLF2kxF3ftlEXZnZLLCRA4nZvb4jpH5gLZN6oWiPtGpLWx2l2iRvQ0IHwA8DmKPq33KqdNwog==";
-	private static final String COSMOS_DB_DATABASE = "scc1920-48043";
+	private static final String COSMOS_DB_ENDPOINT = "https://cloud-1920.documents.azure.com:443/";
+	private static final String COSMOS_DB_MASTER_KEY ="d2uk6OuA3b8jzqXBIK2yhgw9VVKMBhxpp3zXUi5uG2v3U6pTI1M2W9wUBjQ1gFIcGOnnlJbRmCSZtWPRchBk6Q=="; // "cmqCzSEYRX5E2GLF2kxF3ftlEXZnZLLCRA4nZvb4jpH5gLZN6oWiPtGpLWx2l2iRvQ0IHwA8DmKPq33KqdNwog==";
+	private static final String COSMOS_DB_DATABASE =  "cloud-2019";// "scc1920-48043";
 	
 	//private static final String CommunitiesCollection = Microsoft.Azure.Documents.Client.UriFactory.CreateDocumentCollectionUri(COSMOS_DB_DATABASE, "Communities");//"/dbs/cosmos-48043/colls/Communities/";
 	// private static final String CommunitiesCollection = "/dbs/scc1920-48043/colls/Communities/";
@@ -56,12 +56,12 @@ public class CommunityResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response createCommunity(@PathParam("name") String name) {
 		try {
-			Observable<ResourceResponse<Document>> resp = 
+			Observable<ResourceResponse<Document>> resp =
 					cosmos_client.createDocument(CommunitiesCollection, new Community(name), null, false);
-			
+
 			return Response.ok(resp.toBlocking().first().getResource().getId(), MediaType.APPLICATION_JSON).build();
 		} catch(Exception e) {
-			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getStackTrace()).build();
 		}
 	}
 
