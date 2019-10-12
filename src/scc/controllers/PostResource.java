@@ -24,10 +24,9 @@ public class PostResource extends Resource{
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response create(Post post){
-    	return super.create(post, 
-				response -> {
-					return Response.ok(response.getResource().getId(), MediaType.APPLICATION_JSON).build();
-				}, error -> {
+    	return super.create(post,
+				response -> Response.ok(response.getResource().getId(), MediaType.APPLICATION_JSON).build(),
+				error -> {
 					if(error instanceof ConflictException)
 						return Response.status(Status.CONFLICT)
 								.entity("Post with the specified name already exists in the system.")
