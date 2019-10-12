@@ -18,6 +18,7 @@ import com.microsoft.azure.cosmosdb.Document;
 import com.microsoft.azure.cosmosdb.FeedOptions;
 import com.microsoft.azure.cosmosdb.FeedResponse;
 import com.microsoft.azure.cosmosdb.ResourceResponse;
+import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictException;
 import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 
 import rx.Observable;
@@ -61,10 +62,17 @@ public class CommunityResource {
 			
 			return Response.ok(resp.toBlocking().first().getResource().getId(), MediaType.APPLICATION_JSON).build();
 		} catch(Exception e) {
-			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
+			
+			// TODO: Perguntar como capturar as excepções como deve ser
+			if(e.getMessage().contains("statusCode=409"))
+				return Response.status(Status.CONFLICT).entity("Community with the specified name already exists in the system.").build();
+			
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
 	}
 
+	//TODO: GET DE COISA QUE NÂO EXISTE LEVA INFINITO TEMPO E RETORNA There was an unexpected error in the request processing.
+	
 	@GET
 	@Path("/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -83,7 +91,7 @@ public class CommunityResource {
 				String doc = it.next().getResults().get(0).toJson();
 				return Response.ok(doc, MediaType.APPLICATION_JSON).build();
 			} else {
-				return Response.status(Status.NOT_FOUND).build();
+				return Response.status(Status.NOT_FOUND).entity("No Community found with the specified name in the system.").build();
 			}
 		} catch(Exception e) {
 			return Response.serverError().entity(e).build();
