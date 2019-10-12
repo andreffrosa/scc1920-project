@@ -1,27 +1,15 @@
 package scc.controllers;
 
-import java.util.Iterator;
+import com.microsoft.azure.cosmosdb.*;
+import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
+import rx.Observable;
+import scc.models.Community;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
-import com.microsoft.azure.cosmosdb.ConnectionMode;
-import com.microsoft.azure.cosmosdb.ConnectionPolicy;
-import com.microsoft.azure.cosmosdb.ConsistencyLevel;
-import com.microsoft.azure.cosmosdb.Document;
-import com.microsoft.azure.cosmosdb.FeedOptions;
-import com.microsoft.azure.cosmosdb.FeedResponse;
-import com.microsoft.azure.cosmosdb.ResourceResponse;
-import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
-
-import rx.Observable;
-import scc.models.Community;
+import java.util.Iterator;
 
 @Path("/community")
 public class CommunityResource {
@@ -61,10 +49,18 @@ public class CommunityResource {
 
 			return Response.ok(resp.toBlocking().first().getResource().getId(), MediaType.APPLICATION_JSON).build();
 		} catch(Exception e) {
-			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getStackTrace()).build();
+
+			// TODO: Perguntar como capturar as excepções como deve ser
+			if(e.getMessage().contains("statusCode=409"))
+				return Response.status(Status.CONFLICT).entity("Community with the specified name already exists in the system.").build();
+			
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+
 		}
 	}
 
+	//TODO: GET DE COISA QUE NÂO EXISTE LEVA INFINITO TEMPO E RETORNA There was an unexpected error in the request processing.
+	
 	@GET
 	@Path("/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -83,7 +79,7 @@ public class CommunityResource {
 				String doc = it.next().getResults().get(0).toJson();
 				return Response.ok(doc, MediaType.APPLICATION_JSON).build();
 			} else {
-				return Response.status(Status.NOT_FOUND).build();
+				return Response.status(Status.NOT_FOUND).entity("No Community found with the specified name in the system.").build();
 			}
 		} catch(Exception e) {
 			return Response.serverError().entity(e).build();
