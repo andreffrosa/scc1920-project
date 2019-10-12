@@ -43,6 +43,7 @@ public class CommunityResource extends Resource {
 	private AsyncDocumentClient cosmos_client;
 
 	public CommunityResource() throws Exception {
+		super("Communities");
 		ConnectionPolicy connectionPolicy = new ConnectionPolicy(); //ConnectionPolitcy.getDefault()
 		//ConnectionPolicy connectionPolicy = ConnectionPolicy.GetDefault();
 		connectionPolicy.setConnectionMode(ConnectionMode.Direct);

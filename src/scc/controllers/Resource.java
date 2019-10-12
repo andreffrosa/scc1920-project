@@ -44,7 +44,7 @@ public class Resource {
 	    Response execute(Throwable error);
 	}
 	
-	private Response create(Object o, ResponseHandler onResponse, ErrorHandler onError) {
+	protected Response create(Object o, ResponseHandler onResponse, ErrorHandler onError) {
 		 Observable<ResourceResponse<Document>> createDocumentObservable = cosmos_client
 	                .createDocument(collectionLink, o, null, false);
 
