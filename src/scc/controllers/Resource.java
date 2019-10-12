@@ -3,30 +3,54 @@ package scc.controllers;
 import com.microsoft.azure.cosmosdb.*;
 import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 import rx.Observable;
+import scc.Config.Exceptions.CosmosDatabaseIdNotFound;
+import scc.Config.Exceptions.EndpointURLNotFound;
+import scc.Config.Exceptions.MasterKeyNotFound;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.Iterator;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static scc.Config.Config.loadConfig;
+
 public class Resource {
 
-	private static final String COSMOS_DB_ENDPOINT = "https://cloud-1920.documents.azure.com:443/";
-	private static final String COSMOS_DB_MASTER_KEY = "d2uk6OuA3b8jzqXBIK2yhgw9VVKMBhxpp3zXUi5uG2v3U6pTI1M2W9wUBjQ1gFIcGOnnlJbRmCSZtWPRchBk6Q=="; // "cmqCzSEYRX5E2GLF2kxF3ftlEXZnZLLCRA4nZvb4jpH5gLZN6oWiPtGpLWx2l2iRvQ0IHwA8DmKPq33KqdNwog==";
-	private static final String COSMOS_DB_DATABASE = "cloud-2019";// "scc1920-48043";
+	private static final String COSMOS_CONFIG_FILE_PATH = "./config/Cosmos.conf";
+
+	private static final String COSMOS_DB_ENDPOINT = "cosmos_db_endpoint";
+	private static final String COSMOS_DB_MASTER_KEY = "cosmos_db_master_key";
+	private static final String COSMOS_DB_DATABASE = "cosmos_db_database";
 
 	private String collection;
 	private String collectionLink;
 	private AsyncDocumentClient cosmos_client;
 
-	Resource(String collection) {
+	Resource(String collection) throws IOException, CosmosDatabaseIdNotFound, MasterKeyNotFound, EndpointURLNotFound {
 		this.collection = collection;
-		collectionLink = String.format("/dbs/%s/colls/%s", COSMOS_DB_DATABASE, collection);
+
+		Properties props = loadConfig(COSMOS_CONFIG_FILE_PATH);
+		if(props.contains(COSMOS_DB_DATABASE))
+			collectionLink = String.format("/dbs/%s/colls/%s", props.getProperty(COSMOS_DB_DATABASE), collection);
+		else
+			throw new CosmosDatabaseIdNotFound();
+
+		buildClient(props);
+	}
+
+	private void buildClient(Properties props) throws MasterKeyNotFound, EndpointURLNotFound {
+
+		if (!props.contains(COSMOS_DB_MASTER_KEY)) throw new MasterKeyNotFound();
+
+		if (!props.contains(COSMOS_DB_ENDPOINT)) throw new EndpointURLNotFound();
+
 		ConnectionPolicy connectionPolicy = new ConnectionPolicy();
 		connectionPolicy.setConnectionMode(ConnectionMode.Direct);
-		cosmos_client = new AsyncDocumentClient.Builder().withServiceEndpoint(COSMOS_DB_ENDPOINT)
-				.withMasterKeyOrResourceToken(COSMOS_DB_MASTER_KEY).withConnectionPolicy(connectionPolicy)
+		cosmos_client = new AsyncDocumentClient.Builder().withServiceEndpoint(props.getProperty(COSMOS_DB_ENDPOINT))
+				.withMasterKeyOrResourceToken(props.getProperty(COSMOS_DB_MASTER_KEY)).withConnectionPolicy(connectionPolicy)
 				.withConsistencyLevel(ConsistencyLevel.Eventual).build();
 	}
 
@@ -68,18 +92,6 @@ public class Resource {
 		return at.get();
 	}
 
-	/*
-	 * public Response create(Object o){ Response create(Object o){ try {
-	 * Observable<ResourceResponse<Document>> resp =
-	 * cosmos_client.createDocument(collectionLink, o, null, false);
-	 * 
-	 * return Response.ok(resp.toBlocking().first().getResource().getId(),
-	 * MediaType.APPLICATION_JSON).build(); } catch(Exception e) { return
-	 * Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getStackTrace
-	 * ()).build(); }
-	 * 
-	 * }
-	 */
 
 	public Response findByName(String name) {
 

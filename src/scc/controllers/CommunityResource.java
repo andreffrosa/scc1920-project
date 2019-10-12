@@ -31,9 +31,8 @@ public class CommunityResource extends Resource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response createCommunity(@PathParam("name") String name) {
 		return super.create(new Community(name), 
-				response -> {
-					return Response.ok(response.getResource().getId(), MediaType.APPLICATION_JSON).build();
-				}, error -> {
+				response -> Response.ok(response.getResource().getId(), MediaType.APPLICATION_JSON).build(),
+				error -> {
 					if(error instanceof ConflictException)
 						return Response.status(Status.CONFLICT)
 								.entity("Community with the specified name already exists in the system.")
