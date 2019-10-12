@@ -1,6 +1,8 @@
 package scc.controllers;
 
 import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -22,6 +24,7 @@ import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictExceptio
 import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 
 import rx.Observable;
+import rx.functions.Action1;
 import scc.models.Community;
 
 @Path("/community")
@@ -56,7 +59,7 @@ public class CommunityResource {
 	@Path("/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response createCommunity(@PathParam("name") String name) {
-		try {
+		/*try {
 			Observable<ResourceResponse<Document>> resp = 
 					cosmos_client.createDocument(CommunitiesCollection, new Community(name), null, false);
 			
@@ -68,9 +71,96 @@ public class CommunityResource {
 				return Response.status(Status.CONFLICT).entity("Community with the specified name already exists in the system.").build();
 			
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}*/
+		
+        /*Observable<ResourceResponse<Document>> createDocumentObservable = cosmos_client
+                .createDocument(CommunitiesCollection, new Community(name), null, false);
+
+        final CountDownLatch completionLatch = new CountDownLatch(1);
+        
+        AtomicReference<String> at = new AtomicReference<>();
+
+        // Subscribe to Document resource response emitted by the observable
+        createDocumentObservable.single() // We know there will be one response
+        	//.doOnError(throwable -> at2.set(throwable.getClass().getName()))
+        	.subscribe(documentResourceResponse -> {
+                    System.out.println(documentResourceResponse.getActivityId());
+                    at.set(documentResourceResponse.getResource().getId());
+                    completionLatch.countDown();
+                }, error -> {
+                    System.err.println(
+                    */ //       "an error occurred while creating the document: actual cause: " + /*error.getMessage()*/ error.getClass().getName());
+                    /*at.set("xuxuxux " + error.getClass().getName());
+                    completionLatch.countDown();
+                });
+
+        // Wait till document creation completes
+        try {
+			completionLatch.await();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+        
+        
+		
+        return Response.ok(at.get(), MediaType.APPLICATION_JSON).build();*/
+		
+		return AsyncCreate(CommunitiesCollection, new Community(name), 
+				response -> {
+					return Response.ok(response.getResource().getId(), MediaType.APPLICATION_JSON).build();
+				}, error -> {
+					if(error instanceof ConflictException)
+						return Response.status(Status.CONFLICT).entity("Community with the specified name already exists in the system.").build();
+					
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(error.getMessage()).build();
+				});
 	}
 
+	@FunctionalInterface
+	public interface Foo {
+	    Response method(ResourceResponse<Document> response);
+	}
+	
+	@FunctionalInterface
+	public interface Goo {
+	    Response method(Throwable error);
+	}
+	
+	private Response AsyncCreate(String collectionLink, Object o, Foo onResponse, Goo onError) {
+		 Observable<ResourceResponse<Document>> createDocumentObservable = cosmos_client
+	                .createDocument(collectionLink, o, null, false);
+
+	        final CountDownLatch completionLatch = new CountDownLatch(1);
+	        
+	        AtomicReference<Response> at = new AtomicReference<>();
+
+	        // Subscribe to Document resource response emitted by the observable
+	        createDocumentObservable.single() // We know there will be one response
+	        	//.doOnError(throwable -> at2.set(throwable.getClass().getName()))
+	        	.subscribe(documentResourceResponse -> {
+	                    at.set(onResponse.method(documentResourceResponse));
+	                    completionLatch.countDown();
+	                }, error -> {
+	                   // System.err.println(
+	                    //        "an error occurred while creating the document: actual cause: " + /*error.getMessage()*/ error.getClass().getName());
+	                    //at.set("xuxuxux " + error.getClass().getName());
+	                    at.set(onError.method(error));
+	                    completionLatch.countDown();
+	                });
+
+	        // Wait till document creation completes
+	        try {
+				completionLatch.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+	        return at.get();
+	}
+	
+	
 	//TODO: GET DE COISA QUE NÂO EXISTE LEVA INFINITO TEMPO E RETORNA There was an unexpected error in the request processing.
 	
 	@GET
