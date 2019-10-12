@@ -8,6 +8,8 @@ import scc.models.Community;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Resource {
 
@@ -32,7 +34,46 @@ public class Resource {
                 .build();
     }
 
-    public Response create(Object o){
+    @FunctionalInterface
+	public interface ResponseHandler {
+	    Response execute(ResourceResponse<Document> response);
+	}
+	
+	@FunctionalInterface
+	public interface ErrorHandler {
+	    Response execute(Throwable error);
+	}
+	
+	private Response create(Object o, ResponseHandler onResponse, ErrorHandler onError) {
+		 Observable<ResourceResponse<Document>> createDocumentObservable = cosmos_client
+	                .createDocument(collectionLink, o, null, false);
+
+	        final CountDownLatch completionLatch = new CountDownLatch(1);
+	        
+	        AtomicReference<Response> at = new AtomicReference<>();
+
+	        // Subscribe to Document resource response emitted by the observable
+	        createDocumentObservable.single() // We know there will be one response
+	        	.subscribe(documentResourceResponse -> {
+	                    at.set(onResponse.execute(documentResourceResponse));
+	                    completionLatch.countDown();
+	                }, error -> {
+	                    at.set(onError.execute(error));
+	                    completionLatch.countDown();
+	                });
+
+	        // Wait till document creation completes
+	        try {
+				completionLatch.await();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+	        return at.get();
+	}
+
+    
+    /*public Response create(Object o){
         try {
             Observable<ResourceResponse<Document>> resp =
                     cosmos_client.createDocument(collectionLink, o, null, false);
@@ -42,7 +83,7 @@ public class Resource {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getStackTrace()).build();
         }
 
-    }
+    }*/
 
     public Response findByName(String name){
 
