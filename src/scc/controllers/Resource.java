@@ -9,13 +9,14 @@ import scc.config.Exceptions.MasterKeyNotFound;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import static scc.utils.Config.loadConfig;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static scc.config.Config.loadConfig;
 
 public class Resource {
 

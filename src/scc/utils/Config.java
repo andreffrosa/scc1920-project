@@ -1,4 +1,4 @@
-package scc.config;
+package scc.utils;
 
 import java.io.FileInputStream;
 import java.io.IOException;

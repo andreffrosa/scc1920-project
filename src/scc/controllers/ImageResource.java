@@ -10,22 +10,27 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.StorageErrorCode;
+import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import scc.utils.Encryption;
 
-@Path("/media")
-public class MediaResource {
+@Path(ImageResource.PATH)
+public class ImageResource {
 
-	private static final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=blob48043;AccountKey=+0Iy0fw08l+l2A/ZNUY6qPKlLsKZ+mrrq1KA7xSC3x18tzAdzue/ysQd3NxiPDeXP5RC+fMr9Ke1gRuIDzKsZw==;EndpointSuffix=core.windows.net";
+	public static final String PATH = "/images";
+	
+	private static final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=storage48043and47134;AccountKey=D45zU5e7UKm+GqyYZKnssw9rZh0PA0xC5lhcpdjW0Bhdwqubrgjx63RJSUXl2yaTK8wAiUdIEmXBKCcwLsahvA==;EndpointSuffix=core.windows.net";
 	private static final String containerName = "images";
 	
 	private CloudBlobContainer container;
 	
-	public MediaResource() throws Exception {
+	public ImageResource() throws Exception {
 		// Get connection string in the storage access keys page
 		CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
 		CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
@@ -33,6 +38,7 @@ public class MediaResource {
 	}
 	
 	@POST
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response upload(byte[] contents) {
@@ -52,20 +58,26 @@ public class MediaResource {
 	}
 
 	@GET
-	@Path("/{uid}")
+	@Path("/{uuid}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response download(@PathParam("uid") String uid) {
+	public Response download(@PathParam("uuid") String uuid) {
 		try {
 			// Get reference to blob
-			CloudBlob blob = container.getBlobReferenceFromServer(uid);
+			CloudBlob blob = container.getBlobReferenceFromServer(uuid);
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			blob.download(out);
 			out.close();
 			byte[] contents = out.toByteArray();
 			
 			return Response.ok(contents, MediaType.APPLICATION_OCTET_STREAM).build();
-		} catch(Exception e) {
+			
+		} catch (StorageException e) {
+	        if (e.getErrorCode().equals(StorageErrorCode.RESOURCE_NOT_FOUND.toString()))
+	        	return Response.status(Status.NOT_FOUND).entity(e.getMessage()).build();
+	        
+	        return Response.serverError().entity(e).build();
+	    } catch(Exception e) {
 			return Response.serverError().entity(e).build();
 		}
 	}

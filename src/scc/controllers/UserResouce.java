@@ -20,10 +20,11 @@ public class UserResouce extends Resource{
 	}
 
 	@POST
-	@Path("/{name}")
+	@Path("/")
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response create(@PathParam("name") String name){
-		return super.create(new User(name), 
+	public Response create(User u){
+		return super.create(u, 
 				response -> {
 					return Response.ok(response.getResource().getId(), MediaType.APPLICATION_JSON).build();
 				}, error -> {

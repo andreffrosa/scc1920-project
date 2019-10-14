@@ -1,5 +1,6 @@
 package scc.controllers;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -27,10 +28,11 @@ public class CommunityResource extends Resource {
 	// TODO: Fazer as replys como o dred tem nos slides
 	
 	@POST
-	@Path("/{name}")
+	@Path("/")
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createCommunity(@PathParam("name") String name) {
-		return super.create(new Community(name), 
+	public Response createCommunity(Community c) {
+		return super.create(c, 
 				response -> Response.ok(response.getResource().getId(), MediaType.APPLICATION_JSON).build(),
 				error -> {
 					if(error instanceof ConflictException)

@@ -1,7 +1,7 @@
 package scc;
 
 import scc.controllers.CommunityResource;
-import scc.controllers.MediaResource;
+import scc.controllers.ImageResource;
 import scc.controllers.PostResource;
 import scc.controllers.UserResouce;
 
@@ -17,7 +17,7 @@ public class MainApplication extends Application {
     public Set<Class<?>> getClasses() {
         Set<Class<?>> set = new HashSet<>();
         set.add(CommunityResource.class);
-        set.add(MediaResource.class);
+        set.add(ImageResource.class);
         set.add(PostResource.class);
         set.add(UserResouce.class);
         return set;
