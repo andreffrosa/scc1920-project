@@ -35,6 +35,7 @@ public class ImageResource {
 		CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
 		CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
 		container = blobClient.getContainerReference(containerName);
+
 	}
 	
 	@POST
