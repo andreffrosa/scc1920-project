@@ -29,16 +29,17 @@ public class BlobStorageSingleton {
     }
 
     public static BlobStorageSingleton getInstance(String containerName) throws StorageException, InvalidKeyException, URISyntaxException, IOException {
-        if(blobStorageSingletons.containsKey(containerName))
-            return blobStorageSingletons.get(containerName);
+    	BlobStorageSingleton blobStorageSingleton = blobStorageSingletons.get(containerName);
+    	if(blobStorageSingleton != null)
+            return blobStorageSingleton;
         else {
-            BlobStorageSingleton blobStorageSingleton = new BlobStorageSingleton(containerName);
+            blobStorageSingleton = new BlobStorageSingleton(containerName);
             blobStorageSingletons.put(containerName, blobStorageSingleton);
             return blobStorageSingleton;
         }
     }
 
-    public CloudBlobContainer getContainer(){
+    public CloudBlobContainer getContainer() {
         return container;
     }
 

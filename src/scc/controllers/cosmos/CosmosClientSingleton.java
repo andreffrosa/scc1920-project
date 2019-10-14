@@ -13,7 +13,7 @@ import java.util.Properties;
 
 public class CosmosClientSingleton {
 
-    public static final String COSMOS_CONFIG_FILE_PATH = "config/Cosmos.conf";
+    public static final String COSMOS_CONFIG_FILE_PATH = "./config/Cosmos.conf";
     private static final String COSMOS_DB_ENDPOINT = "cosmos_db_endpoint";
     private static final String COSMOS_DB_MASTER_KEY = "cosmos_db_master_key";
     public static final String COSMOS_DB_DATABASE = "cosmos_db_database";
@@ -34,7 +34,6 @@ public class CosmosClientSingleton {
         cosmosClient = new AsyncDocumentClient.Builder().withServiceEndpoint(props.getProperty(COSMOS_DB_ENDPOINT))
                 .withMasterKeyOrResourceToken(props.getProperty(COSMOS_DB_MASTER_KEY)).withConnectionPolicy(connectionPolicy)
                 .withConsistencyLevel(ConsistencyLevel.Eventual).build();
-
     }
 
     public static CosmosClientSingleton getInstance(Properties properties) throws IOException, CosmosDatabaseIdNotFound, MasterKeyNotFound, EndpointURLNotFound {
