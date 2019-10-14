@@ -3,7 +3,6 @@
 	import com.microsoft.azure.storage.StorageErrorCode;
 	import com.microsoft.azure.storage.StorageException;
 	import com.microsoft.azure.storage.blob.CloudBlob;
-	import scc.config.Config;
 	import scc.controllers.blobStorage.BlobStorageSingleton;
 	import scc.utils.Encryption;
 
@@ -12,7 +11,6 @@
 	import javax.ws.rs.core.Response;
 	import javax.ws.rs.core.Response.Status;
 	import java.io.ByteArrayOutputStream;
-	import java.util.Properties;
 
 @Path(ImageResource.PATH)
 public class ImageResource {
@@ -23,8 +21,7 @@ public class ImageResource {
 	private BlobStorageSingleton blobStorageSingleton;
 
 	public ImageResource() throws Exception {
-		Properties properties = Config.getInstance(BlobStorageSingleton.BLOB_STORAGE_CONFIG_FILE_PATH).getProperties();
-		blobStorageSingleton = BlobStorageSingleton.getInstance(properties.getProperty(BlobStorageSingleton.CONNECTION_STRING), CONTAINER_NAME);
+		blobStorageSingleton = BlobStorageSingleton.getInstance(CONTAINER_NAME);
 	}
 	
 	@POST
