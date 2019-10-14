@@ -14,8 +14,6 @@ import scc.controllers.cosmos.CosmosClientSingleton;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static scc.utils.Config.loadConfig;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;

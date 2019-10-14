@@ -11,6 +11,9 @@ import java.util.Map;
 
 public class BlobStorageSingleton {
 
+    public static final String BLOB_STORAGE_CONFIG_FILE_PATH = "./config/Blob.conf";
+    public static final String CONNECTION_STRING = "storage_connection_string";
+
     private static Map<String,BlobStorageSingleton> blobStorageSingletons;
     private CloudBlobContainer container;
 

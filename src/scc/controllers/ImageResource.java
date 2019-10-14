@@ -1,41 +1,30 @@
     package scc.controllers;
 
-import java.io.ByteArrayOutputStream;
+	import com.microsoft.azure.storage.StorageErrorCode;
+	import com.microsoft.azure.storage.StorageException;
+	import com.microsoft.azure.storage.blob.CloudBlob;
+	import scc.config.Config;
+	import scc.controllers.blobStorage.BlobStorageSingleton;
+	import scc.utils.Encryption;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.StorageErrorCode;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.CloudBlob;
-import com.microsoft.azure.storage.blob.CloudBlobClient;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import scc.utils.Encryption;
+	import javax.ws.rs.*;
+	import javax.ws.rs.core.MediaType;
+	import javax.ws.rs.core.Response;
+	import javax.ws.rs.core.Response.Status;
+	import java.io.ByteArrayOutputStream;
+	import java.util.Properties;
 
 @Path(ImageResource.PATH)
 public class ImageResource {
 
-	public static final String PATH = "/images";
-	
-	private static final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=storage48043and47134;AccountKey=D45zU5e7UKm+GqyYZKnssw9rZh0PA0xC5lhcpdjW0Bhdwqubrgjx63RJSUXl2yaTK8wAiUdIEmXBKCcwLsahvA==;EndpointSuffix=core.windows.net";
-	private static final String containerName = "images";
-	
-	private CloudBlobContainer container;
-	
-	public ImageResource() throws Exception {
-		// Get connection string in the storage access keys page
-		CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
-		CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
-		container = blobClient.getContainerReference(containerName);
+	static final String PATH = "/images";
+	private static final String CONTAINER_NAME = "images";
 
+	private BlobStorageSingleton blobStorageSingleton;
+
+	public ImageResource() throws Exception {
+		Properties properties = Config.getInstance(BlobStorageSingleton.BLOB_STORAGE_CONFIG_FILE_PATH).getProperties();
+		blobStorageSingleton = BlobStorageSingleton.getInstance(properties.getProperty(BlobStorageSingleton.CONNECTION_STRING), CONTAINER_NAME);
 	}
 	
 	@POST
@@ -47,7 +36,7 @@ public class ImageResource {
 			String hash = Encryption.computeHash(contents);
 			
 			// Get reference to blob
-			CloudBlob blob = container.getBlockBlobReference(hash);
+			CloudBlob blob = blobStorageSingleton.getContainer().getBlockBlobReference(hash);
 			
 			// Upload contents from byte array
 			blob.uploadFromByteArray(contents, 0, contents.length);
@@ -65,7 +54,7 @@ public class ImageResource {
 	public Response download(@PathParam("uuid") String uuid) {
 		try {
 			// Get reference to blob
-			CloudBlob blob = container.getBlobReferenceFromServer(uuid);
+			CloudBlob blob = blobStorageSingleton.getContainer().getBlobReferenceFromServer(uuid);
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			blob.download(out);
 			out.close();
