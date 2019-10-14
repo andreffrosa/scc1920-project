@@ -30,6 +30,7 @@ public class MediaResource {
 		CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
 		CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
 		container = blobClient.getContainerReference(containerName);
+
 	}
 	
 	@POST
