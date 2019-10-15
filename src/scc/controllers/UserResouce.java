@@ -10,7 +10,7 @@ import javax.ws.rs.core.Response.Status;
 import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictException;
 
 @Path(UserResouce.PATH)
-public class UserResouce extends Resource{
+public class UserResouce extends Resource {
 
 	public static final String PATH = "/user";
 	private static final String CONTAINER = "Users";

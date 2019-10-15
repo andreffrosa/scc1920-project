@@ -1,3 +1,5 @@
 
 
 ... = ConnectionPolitcy.getDefault()
+
+como meter consistência eventual apenas nos likes?

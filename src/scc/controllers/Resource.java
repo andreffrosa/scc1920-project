@@ -21,8 +21,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Resource {
 
-
-
 	private String collection;
 	private String collectionLink;
 	private CosmosClientSingleton cosmosClientSingleton;

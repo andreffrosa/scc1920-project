@@ -15,7 +15,7 @@
 @Path(ImageResource.PATH)
 public class ImageResource {
 
-	static final String PATH = "/images";
+	public static final String PATH = "/image";
 	private static final String CONTAINER_NAME = "images";
 
 	private BlobStorageSingleton blobStorageSingleton;
