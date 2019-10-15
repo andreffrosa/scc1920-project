@@ -1,5 +1,6 @@
 package scc.controllers;
 
+import scc.models.Like;
 import scc.models.Post;
 
 import javax.ws.rs.*;
@@ -39,11 +40,30 @@ public class PostResource extends Resource{
     }
 
     @GET
-    @Path("/{name}")
+    @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response findByName(@PathParam("name") String name){
-        return super.findByName(name);
+    public Response findById(@PathParam("id") String id){
+        return super.findByName(id);
     }
+
+
+    @POST
+	@Path("/{id}/like/{user_id}")
+	public Response likePost(@PathParam("id") int postId, @PathParam("user_id") String user_id){
+		return super.create( new Like(postId, user_id),
+				response -> Response.ok().build(),
+				error -> {
+
+			        if(error instanceof ConflictException)
+						return Response.status(Status.CONFLICT)
+								.entity("Already has like on Post.")
+								.build();
+
+					return Response.status(Status.INTERNAL_SERVER_ERROR)
+							.entity(error.getMessage())
+							.build();
+				});
+	}
 
     /*@PUT
     @Path("/{name}")
