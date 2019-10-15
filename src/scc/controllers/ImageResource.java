@@ -6,7 +6,9 @@
 	import scc.controllers.blobStorage.BlobStorageSingleton;
 	import scc.utils.Encryption;
 
+	import javax.servlet.ServletContext;
 	import javax.ws.rs.*;
+	import javax.ws.rs.core.Context;
 	import javax.ws.rs.core.MediaType;
 	import javax.ws.rs.core.Response;
 	import javax.ws.rs.core.Response.Status;
@@ -14,7 +16,6 @@
 
 @Path(ImageResource.PATH)
 public class ImageResource {
-
 	public static final String PATH = "/image";
 	private static final String CONTAINER_NAME = "images";
 
@@ -28,10 +29,10 @@ public class ImageResource {
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response upload(byte[] contents) {
+	public Response upload(@Context ServletContext context, byte[] contents) {
 		try {
 			String hash = Encryption.computeHash(contents);
-			
+
 			// Get reference to blob
 			CloudBlob blob = blobStorageSingleton.getContainer().getBlockBlobReference(hash);
 			

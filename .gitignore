@@ -91,7 +91,7 @@ local.properties
 .classpath
 
 # Annotation Processing
-./config/
+WebContent/config/
 
 .apt_generated
 

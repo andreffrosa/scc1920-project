@@ -32,6 +32,8 @@ public class CommunityResource extends Resource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response createCommunity(Community c) {
+
+
 		return super.create(c, 
 				response -> Response.ok(response.getResource().getId(), MediaType.APPLICATION_JSON).build(),
 				error -> {
