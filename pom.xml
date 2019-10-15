@@ -79,8 +79,8 @@
               </resource> 
             </resources> 
           </deployment>  
-          <resourceGroup>Cloud-1920</resourceGroup>  
-          <appName>cloud-1920</appName> 
+          <resourceGroup>cloud-47134-48043-rg</resourceGroup>  
+          <appName>cloud-47134-48043-server</appName> 
         </configuration> 
       </plugin> 
     </plugins> 
