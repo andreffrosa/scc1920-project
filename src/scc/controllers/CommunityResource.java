@@ -10,11 +10,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.microsoft.azure.cosmosdb.DocumentClientException;
-import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictException;
 
 import scc.models.Community;
 
@@ -54,8 +52,13 @@ public class CommunityResource extends Resource {
 	@GET
 	@Path("/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response consultCommunity(@PathParam("name") String name) {
-		return super.getByName(name);
+	public String consultCommunity(@PathParam("name") String name) {
+		String community = super.getByName(name);
+		
+		if(community == null)
+			throw new WebApplicationException("Community with the specified name does not exists.", Status.NOT_FOUND);
+		
+		return community;
 	}
 
 

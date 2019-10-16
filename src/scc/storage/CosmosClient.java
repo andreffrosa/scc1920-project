@@ -94,7 +94,7 @@ public class CosmosClient {
 		
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 		
-		try {
+		//try {
 			FeedOptions queryOptions = new FeedOptions();
 			queryOptions.setEnableCrossPartitionQuery(true);
 			queryOptions.setMaxDegreeOfParallelism(-1);
@@ -109,10 +109,10 @@ public class CosmosClient {
 			} else {
 				return null;
 			}
-		} catch (Exception e) {
+		/*} catch (Exception e) {
 			//return Response.serverError().entity(e).build();
 			return null; //TODO: fazer isto como deve ser
-		}
+		}*/
 	}
 
 }
