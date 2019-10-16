@@ -9,10 +9,8 @@ public class Post {
     private long creationTine;
     public String message;
     private String multiMediaObject;
-    private int likes;
     private String parent;
 
-    //Dummy Constructor so that jackson can Deserialize
     public Post() {   }
 
 	public String getId() {
@@ -41,10 +39,6 @@ public class Post {
 
 	public String getMultiMediaObject() {
 		return multiMediaObject;
-	}
-
-	public int getLikes() {
-		return likes;
 	}
 
 	public String getParent() {

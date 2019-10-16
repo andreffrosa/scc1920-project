@@ -1,7 +1,8 @@
 package scc;
 
-import scc.storage.config.Config;
 import scc.controllers.*;
+import scc.storage.Config;
+import scc.storage.Config;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
@@ -11,6 +12,10 @@ import java.util.Set;
 @ApplicationPath("/")
 public class MainApplication extends Application {
 
+	public MainApplication() {
+		Config.load();
+	}
+	
     @Override
     public Set<Class<?>> getClasses() {
         Set<Class<?>> set = new HashSet<>();
@@ -19,8 +24,6 @@ public class MainApplication extends Application {
         set.add(ImageResource.class);
         set.add(PostResource.class);
         set.add(UserResouce.class);
-        set.add(Config.class);
-
         return set;
 
     }

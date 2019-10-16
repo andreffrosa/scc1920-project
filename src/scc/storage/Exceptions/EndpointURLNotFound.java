@@ -1,4 +1,4 @@
-package scc.storage.config.Exceptions;
+package scc.storage.Exceptions;
 
 public class EndpointURLNotFound extends Exception{
 

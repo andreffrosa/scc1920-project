@@ -56,7 +56,7 @@ public class PostResource extends Resource{
 
     @POST
 	@Path("/{id}/like/{user_id}")
-	public Response likePost(@PathParam("id") int postId, @PathParam("user_id") String user_id){
+	public Response likePost(@PathParam("id") String postId, @PathParam("user_id") String user_id){
 		return super.create( new Like(postId, user_id),
 				response -> Response.ok().build(),
 				error -> {

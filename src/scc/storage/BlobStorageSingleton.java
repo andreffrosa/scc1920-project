@@ -1,10 +1,9 @@
-package scc.storage.blobStorage;
+package scc.storage;
 
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import scc.storage.config.Config;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
@@ -14,9 +13,6 @@ import java.util.Map;
 import java.util.Properties;
 
 public class BlobStorageSingleton {
-
-    private static final String BLOB_STORAGE_CONFIG_FILE_PATH = "./config/Blob.conf";
-    private static final String CONNECTION_STRING = "storage_connection_string";
 
     private static Map<String,BlobStorageSingleton> blobStorageSingletons;
     private CloudBlobContainer container;

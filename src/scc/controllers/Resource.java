@@ -5,11 +5,11 @@ import com.microsoft.azure.cosmosdb.FeedOptions;
 import com.microsoft.azure.cosmosdb.FeedResponse;
 import com.microsoft.azure.cosmosdb.ResourceResponse;
 import rx.Observable;
-import scc.storage.config.Config;
-import scc.storage.config.Exceptions.CosmosDatabaseIdNotFound;
-import scc.storage.config.Exceptions.EndpointURLNotFound;
-import scc.storage.config.Exceptions.MasterKeyNotFound;
-import scc.storage.cosmos.CosmosClientSingleton;
+import scc.storage.Config;
+import scc.storage.CosmosClientSingleton;
+import scc.storage.Exceptions.CosmosDatabaseIdNotFound;
+import scc.storage.Exceptions.EndpointURLNotFound;
+import scc.storage.Exceptions.MasterKeyNotFound;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -32,44 +32,7 @@ public class Resource {
 		collectionLink = String.format("/dbs/%s/colls/%s", cosmosClientSingleton.getCosmosDatabase(), collection);
 	}
 
-	@FunctionalInterface
-	public interface ResponseHandler {
-		Response execute(ResourceResponse<Document> response);
-	}
-
-	@FunctionalInterface
-	public interface ErrorHandler {
-		Response execute(Throwable error);
-	}
-
-	protected Response create(Object o, ResponseHandler onResponse, ErrorHandler onError) {
-		Observable<ResourceResponse<Document>> createDocumentObservable = cosmosClientSingleton.getCosmosClient().createDocument(collectionLink,
-				o, null, false);
-
-		final CountDownLatch completionLatch = new CountDownLatch(1);
-
-		AtomicReference<Response> at = new AtomicReference<>();
-
-		// Subscribe to Document resource response emitted by the observable
-		createDocumentObservable.single() // We know there will be one response
-				.subscribe(documentResourceResponse -> {
-					at.set(onResponse.execute(documentResourceResponse));
-					completionLatch.countDown();
-				}, error -> {
-					at.set(onError.execute(error));
-					completionLatch.countDown();
-				});
-
-		// Wait till document creation completes
-		try {
-			completionLatch.await();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		return at.get();
-	}
-
+	
 
 	public Response findByName(String name) {
 

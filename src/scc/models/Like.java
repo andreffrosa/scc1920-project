@@ -2,20 +2,19 @@ package scc.models;
 
 public class Like {
 
-    private int id, post_id;
+    private String id, post_id;
     private String author_username;
 
-    //Dummy Constructor so that jackson can Deserialize
     public Like(){  }
 
-    public Like(int post_id, String author_username){
+    public Like(String post_id, String author_username){
         this.post_id = post_id;
         this.author_username = author_username;
     }
 
-    public int getId(){ return id; }
+    public String getId(){ return id; }
 
-    public int getPost_id(){ return  post_id; }
+    public String getPost_id(){ return  post_id; }
 
     public String getAuthor_username(){ return  author_username; }
 }

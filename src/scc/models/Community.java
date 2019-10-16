@@ -5,7 +5,6 @@ public class Community {
 	private String id;
 	private String name;
 
-	//Dummy Constructor so that jackson can Deserialize
 	public Community(){ }
 
 	public Community(String name) {
