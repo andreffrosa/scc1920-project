@@ -25,7 +25,7 @@ public class CommunityResource extends Resource {
 	}
 
 	// TODO: Fazer as excepções como deve ser
-	// TODO: Fazer as replys como o dred tem nos slides
+	// TODO: Fazer as replys como o prof tem nos slides
 	
 	@POST
 	@Path("/")
