@@ -23,7 +23,7 @@ public class CommunityResource extends Resource {
 	static ServletContext context;
 
 	static final String PATH = "/community";
-	private static final String CONTAINER = "Communities";
+	public static final String CONTAINER = "Communities";
 
 	public CommunityResource() throws Exception {
 		super(CONTAINER);
