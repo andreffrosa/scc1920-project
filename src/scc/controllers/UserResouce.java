@@ -2,7 +2,9 @@ package scc.controllers;
 
 import scc.models.User;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -12,9 +14,12 @@ import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictExceptio
 @Path(UserResouce.PATH)
 public class UserResouce extends Resource {
 
-	public static final String PATH = "/user";
+	static final String PATH = "/user";
 	private static final String CONTAINER = "Users";
-	
+
+	@Context
+	static ServletContext context;
+
 	public UserResouce() throws Exception {
 		super(CONTAINER);
 	}

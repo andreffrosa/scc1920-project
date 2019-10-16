@@ -3,8 +3,9 @@
 	import com.microsoft.azure.storage.StorageErrorCode;
 	import com.microsoft.azure.storage.StorageException;
 	import com.microsoft.azure.storage.blob.CloudBlob;
-	import scc.controllers.blobStorage.BlobStorageSingleton;
+	import scc.storage.blobStorage.BlobStorageSingleton;
 	import scc.utils.Encryption;
+	import scc.storage.config.Config;
 
 	import javax.servlet.ServletContext;
 	import javax.ws.rs.*;
@@ -16,13 +17,16 @@
 
 @Path(ImageResource.PATH)
 public class ImageResource {
-	public static final String PATH = "/image";
+	static final String PATH = "/image";
 	private static final String CONTAINER_NAME = "images";
+
+	@Context
+	static ServletContext context;
 
 	private BlobStorageSingleton blobStorageSingleton;
 
 	public ImageResource() throws Exception {
-		blobStorageSingleton = BlobStorageSingleton.getInstance(CONTAINER_NAME);
+		blobStorageSingleton = Config.getBlobStorageClientInstance(CONTAINER_NAME);
 	}
 	
 	@POST

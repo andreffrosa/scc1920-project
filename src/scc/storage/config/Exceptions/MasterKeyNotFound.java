@@ -1,4 +1,4 @@
-package scc.config.Exceptions;
+package scc.storage.config.Exceptions;
 
 public class MasterKeyNotFound extends Exception {
 

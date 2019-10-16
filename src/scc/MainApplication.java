@@ -1,5 +1,6 @@
 package scc;
 
+import scc.storage.config.Config;
 import scc.controllers.*;
 
 import javax.ws.rs.ApplicationPath;
@@ -18,6 +19,7 @@ public class MainApplication extends Application {
         set.add(ImageResource.class);
         set.add(PostResource.class);
         set.add(UserResouce.class);
+        set.add(Config.class);
 
         return set;
 

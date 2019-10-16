@@ -12,9 +12,10 @@ import java.util.Properties;
 
 @Path(Debug.PATH)
 public class Debug {
+
     @Context ServletContext context;
     static final String PATH = "/debug" ;
-    private static final String VERSION = "5.0";
+    private static final String VERSION = "9.0";
 
     @GET
     @Path("/version")
@@ -37,5 +38,4 @@ public class Debug {
             return Response.serverError().entity(e).build();
         }
     }
-
 }

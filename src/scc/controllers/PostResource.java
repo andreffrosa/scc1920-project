@@ -4,7 +4,9 @@ import com.microsoft.azure.cosmosdb.DocumentClientException;
 import scc.models.Like;
 import scc.models.Post;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -14,9 +16,12 @@ import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictExceptio
 @Path(PostResource.PATH)
 public class PostResource extends Resource{
 
-	public static final String PATH = "/post";
+	static final String PATH = "/post";
 	private static final String CONTAINER = "Posts";
-	
+
+	@Context
+	static ServletContext context;
+
 	public PostResource() throws Exception {
 		super(CONTAINER);
 	}
