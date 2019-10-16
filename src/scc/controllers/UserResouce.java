@@ -1,15 +1,13 @@
 package scc.controllers;
 
+import com.microsoft.azure.cosmosdb.DocumentClientException;
 import scc.models.User;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
-import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictException;
 
 @Path(UserResouce.PATH)
 public class UserResouce extends Resource {
@@ -28,26 +26,26 @@ public class UserResouce extends Resource {
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response create(User u){
-		return super.create(u, 
-				response -> {
-					return Response.ok(response.getResource().getId(), MediaType.APPLICATION_JSON).build();
-				}, error -> {
-					if(error instanceof ConflictException)
-						return Response.status(Status.CONFLICT)
-								.entity("User with the specified name already exists in the system.")
-								.build();
-
-					return Response.status(Status.INTERNAL_SERVER_ERROR)
-							.entity(error.getMessage())
-							.build();
-				});
+	public String create(User u){
+		try {
+			return super.create(u);
+		} catch (DocumentClientException e) {
+			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
+				throw new WebApplicationException("User already exists", Status.CONFLICT);
+			else
+				throw new WebApplicationException("Unexpected error", Status.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@GET
 	@Path("/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getByName(@PathParam("name") String name){
+	public String getByName(@PathParam("name") String name){
+		String user = super.getByName(name);
+
+		if(user == null)
+			throw new WebApplicationException("User not found", Status.NOT_FOUND);
+
 		return super.getByName(name);
 	}
 

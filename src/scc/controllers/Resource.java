@@ -25,6 +25,8 @@ public class Resource {
 		return CosmosClient.getByName(collection, name);
 	}
 
+	public String getById(String id) { return CosmosClient.getById(collection, id); }
+
 
 	/*Response update(Object o) {
 		return null;

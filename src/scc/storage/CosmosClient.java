@@ -117,4 +117,28 @@ public class CosmosClient {
 		}*/
 	}
 
+	public static String getById(String container_name, String id) {
+		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+
+		//try {
+		FeedOptions queryOptions = new FeedOptions();
+		queryOptions.setEnableCrossPartitionQuery(true);
+		queryOptions.setMaxDegreeOfParallelism(-1);
+		Iterator<FeedResponse<Document>> it = cosmosClient.queryDocuments(collectionLink,
+				"SELECT * FROM " + container_name + " c WHERE c.id = '" + id + "'", queryOptions).toBlocking()
+				.getIterator();
+
+		// NOTE: multiple documents can be returned or none
+		if (it.hasNext()) {
+			String doc = it.next().getResults().get(0).toJson();
+			return doc;
+		} else {
+			return null;
+		}
+		/*} catch (Exception e) {
+			//return Response.serverError().entity(e).build();
+			return null; //TODO: fazer isto como deve ser
+		}*/
+	}
+
 }
