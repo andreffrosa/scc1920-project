@@ -91,8 +91,8 @@ public class Resource {
 		} catch (Exception e) {
 			return Response.serverError().entity(e).build();
 		}
-
 	}
+
 
 	/*Response update(Object o) {
 		return null;

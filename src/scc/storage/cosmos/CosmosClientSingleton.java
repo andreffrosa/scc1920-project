@@ -18,9 +18,9 @@ public class CosmosClientSingleton {
 
     private static CosmosClientSingleton cosmosClientSingleton = null;
     private AsyncDocumentClient cosmosClient;
+    private String cosmosDatabase, container;
 
-    private String cosmosDatabase;
-
+    /*
     private CosmosClientSingleton(Map<String, String> props) throws IOException, CosmosDatabaseIdNotFound, MasterKeyNotFound, EndpointURLNotFound {
 
         if(!props.containsKey(Config.COSMOS_DB_DATABASE)) throw new CosmosDatabaseIdNotFound();
@@ -29,11 +29,13 @@ public class CosmosClientSingleton {
 
         if (!props.containsKey(Config.COSMOS_DB_ENDPOINT)) throw new EndpointURLNotFound();
 
-       //TODO:  new CosmosClientSingleton(props.get(Config.COSMOS_DB_DATABASE), props.get(Config.COSMOS_DB_MASTER_KEY), props.get(Config.COSMOS_DB_ENDPOINT));
+        new CosmosClientSingleton(props.get(Config.COSMOS_DB_DATABASE), props.get(Config.COSMOS_DB_MASTER_KEY), props.get(Config.COSMOS_DB_ENDPOINT));
     }
+    */
+    
+    private CosmosClientSingleton(String container, String cosmosDB, String cosmosMasterKey, String cosmosEndpoint) {
 
-    private CosmosClientSingleton(String cosmosDB, String cosmosMasterKey, String cosmosEndpoint) {
-
+        this.container = container;
         this.cosmosDatabase = cosmosDB;
 
         ConnectionPolicy connectionPolicy = new ConnectionPolicy();
@@ -43,9 +45,9 @@ public class CosmosClientSingleton {
                 .withConsistencyLevel(ConsistencyLevel.Eventual).build();
     }
 
-    public static CosmosClientSingleton getInstance(String cosmosDB, String cosmosMasterKey, String cosmosEndpoint) {
+    public static CosmosClientSingleton getInstance(String container, String cosmosDB, String cosmosMasterKey, String cosmosEndpoint) {
         if(cosmosClientSingleton == null)
-            cosmosClientSingleton = new CosmosClientSingleton(cosmosDB, cosmosMasterKey, cosmosEndpoint);
+            cosmosClientSingleton = new CosmosClientSingleton(container, cosmosDB, cosmosMasterKey, cosmosEndpoint);
 
         return cosmosClientSingleton;
     }

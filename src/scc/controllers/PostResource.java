@@ -11,8 +11,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictException;
-
 @Path(PostResource.PATH)
 public class PostResource extends Resource{
 
@@ -31,10 +29,13 @@ public class PostResource extends Resource{
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response create(Post post){
+
+
+
     	return super.create(post,
 				response -> Response.ok(response.getResource().getId(), MediaType.APPLICATION_JSON).build(),
 				error -> {
-					if(error instanceof ConflictException)
+					if(error instanceof DocumentClientException)
 						return Response.status(Status.CONFLICT)
 								.entity("Post with the specified name already exists in the system.")
 								.build();
@@ -59,7 +60,6 @@ public class PostResource extends Resource{
 		return super.create( new Like(postId, user_id),
 				response -> Response.ok().build(),
 				error -> {
-
 			        if(error instanceof DocumentClientException) {
 						int statusCode = ((DocumentClientException) error).getStatusCode();
 			        	if (statusCode == Status.CONFLICT.getStatusCode())
