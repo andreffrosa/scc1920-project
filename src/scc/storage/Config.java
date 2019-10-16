@@ -29,7 +29,7 @@ public class Config {
 
     public static void load() {
     	CosmosClient.init(COSMOS_DB_DATABASE, COSMOS_DB_MASTER_KEY, COSMOS_DB_ENDPOINT);
-    	BlobStorageSingleton.newInstance(BLOB_STORAGE_CONNECTION_STRING, ImageResource.CONTAINER_NAME);
+    	BlobStorageClient.newInstance(BLOB_STORAGE_CONNECTION_STRING, ImageResource.CONTAINER_NAME);
     }
     
 }

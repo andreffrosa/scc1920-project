@@ -23,11 +23,13 @@ public class CosmosClient {
 	private static AsyncDocumentClient cosmosClient;
 	private static String cosmosDatabase;
 
-	public AsyncDocumentClient getCosmosClient(){
+	private CosmosClient() {}
+	
+	public static AsyncDocumentClient getCosmosClient(){
 		return cosmosClient;
 	}
 
-	public String getCosmosDatabase(){
+	public static String getCosmosDatabase(){
 		return cosmosDatabase;
 	}
 

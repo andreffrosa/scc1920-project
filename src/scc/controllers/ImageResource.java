@@ -5,7 +5,7 @@
 	import com.microsoft.azure.storage.blob.CloudBlob;
 
 import scc.utils.Encryption;
-import scc.storage.BlobStorageSingleton;
+import scc.storage.BlobStorageClient;
 import scc.storage.Config;
 
 import javax.servlet.ServletContext;
@@ -22,32 +22,21 @@ public class ImageResource {
 	static final String PATH = "/image";
 	public static final String CONTAINER_NAME = "images";
 
-	@Context
-	static ServletContext context;
-
-	private BlobStorageSingleton blobStorageSingleton;
-
-	public ImageResource() throws Exception {
-		blobStorageSingleton = Config.getBlobStorageClientInstance(CONTAINER_NAME);
-	}
+	public ImageResource() {}
 	
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response upload(@Context ServletContext context, byte[] contents) {
+	public String upload(@Context ServletContext context, byte[] contents) {
 		try {
 			String hash = Encryption.computeHash(contents);
-
-			// Get reference to blob
-			CloudBlob blob = blobStorageSingleton.getContainer().getBlockBlobReference(hash);
 			
-			// Upload contents from byte array
-			blob.uploadFromByteArray(contents, 0, contents.length);
+			BlobStorageClient.upload(CONTAINER_NAME, hash, contents);
 			
-			return Response.ok(hash, MediaType.APPLICATION_JSON).build();
+			return hash;
 		} catch(Exception e) {
-			return Response.serverError().entity(e).build();
+			throw new WebApplicationException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
 		}
 	}
 
