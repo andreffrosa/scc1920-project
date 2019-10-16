@@ -5,6 +5,7 @@ public class Like {
     private int id, post_id;
     private String author_username;
 
+    //Dummy Constructor so that jackson can Deserialize
     public Like(){  }
 
     public Like(int post_id, String author_username){

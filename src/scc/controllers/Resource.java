@@ -5,32 +5,31 @@ import com.microsoft.azure.cosmosdb.FeedOptions;
 import com.microsoft.azure.cosmosdb.FeedResponse;
 import com.microsoft.azure.cosmosdb.ResourceResponse;
 import rx.Observable;
-import scc.config.Config;
-import scc.config.Exceptions.CosmosDatabaseIdNotFound;
-import scc.config.Exceptions.EndpointURLNotFound;
-import scc.config.Exceptions.MasterKeyNotFound;
-import scc.controllers.cosmos.CosmosClientSingleton;
+import scc.storage.config.Config;
+import scc.storage.config.Exceptions.CosmosDatabaseIdNotFound;
+import scc.storage.config.Exceptions.EndpointURLNotFound;
+import scc.storage.config.Exceptions.MasterKeyNotFound;
+import scc.storage.cosmos.CosmosClientSingleton;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+
 
 public class Resource {
 
 	private String collection;
 	private String collectionLink;
 	private CosmosClientSingleton cosmosClientSingleton;
-	private Config config;
 
 	Resource(String collection) throws IOException, CosmosDatabaseIdNotFound, MasterKeyNotFound, EndpointURLNotFound {
-		config = Config.getInstance(CosmosClientSingleton.COSMOS_CONFIG_FILE_PATH);
-		cosmosClientSingleton = CosmosClientSingleton.getInstance(config.getProperties());
+
+		cosmosClientSingleton = Config.getCosmosDBClientInstance();
 		this.collection = collection;
-		collectionLink = String.format("/dbs/%s/colls/%s", config.getProperties().getProperty(CosmosClientSingleton.COSMOS_DB_DATABASE), collection);
+		collectionLink = String.format("/dbs/%s/colls/%s", cosmosClientSingleton.getCosmosDatabase(), collection);
 	}
 
 	@FunctionalInterface
@@ -92,8 +91,8 @@ public class Resource {
 		} catch (Exception e) {
 			return Response.serverError().entity(e).build();
 		}
-
 	}
+
 
 	/*Response update(Object o) {
 		return null;
