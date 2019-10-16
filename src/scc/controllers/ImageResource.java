@@ -41,27 +41,19 @@ public class ImageResource {
 	}
 
 	@GET
-	@Path("/{uuid}")
+	@Path("/{img_id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response download(@PathParam("uuid") String uuid) {
+	public byte[] download(@PathParam("img_id") String img_id) {
 		try {
-			// Get reference to blob
-			CloudBlob blob = blobStorageSingleton.getContainer().getBlobReferenceFromServer(uuid);
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			blob.download(out);
-			out.close();
-			byte[] contents = out.toByteArray();
-			
-			return Response.ok(contents, MediaType.APPLICATION_OCTET_STREAM).build();
-			
+			return BlobStorageClient.download(CONTAINER_NAME, img_id);
 		} catch (StorageException e) {
 	        if (e.getErrorCode().equals(StorageErrorCode.RESOURCE_NOT_FOUND.toString()))
-	        	return Response.status(Status.NOT_FOUND).entity(e.getMessage()).build();
+	        	throw new WebApplicationException(e.getMessage(), Status.NOT_FOUND);
 	        
-	        return Response.serverError().entity(e).build();
+	        throw new WebApplicationException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
 	    } catch(Exception e) {
-			return Response.serverError().entity(e).build();
+	    	throw new WebApplicationException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
 		}
 	}
 
