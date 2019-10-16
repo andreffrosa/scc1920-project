@@ -12,9 +12,8 @@ public class Post {
     private int likes;
     private String parent;
 
-    public Post() {
-    	
-    }
+    //Dummy Constructor so that jackson can Deserialize
+    public Post() {   }
 
 	public String getId() {
 		return id;

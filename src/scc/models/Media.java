@@ -4,6 +4,7 @@ public class Media {
 	
 	private String id;
 
+	//Dummy Constructor so that jackson can Deserialize
 	public Media(){ }
 
 	public Media(String id) {
