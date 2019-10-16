@@ -28,7 +28,7 @@ public class Config {
     private static final String COSMOS_DB_DATABASE = "cloud-47134-48043-database";
 
     public static void load() {
-    	CosmosClientSingleton.init(COSMOS_DB_DATABASE, COSMOS_DB_MASTER_KEY, COSMOS_DB_ENDPOINT);
+    	CosmosClient.init(COSMOS_DB_DATABASE, COSMOS_DB_MASTER_KEY, COSMOS_DB_ENDPOINT);
     	BlobStorageSingleton.newInstance(BLOB_STORAGE_CONNECTION_STRING, ImageResource.CONTAINER_NAME);
     }
     

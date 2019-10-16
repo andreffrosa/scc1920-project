@@ -7,11 +7,13 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.microsoft.azure.cosmosdb.DocumentClientException;
 import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictException;
 
 import scc.models.Community;
@@ -36,21 +38,15 @@ public class CommunityResource extends Resource {
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createCommunity(Community c) {
-
-
-		return super.create(c, 
-				response -> Response.ok(response.getResource().getId(), MediaType.APPLICATION_JSON).build(),
-				error -> {
-					if(error instanceof ConflictException)
-						return Response.status(Status.CONFLICT)
-								.entity("Community with the specified name already exists in the system.")
-								.build();
-					
-					return Response.status(Status.INTERNAL_SERVER_ERROR)
-							.entity(error.getMessage())
-							.build();
-				});
+	public String createCommunity(Community c) {
+		try {
+			return super.create(c);
+		} catch(DocumentClientException e) {
+			if(e.getStatusCode() == 409)
+				throw new WebApplicationException("Community with the specified name already exists in the system.", Status.CONFLICT);
+		
+			throw new WebApplicationException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	//TODO: GET DE COISA QUE NÂO EXISTE LEVA INFINITO TEMPO E RETORNA There was an unexpected error in the request processing.
@@ -59,7 +55,7 @@ public class CommunityResource extends Resource {
 	@Path("/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response consultCommunity(@PathParam("name") String name) {
-		return super.findByName(name);
+		return super.getByName(name);
 	}
 
 

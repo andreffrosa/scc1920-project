@@ -47,8 +47,8 @@ public class UserResouce extends Resource {
 	@GET
 	@Path("/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response findByName(@PathParam("name") String name){
-		return super.findByName(name);
+	public Response getByName(@PathParam("name") String name){
+		return super.getByName(name);
 	}
 
 	/*@PUT

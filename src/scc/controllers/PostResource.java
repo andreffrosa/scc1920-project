@@ -50,7 +50,7 @@ public class PostResource extends Resource{
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("id") String id){
-        return super.findByName(id);
+        return super.getByName(id);
     }
 
 

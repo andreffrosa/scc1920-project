@@ -18,7 +18,7 @@ import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 
 import rx.Observable;
 
-public class CosmosClientSingleton {
+public class CosmosClient {
 
 	private static AsyncDocumentClient cosmosClient;
 	private static String cosmosDatabase;
@@ -51,7 +51,7 @@ public class CosmosClientSingleton {
 		Response execute(Throwable error);
 	}
 
-	public static String create(String container_name, Object o)  {
+	public static String create(String container_name, Object o) throws DocumentClientException  {
 
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
@@ -60,21 +60,18 @@ public class CosmosClientSingleton {
 		final CountDownLatch completionLatch = new CountDownLatch(1);
 
 		AtomicReference<String> at = new AtomicReference<>();
-		AtomicReference<Integer> at2 = new AtomicReference<>();
+		AtomicReference<DocumentClientException> at2 = new AtomicReference<>();
 
 		// Subscribe to Document resource response emitted by the observable
 		createDocumentObservable.single() // We know there will be one response
 		.subscribe(documentResourceResponse -> {
 			at.set(documentResourceResponse.getResource().getId());
-			at2.set(200);
 			completionLatch.countDown();
 		}, error -> {			
 			if(error instanceof DocumentClientException) {
-				at2.set(((DocumentClientException)error).getStatusCode());
-			} else
-				at2.set(500);
-
-			at.set(error.getMessage());
+				at2.set(((DocumentClientException)error));
+			}
+			at2.set(new DocumentClientException(500, error.getMessage()));
 			completionLatch.countDown();
 		});
 
@@ -85,16 +82,15 @@ public class CosmosClientSingleton {
 			e.printStackTrace();
 		}
 
-		int status_code = at2.get();
-		if(status_code == 200) {
+		DocumentClientException e = at2.get();
+		if(e == null) {
 			return at.get();
 		} else {
-			// TODO: Lançar excepções
-			return null;
+			throw e;
 		}
 	}
 
-	public <T> String getByName(String container_name, String name) {
+	public static <T> String getByName(String container_name, String name) {
 		
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 		
