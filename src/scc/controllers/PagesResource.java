@@ -18,10 +18,8 @@ import javax.ws.rs.core.Response.Status;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
-import scc.models.Post;
 import scc.models.PostWithReplies;
 import scc.storage.CosmosClient;
-import scc.storage.GSON;
 
 @Path(PagesResource.PATH)
 public class PagesResource {
@@ -30,7 +28,7 @@ public class PagesResource {
 	static final int DEFAULT_LEVEL = 1;
 
 	@GET
-	@Path("/thread/{id}/")
+	@Path("/thread/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public PostWithReplies getThread(@PathParam("id") String id, @DefaultValue(""+DEFAULT_LEVEL) @QueryParam("d") int depth) {
 
