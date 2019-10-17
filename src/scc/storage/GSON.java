@@ -9,4 +9,8 @@ public class GSON {
     public static String toJson(Object o){
         return gson.toJson(o);
     }
+
+    public static Object fromJson(String json, Class c){
+        return gson.fromJson(json, c);
+    }
 }
