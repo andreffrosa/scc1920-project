@@ -17,6 +17,7 @@ public class PostResource extends Resource{
 
 	static final String PATH = "/post";
 	public static final String CONTAINER = "Posts";
+	static final String LIKE_CONTAINER = "Likes";
 
 	@Context
 	static ServletContext context;
@@ -77,7 +78,7 @@ public class PostResource extends Resource{
 
 		try {
 			Like like = new Like(postId, user_name, System.currentTimeMillis());
-			return super.create(like);
+			return CosmosClient.create(LIKE_CONTAINER, like);
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
 				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("You have already liked that post").build());
@@ -99,7 +100,7 @@ public class PostResource extends Resource{
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Post does not exist").build());
 
 		try {
-			super.delete(Like.buildId(postId, user_name));
+			CosmosClient.delete(LIKE_CONTAINER, Like.buildId(postId, user_name));
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
 				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("You have already liked that post").build());

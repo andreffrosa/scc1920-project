@@ -45,7 +45,7 @@ public class CosmosClient {
 		connectionPolicy.setConnectionMode(ConnectionMode.Direct);
 		cosmosClient = new AsyncDocumentClient.Builder().withServiceEndpoint(cosmosDbEndpoint)
 				.withMasterKeyOrResourceToken(cosmosDbMasterKey).withConnectionPolicy(connectionPolicy)
-				.withConsistencyLevel(ConsistencyLevel.Eventual).build();
+				.withConsistencyLevel(ConsistencyLevel.Session).build();
 	}
 
 	@FunctionalInterface
