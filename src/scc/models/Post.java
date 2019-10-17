@@ -12,7 +12,7 @@ public class Post {
     public String message;
     private String multiMediaObject;
     private String parent;
-    private transient List<String> replies;
+    private List<String> replies;
 
     public Post() {   }
 
@@ -58,6 +58,38 @@ public class Post {
 
 	public void setReplies(List<String> replies) {
 		this.replies = replies;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+
+	public void setCommunity(String community) {
+		this.community = community;
+	}
+
+	public void setCreationTime(long creationTime) {
+		this.creationTime = creationTime;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public void setMultiMediaObject(String multiMediaObject) {
+		this.multiMediaObject = multiMediaObject;
+	}
+
+	public void setParent(String parent) {
+		this.parent = parent;
 	}
 
 }

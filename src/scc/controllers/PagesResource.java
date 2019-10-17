@@ -37,7 +37,9 @@ public class PagesResource {
 
 		List<String> replies = CosmosClient.query(PostResource.CONTAINER, query);
 
-		post.setReplies(replies);
+		post.setTitle(String.format(query, PostResource.CONTAINER));
+		post.setAuthor(replies.size() +  "");
+		//post.setReplies(replies);
 
 		return post;
 
