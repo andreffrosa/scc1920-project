@@ -28,7 +28,7 @@ public class Like {
 	}
 
 	public static String buildId(String post_id, String author_username){
-        return post_id + "@" + author_username;
+        return author_username + "@" + post_id;
     }
     
 }
