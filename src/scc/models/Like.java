@@ -30,5 +30,7 @@ public class Like {
 	public static String buildId(String post_id, String author_username){
         return author_username + "@" + post_id;
     }
+
+    public boolean isValid(){ return username != null && !username.equals("") && post_id != null && !post_id.equals(""); }
     
 }

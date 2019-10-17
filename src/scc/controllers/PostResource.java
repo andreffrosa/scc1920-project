@@ -32,6 +32,9 @@ public class PostResource extends Resource{
     @Produces(MediaType.APPLICATION_JSON)
     public String create(Post post){
 
+		if(!post.validPost())
+			throw new WebApplicationException(Response.status(Status.BAD_GATEWAY).entity("Invalid Params").build());
+
 		String author = CosmosClient.getByName(UserResouce.CONTAINER, post.getAuthor());
 		if(author == null)
 			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Username does not exists").build());
@@ -39,6 +42,7 @@ public class PostResource extends Resource{
 		String community = CosmosClient.getByName(CommunityResource.CONTAINER, post.getCommunity());
 		if(community == null)
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Community does not exist").build());
+
 
 		try{
 			post.setCreationTime(System.currentTimeMillis());
