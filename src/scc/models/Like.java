@@ -7,6 +7,7 @@ public class Like {
     private long creationTime;
 
     public Like(String post_id, String author_username, long creation_time){
+        id = buildId(post_id, author_username);
         this.post_id = post_id;
         this.author_username = author_username;
         this.creationTime = creation_time;
@@ -25,5 +26,9 @@ public class Like {
 	public long getCreationTime() {
 		return creationTime;
 	}
+
+	public static String buildId(String post_id, String author_username){
+        return post_id + "@" + author_username;
+    }
     
 }

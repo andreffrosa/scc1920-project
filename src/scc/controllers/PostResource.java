@@ -99,7 +99,7 @@ public class PostResource extends Resource{
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Post does not exist").build());
 
 		try {
-			return super.delete();
+			super.delete(Like.buildId(postId, user_name));
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
 				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("You have already liked that post").build());
