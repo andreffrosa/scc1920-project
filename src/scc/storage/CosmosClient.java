@@ -199,5 +199,26 @@ public class CosmosClient {
 		
 		return list;
 	}
+	
+	public static <T> List<String> query(String container_name, String query){
+		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+
+		FeedOptions queryOptions = new FeedOptions();
+		queryOptions.setEnableCrossPartitionQuery(true);
+		queryOptions.setMaxDegreeOfParallelism(-1);
+		Iterator<FeedResponse<Document>> it = cosmosClient.queryDocuments(collectionLink,
+				String.format(query, container_name), queryOptions).toBlocking()
+				.getIterator();
+
+		List<String> list = new LinkedList<String>();
+		
+		while(it.hasNext()) {
+			List<String> l = it.next().getResults().parallelStream()
+					.map(d -> d.toJson()).collect(Collectors.toList());
+			list.addAll(l);
+		}
+		
+		return list;
+	}
 
 }

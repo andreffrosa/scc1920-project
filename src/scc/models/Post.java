@@ -1,5 +1,7 @@
 package scc.models;
 
+import java.util.List;
+
 public class Post {
 
     private String id;
@@ -10,6 +12,7 @@ public class Post {
     public String message;
     private String multiMediaObject;
     private String parent;
+    private transient List<String> replies;
 
     public Post() {   }
 
@@ -47,6 +50,14 @@ public class Post {
 
 	public void setCreationTime(Long creationTime){
     	this.creationTime = creationTime;
+	}
+
+	public List<String> getReplies() {
+		return replies;
+	}
+
+	public void setReplies(List<String> replies) {
+		this.replies = replies;
 	}
 
 }

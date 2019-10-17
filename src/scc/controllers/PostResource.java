@@ -16,7 +16,7 @@ import javax.ws.rs.core.Response.Status;
 public class PostResource extends Resource{
 
 	static final String PATH = "/post";
-	private static final String CONTAINER = "Posts";
+	public static final String CONTAINER = "Posts";
 
 	@Context
 	static ServletContext context;
