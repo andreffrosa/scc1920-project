@@ -2,7 +2,6 @@ package scc.controllers;
 
 import java.util.List;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -13,6 +12,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import scc.models.Post;
+import scc.models.PostWithReplies;
 import scc.storage.CosmosClient;
 import scc.storage.GSON;
 
@@ -20,6 +20,7 @@ import scc.storage.GSON;
 public class PagesResource {
 
 	static final String PATH = "/page";
+	static final int DEFAULT_LEVEL = 1;
 
 	@GET
 	@Path("/thread/{id}/")
@@ -30,16 +31,21 @@ public class PagesResource {
 		if(post_json == null)
 			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Post does not exists").build());
 
-		Post post = GSON.fromJson(post_json, Post.class);
+		PostWithReplies post = GSON.fromJson(post_json, PostWithReplies.class);
 
 		String query = "SELECT * FROM %s p WHERE p.parent='" + post.getId() +"'";
 
-		List<String> replies = CosmosClient.query(PostResource.CONTAINER, query);
+		List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
 
-		post.setTitle(String.format(query, PostResource.CONTAINER));
-		post.setAuthor(replies.size() +  "");
-		//post.setReplies(replies);
-
+		post.setReplies(replies);
+		
+		/*for(PostWithReplies r : replies) {
+			query = "SELECT * FROM %s p WHERE p.parent='" + r.getId() +"'";
+			
+			List<PostWithReplies> inner_replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
+			r.setReplies(inner_replies);
+		}*/
+		
 		return post;
 
 	}

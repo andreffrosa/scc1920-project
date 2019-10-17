@@ -15,7 +15,7 @@ public class Debug {
 
     @Context ServletContext context;
     static final String PATH = "/debug" ;
-    private static final String VERSION = "22.0";
+    private static final String VERSION = "23.0";
 
     @GET
     @Path("/version")

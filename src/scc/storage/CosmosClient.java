@@ -1,7 +1,5 @@
 package scc.storage;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,7 +7,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import javax.print.Doc;
 import javax.ws.rs.core.Response;
 
 import com.microsoft.azure.cosmosdb.ConnectionMode;
@@ -200,7 +197,7 @@ public class CosmosClient {
 		return list;
 	}
 	
-	public static <T> List<String> query(String container_name, String query){
+	public static List<String> query(String container_name, String query) {
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
 		FeedOptions queryOptions = new FeedOptions();
@@ -215,6 +212,29 @@ public class CosmosClient {
 		while(it.hasNext()) {
 			List<String> l = it.next().getResults().parallelStream()
 					.map(d -> d.toJson()).collect(Collectors.toList());
+			list.addAll(l);
+		}
+		
+		return list;
+	}
+	
+	public static <T> List<T> queryAndUnparse(String container_name, String query, Class<T> class_) {
+		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+
+		String final_query = String.format(query, container_name);
+		
+		FeedOptions queryOptions = new FeedOptions();
+		queryOptions.setEnableCrossPartitionQuery(true);
+		queryOptions.setMaxDegreeOfParallelism(-1);
+		Iterator<FeedResponse<Document>> it = 
+				cosmosClient.queryDocuments(collectionLink,
+				final_query, queryOptions).toBlocking()
+				.getIterator();
+
+		List<T> list = new LinkedList<T>();
+		while(it.hasNext()) {
+			List<T> l = it.next().getResults().parallelStream()
+					.map(d -> GSON.fromJson(d.toJson(), class_)).collect(Collectors.toList());
 			list.addAll(l);
 		}
 		
