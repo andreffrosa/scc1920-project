@@ -4,9 +4,9 @@ import java.util.List;
 
 public class PostWithReplies extends Post {
 
+	private int n_likes;
     private List<PostWithReplies> replies;
-    private int n_likes;
-
+   
     public PostWithReplies() {}
 
 	public List<PostWithReplies> getReplies() {
