@@ -86,6 +86,28 @@ public class PostResource extends Resource{
 		}
 	}
 
+	@DELETE
+	@Path("/{id}/dislike/{user_name}")
+	public void dislikePost(@PathParam("id") String postId, @PathParam("user_name") String user_name){
+
+		String author = CosmosClient.getByName(UserResouce.CONTAINER, user_name);
+		if(author == null)
+			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Username does not exists").build());
+
+		String post = CosmosClient.getById(CONTAINER, postId);
+		if(post == null)
+			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Post does not exist").build());
+
+		try {
+			return super.delete();
+		} catch (DocumentClientException e) {
+			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
+				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("You have already liked that post").build());
+			else
+				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("Unexpected error").build());
+		}
+	}
+
     /*@PUT
     @Path("/{name}")
     @Consumes(MediaType.APPLICATION_JSON)

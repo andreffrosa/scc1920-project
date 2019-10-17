@@ -9,6 +9,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import javax.print.Doc;
 import javax.ws.rs.core.Response;
 
 import com.microsoft.azure.cosmosdb.ConnectionMode;
@@ -94,6 +95,40 @@ public class CosmosClient {
 		if(e == null) {
 			return at.get();
 		} else {
+			throw e;
+		}
+	}
+
+	public static void delete(String container_name, String id) throws DocumentClientException {
+
+
+		String documentLink = String.format("/dbs/%s/colls/%s/docs/%s", cosmosDatabase, container_name, id);
+		Observable<ResourceResponse<Document>> createDocumentObservable = cosmosClient.deleteDocument(documentLink,
+				null);
+
+		final CountDownLatch completionLatch = new CountDownLatch(1);
+		AtomicReference<DocumentClientException> at = new AtomicReference<>();
+
+		createDocumentObservable.single() // we know there will be one response
+				.subscribe(documentResourceResponse -> {
+					completionLatch.countDown();
+				}, error -> {
+					if(error instanceof DocumentClientException)
+						at.set(new DocumentClientException(Response.Status.NOT_FOUND.getStatusCode(), (Exception) error));
+					else
+						at.set(new DocumentClientException(500, error.getMessage()));
+					completionLatch.countDown();
+				});
+
+		// Wait till document creation completes
+		try {
+			completionLatch.await();
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+
+		DocumentClientException e = at.get();
+		if(e != null) {
 			throw e;
 		}
 	}
