@@ -10,7 +10,7 @@ public class GSON {
         return gson.toJson(o);
     }
 
-    public static Object fromJson(String json, Class c){
+    public static <T> T fromJson(String json, Class<T> c){
         return gson.fromJson(json, c);
     }
 }
