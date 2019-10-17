@@ -22,8 +22,7 @@ public class PagesResource {
 	static final String PATH = "/page";
 
 	@GET
-	@Path("/thread/{id}")
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/thread/{id}/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Post getThread(@PathParam("id") String id) {
 
@@ -33,7 +32,7 @@ public class PagesResource {
 
 		Post post = GSON.fromJson(post_json, Post.class);
 
-		String query = "SELECT * FROM %s p WHERE p.parent=" + post.getId();
+		String query = "SELECT * FROM %s p WHERE p.parent='" + post.getId() +"'";
 
 		List<String> replies = CosmosClient.query(PostResource.CONTAINER, query);
 
