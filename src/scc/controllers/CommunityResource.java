@@ -35,6 +35,10 @@ public class CommunityResource extends Resource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String createCommunity(Community c) {
+
+		if(!c.isValid())
+			throw new WebApplicationException(Response.status(Status.BAD_GATEWAY).entity("Invalid Params").build());
+
 		try {
 			return super.create(c);
 		} catch(DocumentClientException e) {

@@ -81,4 +81,12 @@ public class Post {
 		this.parent = parent;
 	}
 
+	public boolean validPost(){
+    	return community!= null && !community.equals("") && author != null && !author.equals("") && title != null && !title.equals("") && message != null && !message.equals("");
+	}
+
+	public boolean validReply(){
+    	return author != null && !author.equals("") && parent != null && !parent.equals("") && message != null && !message.equals("");
+	}
+
 }

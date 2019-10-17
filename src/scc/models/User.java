@@ -21,4 +21,6 @@ public class User {
 		return id;
 	}
 
+	public boolean isValid(){ return name != null && !name.equals(""); }
+
 }

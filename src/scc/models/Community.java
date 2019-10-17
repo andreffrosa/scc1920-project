@@ -19,5 +19,6 @@ public class Community {
 	public String getName() {
 		return name;
 	}
-	
+
+	public boolean isValid(){ return  name != null && !name.equals(""); }
 }
