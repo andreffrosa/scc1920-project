@@ -10,6 +10,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.microsoft.azure.cosmosdb.DocumentClientException;
@@ -23,15 +24,12 @@ public class CommunityResource extends Resource {
 	static ServletContext context;
 
 	static final String PATH = "/community";
-	public static final String CONTAINER = "Communities";
+	static final String CONTAINER = "Communities";
 
 	public CommunityResource() throws Exception {
 		super(CONTAINER);
 	}
 
-	// TODO: Fazer as excepções como deve ser
-	// TODO: Fazer as replys como o prof tem nos slides
-	
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -40,15 +38,13 @@ public class CommunityResource extends Resource {
 		try {
 			return super.create(c);
 		} catch(DocumentClientException e) {
-			if(e.getStatusCode() == 409)
-				throw new WebApplicationException("Community with the specified name already exists in the system.", Status.CONFLICT);
+			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
+				throw new WebApplicationException(Response.status(Status.CONFLICT).entity("Community with the specified name already exists in the system.").build());
 		
-			throw new WebApplicationException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
+			throw new WebApplicationException( Response.serverError().entity(e.getMessage()).build());
 		}
 	}
 
-	//TODO: GET DE COISA QUE NÂO EXISTE LEVA INFINITO TEMPO E RETORNA There was an unexpected error in the request processing.
-	
 	@GET
 	@Path("/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -56,10 +52,11 @@ public class CommunityResource extends Resource {
 		String community = super.getByName(name);
 		
 		if(community == null)
-			throw new WebApplicationException("Community with the specified name does not exists.", Status.NOT_FOUND);
+			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Community with the specified name does not exists.").build());
 		
 		return community;
 	}
+
 
 
 	/*@PUT

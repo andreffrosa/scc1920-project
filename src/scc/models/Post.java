@@ -6,7 +6,7 @@ public class Post {
     private String title;
     private String author;
     private String community;
-    private long creationTine;
+    private long creationTime;
     public String message;
     private String multiMediaObject;
     private String parent;
@@ -29,8 +29,8 @@ public class Post {
 		return community;
 	}
 
-	public long getCreationTine() {
-		return creationTine;
+	public long getCreationTime() {
+		return creationTime;
 	}
 
 	public String getMessage() {
@@ -43,6 +43,10 @@ public class Post {
 
 	public String getParent() {
 		return parent;
+	}
+
+	public void setCreationTime(Long creationTime){
+    	this.creationTime = creationTime;
 	}
 
 }

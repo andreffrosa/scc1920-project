@@ -9,6 +9,7 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 @Path(PostResource.PATH)
@@ -30,17 +31,22 @@ public class PostResource extends Resource{
     @Produces(MediaType.APPLICATION_JSON)
     public String create(Post post){
 
+		String author = CosmosClient.getByName(UserResouce.CONTAINER, post.getAuthor());
+		if(author == null)
+			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Username does not exists").build());
+
 		String community = CosmosClient.getByName(CommunityResource.CONTAINER, post.getCommunity());
 		if(community == null)
-			throw new WebApplicationException("Community does not exist", Status.NOT_FOUND);
+			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Community does not exist").build());
 
 		try{
+			post.setCreationTime(System.currentTimeMillis());
 			return super.create(post);
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
-				throw new WebApplicationException("Post with that ID already exists", Status.CONFLICT);
+				throw new WebApplicationException(Response.status(Status.CONFLICT).entity("Post with that ID already exists").build());
 			else
-				throw new WebApplicationException("Unexpected error", Status.INTERNAL_SERVER_ERROR);
+				throw new WebApplicationException( Response.serverError().entity("Unexpected error").build());
 		}
 	}
 
@@ -51,26 +57,32 @@ public class PostResource extends Resource{
         String post = super.getById(id);
 
         if (post == null)
-        	throw new WebApplicationException("Post with that ID does not exist", Status.NOT_FOUND);
+        	throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Post with that ID does not exist").build());
 
         return post;
     }
 
 
     @POST
-	@Path("/{id}/like/{user_id}")
-	public String likePost(@PathParam("id") String postId, @PathParam("user_id") String user_id){
+	@Path("/{id}/like/{user_name}")
+	public String likePost(@PathParam("id") String postId, @PathParam("user_name") String user_name){
+
+		String author = CosmosClient.getByName(UserResouce.CONTAINER, user_name);
+		if(author == null)
+			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Username does not exists").build());
+
 		String post = CosmosClient.getById(CONTAINER, postId);
 		if(post == null)
-			throw new WebApplicationException("Post does not exist", Status.NOT_FOUND);
+			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Post does not exist").build());
 
 		try {
-			return super.create(new Like(postId, user_id));
+			Like like = new Like(postId, user_name, System.currentTimeMillis());
+			return super.create(like);
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
-				throw new WebApplicationException("You have already liked that post", Status.CONFLICT.getStatusCode());
+				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("You have already liked that post").build());
 			else
-				throw new WebApplicationException("Unexpected error", Status.INTERNAL_SERVER_ERROR);
+				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("Unexpected error").build());
 		}
 	}
 

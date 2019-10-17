@@ -1,11 +1,14 @@
 package scc.storage;
 
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.core.Response;
 
+import com.google.gson.Gson;
 import com.microsoft.azure.cosmosdb.ConnectionMode;
 import com.microsoft.azure.cosmosdb.ConnectionPolicy;
 import com.microsoft.azure.cosmosdb.ConsistencyLevel;
@@ -14,8 +17,10 @@ import com.microsoft.azure.cosmosdb.DocumentClientException;
 import com.microsoft.azure.cosmosdb.FeedOptions;
 import com.microsoft.azure.cosmosdb.FeedResponse;
 import com.microsoft.azure.cosmosdb.ResourceResponse;
+import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictException;
 import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 
+import org.w3c.dom.ls.LSException;
 import rx.Observable;
 
 public class CosmosClient {
@@ -70,18 +75,18 @@ public class CosmosClient {
 			at.set(documentResourceResponse.getResource().getId());
 			completionLatch.countDown();
 		}, error -> {			
-			if(error instanceof DocumentClientException) {
-				at2.set(((DocumentClientException)error));
-			}
-			at2.set(new DocumentClientException(500, error.getMessage()));
+				if(error instanceof ConflictException) {
+				at2.set(new DocumentClientException(Response.Status.CONFLICT.getStatusCode(), (Exception) error));
+			}else
+				at2.set(new DocumentClientException(500, error.getMessage()));
 			completionLatch.countDown();
 		});
 
 		// Wait till document creation completes
 		try {
 			completionLatch.await();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
 		}
 
 		DocumentClientException e = at2.get();
@@ -106,15 +111,13 @@ public class CosmosClient {
 
 			// NOTE: multiple documents can be returned or none
 			if (it.hasNext()) {
-				String doc = it.next().getResults().get(0).toJson();
-				return doc;
-			} else {
-				return null;
+				List<Document> doc = it.next().getResults();
+				if(doc.size() > 0)
+					return	doc.get(0).toJson();
 			}
-		/*} catch (Exception e) {
-			//return Response.serverError().entity(e).build();
-			return null; //TODO: fazer isto como deve ser
-		}*/
+
+			return null;
+
 	}
 
 	public static String getById(String container_name, String id) {
@@ -130,15 +133,32 @@ public class CosmosClient {
 
 		// NOTE: multiple documents can be returned or none
 		if (it.hasNext()) {
-			String doc = it.next().getResults().get(0).toJson();
-			return doc;
-		} else {
-			return null;
+			List<Document> doc = it.next().getResults();
+			if(doc.size() > 0)
+				return doc.get(0).toJson();
+
 		}
-		/*} catch (Exception e) {
-			//return Response.serverError().entity(e).build();
-			return null; //TODO: fazer isto como deve ser
-		}*/
+
+		return null;
+	}
+
+	public static <T> String getNewest(String container_name){
+		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+
+		//try {
+		FeedOptions queryOptions = new FeedOptions();
+		queryOptions.setEnableCrossPartitionQuery(true);
+		queryOptions.setMaxDegreeOfParallelism(-1);
+		Iterator<FeedResponse<Document>> it = cosmosClient.queryDocuments(collectionLink,
+				"SELECT * FROM " + container_name + " c ORDER BY c.creationTime DESC", queryOptions).toBlocking()
+				.getIterator();
+
+		// NOTE: multiple documents can be returned or none
+		if (it.hasNext()) {
+			return GSON.toJson(it.next().getResults());
+		} else {
+			return GSON.toJson(Collections.emptyList());
+		}
 	}
 
 }

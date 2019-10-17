@@ -7,13 +7,14 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 @Path(UserResouce.PATH)
 public class UserResouce extends Resource {
 
 	static final String PATH = "/user";
-	private static final String CONTAINER = "Users";
+	static final String CONTAINER = "Users";
 
 	@Context
 	static ServletContext context;
@@ -31,9 +32,9 @@ public class UserResouce extends Resource {
 			return super.create(u);
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
-				throw new WebApplicationException("User already exists", Status.CONFLICT);
+				throw new WebApplicationException(Response.status(Status.CONFLICT).entity("User already exists").build());
 			else
-				throw new WebApplicationException("Unexpected error", Status.INTERNAL_SERVER_ERROR);
+				throw new WebApplicationException( Response.serverError().entity("Unexpected error").build());
 		}
 	}
 
@@ -44,7 +45,7 @@ public class UserResouce extends Resource {
 		String user = super.getByName(name);
 
 		if(user == null)
-			throw new WebApplicationException("User not found", Status.NOT_FOUND);
+			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("User not found").build());
 
 		return super.getByName(name);
 	}
