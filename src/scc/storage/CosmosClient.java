@@ -1,10 +1,13 @@
 package scc.storage;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
@@ -140,7 +143,7 @@ public class CosmosClient {
 		return null;
 	}
 
-	public static <T> String getNewest(String container_name){
+	public static <T> List<String> getNewest(String container_name){
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
 		//try {
@@ -151,12 +154,15 @@ public class CosmosClient {
 				"SELECT * FROM " + container_name + " c ORDER BY c.creationTime DESC", queryOptions).toBlocking()
 				.getIterator();
 
-		// NOTE: multiple documents can be returned or none
-		if (it.hasNext()) {
-			return GSON.toJson(it.next().getResults());
-		} else {
-			return GSON.toJson(Collections.emptyList());
+		List<String> list = new LinkedList<String>();
+		
+		while(it.hasNext()) {
+			List<String> l = it.next().getResults().parallelStream()
+					.map(d -> d.toJson()).collect(Collectors.toList());
+			list.addAll(l);
 		}
+		
+		return list;
 	}
 
 }
