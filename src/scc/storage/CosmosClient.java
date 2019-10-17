@@ -7,6 +7,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 import com.microsoft.azure.cosmosdb.ConnectionMode;
@@ -28,7 +29,7 @@ public class CosmosClient {
 	private static String cosmosDatabase;
 
 	private CosmosClient() {}
-	
+
 	public static AsyncDocumentClient getCosmosClient(){
 		return cosmosClient;
 	}
@@ -74,7 +75,7 @@ public class CosmosClient {
 			at.set(documentResourceResponse.getResource().getId());
 			completionLatch.countDown();
 		}, error -> {			
-				if(error instanceof ConflictException) {
+			if(error instanceof ConflictException) {
 				at2.set(new DocumentClientException(Response.Status.CONFLICT.getStatusCode(), (Exception) error));
 			}else
 				at2.set(new DocumentClientException(500, error.getMessage()));
@@ -107,15 +108,15 @@ public class CosmosClient {
 		AtomicReference<DocumentClientException> at = new AtomicReference<>();
 
 		createDocumentObservable.single() // we know there will be one response
-				.subscribe(documentResourceResponse -> {
-					completionLatch.countDown();
-				}, error -> {
-					if(error instanceof DocumentClientException)
-						at.set(new DocumentClientException(Response.Status.NOT_FOUND.getStatusCode(), (Exception) error));
-					else
-						at.set(new DocumentClientException(500, error.getMessage()));
-					completionLatch.countDown();
-				});
+		.subscribe(documentResourceResponse -> {
+			completionLatch.countDown();
+		}, error -> {
+			if(error instanceof DocumentClientException)
+				at.set(new DocumentClientException(Response.Status.NOT_FOUND.getStatusCode(), (Exception) error));
+			else
+				at.set(new DocumentClientException(500, error.getMessage()));
+			completionLatch.countDown();
+		});
 
 		// Wait till document creation completes
 		try {
@@ -131,25 +132,25 @@ public class CosmosClient {
 	}
 
 	public static <T> String getByName(String container_name, String name) {
-		
+
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
-		
+
 		//try {
-			FeedOptions queryOptions = new FeedOptions();
-			queryOptions.setEnableCrossPartitionQuery(true);
-			queryOptions.setMaxDegreeOfParallelism(-1);
-			Iterator<FeedResponse<Document>> it = cosmosClient.queryDocuments(collectionLink,
-					"SELECT * FROM " + container_name + " c WHERE c.name = '" + name + "'", queryOptions).toBlocking()
-					.getIterator();
+		FeedOptions queryOptions = new FeedOptions();
+		queryOptions.setEnableCrossPartitionQuery(true);
+		queryOptions.setMaxDegreeOfParallelism(-1);
+		Iterator<FeedResponse<Document>> it = cosmosClient.queryDocuments(collectionLink,
+				"SELECT * FROM " + container_name + " c WHERE c.name = '" + name + "'", queryOptions).toBlocking()
+				.getIterator();
 
-			// NOTE: multiple documents can be returned or none
-			if (it.hasNext()) {
-				List<Document> doc = it.next().getResults();
-				if(doc.size() > 0)
-					return	doc.get(0).toJson();
-			}
+		// NOTE: multiple documents can be returned or none
+		if (it.hasNext()) {
+			List<Document> doc = it.next().getResults();
+			if(doc.size() > 0)
+				return	doc.get(0).toJson();
+		}
 
-			return null;
+		return null;
 
 	}
 
@@ -175,6 +176,29 @@ public class CosmosClient {
 		return null;
 	}
 
+	public static <T> T getByIdUnparse(String container_name, String id, Class<T> class_) {
+		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+
+		//try {
+		FeedOptions queryOptions = new FeedOptions();
+		queryOptions.setEnableCrossPartitionQuery(true);
+		queryOptions.setMaxDegreeOfParallelism(-1);
+		Iterator<FeedResponse<Document>> it = cosmosClient.queryDocuments(collectionLink,
+				"SELECT * FROM " + container_name + " c WHERE c.id = '" + id + "'", queryOptions).toBlocking()
+				.getIterator();
+
+		// NOTE: multiple documents can be returned or none
+		if (it.hasNext()) {
+			List<Document> doc = it.next().getResults();
+			if(doc.size() > 0) {
+				return GSON.fromJson(doc.get(0).toJson(), class_);
+			}
+
+		}
+
+		return null;
+	}
+
 	public static <T> List<String> getNewest(String container_name){
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
@@ -187,16 +211,16 @@ public class CosmosClient {
 				.getIterator();
 
 		List<String> list = new LinkedList<String>();
-		
+
 		while(it.hasNext()) {
-			List<String> l = it.next().getResults().parallelStream()
+			List<String> l = it.next().getResults().parallelStream() // Ou apenas Stream?
 					.map(d -> d.toJson()).collect(Collectors.toList());
 			list.addAll(l);
 		}
-		
+
 		return list;
 	}
-	
+
 	public static List<String> query(String container_name, String query) {
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
@@ -208,27 +232,27 @@ public class CosmosClient {
 				.getIterator();
 
 		List<String> list = new LinkedList<String>();
-		
+
 		while(it.hasNext()) {
 			List<String> l = it.next().getResults().parallelStream()
 					.map(d -> d.toJson()).collect(Collectors.toList());
 			list.addAll(l);
 		}
-		
+
 		return list;
 	}
-	
+
 	public static <T> List<T> queryAndUnparse(String container_name, String query, Class<T> class_) {
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
 		String final_query = String.format(query, container_name);
-		
+
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
 		Iterator<FeedResponse<Document>> it = 
 				cosmosClient.queryDocuments(collectionLink,
-				final_query, queryOptions).toBlocking()
+						final_query, queryOptions).toBlocking()
 				.getIterator();
 
 		List<T> list = new LinkedList<T>();
@@ -237,7 +261,7 @@ public class CosmosClient {
 					.map(d -> GSON.fromJson(d.toJson(), class_)).collect(Collectors.toList());
 			list.addAll(l);
 		}
-		
+
 		return list;
 	}
 
