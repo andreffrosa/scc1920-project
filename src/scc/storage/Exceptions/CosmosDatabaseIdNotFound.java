@@ -2,7 +2,12 @@ package scc.storage.Exceptions;
 
 public class CosmosDatabaseIdNotFound extends Exception {
 
-    public CosmosDatabaseIdNotFound(){
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public CosmosDatabaseIdNotFound(){
         super("You have to provide your CosmosDB ID");
     }
 

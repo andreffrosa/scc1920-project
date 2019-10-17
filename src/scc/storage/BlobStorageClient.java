@@ -1,28 +1,17 @@
 package scc.storage;
 
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.StorageErrorCode;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.CloudBlob;
-import com.microsoft.azure.storage.blob.CloudBlobClient;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-
-import scc.utils.Encryption;
-
-import javax.servlet.ServletContext;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
+
+import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.blob.CloudBlob;
+import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
 
 public class BlobStorageClient {
 

@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.core.Response;
 
-import com.google.gson.Gson;
 import com.microsoft.azure.cosmosdb.ConnectionMode;
 import com.microsoft.azure.cosmosdb.ConnectionPolicy;
 import com.microsoft.azure.cosmosdb.ConsistencyLevel;
@@ -20,7 +19,6 @@ import com.microsoft.azure.cosmosdb.ResourceResponse;
 import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictException;
 import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 
-import org.w3c.dom.ls.LSException;
 import rx.Observable;
 
 public class CosmosClient {

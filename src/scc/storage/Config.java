@@ -1,22 +1,5 @@
 package scc.storage;
 
-import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-
-import scc.controllers.ImageResource;
-import scc.storage.Exceptions.CosmosDatabaseIdNotFound;
-import scc.storage.Exceptions.EndpointURLNotFound;
-import scc.storage.Exceptions.MasterKeyNotFound;
-
-import javax.swing.*;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
 public class Config {
 
     //Blob Storage Config setting

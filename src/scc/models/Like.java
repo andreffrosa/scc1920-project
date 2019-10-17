@@ -4,13 +4,12 @@ public class Like {
 
     private String id, post_id;
     private String author_username;
-    private Long creationTime;
+    private long creationTime;
 
-    public Like(String postId, String user_id, long l){  }
-
-    public Like(String post_id, String author_username){
+    public Like(String post_id, String author_username, long creation_time){
         this.post_id = post_id;
         this.author_username = author_username;
+        this.creationTime = creation_time;
     }
 
     public String getId(){ return id; }
@@ -22,4 +21,9 @@ public class Like {
     public void setCreationTime(Long creationTime){
         this.creationTime = creationTime;
     }
+
+	public long getCreationTime() {
+		return creationTime;
+	}
+    
 }
