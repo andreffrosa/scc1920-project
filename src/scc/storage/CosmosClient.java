@@ -218,7 +218,7 @@ public class CosmosClient {
 		List<String> list = new LinkedList<String>();
 
 		while (it.hasNext()) {
-			List<String> l = it.next().getResults().parallelStream() // Ou apenas Stream?
+			List<String> l = it.next().getResults().stream()
 					.map(d -> d.toJson()).collect(Collectors.toList());
 			list.addAll(l);
 		}
