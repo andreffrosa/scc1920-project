@@ -96,9 +96,7 @@ public class PagesResource {
 				query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "' AND p.creationTime>=" + time;
 				List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
 				p.setReplies(replies);
-
-				// Também se pode ir ver as replies das replies ....
-
+				
 				// Likes in last 24h
 				query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='"+ p.getId() + "' AND l.creationTime>=" + time;
 				List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
@@ -107,17 +105,14 @@ public class PagesResource {
 					int n_likes = root.getAsJsonObject().get("Likes").getAsInt();
 					p.setLikes(n_likes);
 				}
-
-				// Visualizations(?)
-
-				//int hotness = (int) Math.round(0.5*p.getLikes() + 0.5*p.getReplies().size());
+				
 				int hotness = Math.max((int) Math.round(0.8*p.getLikes() + 0.2*p.getReplies().size()),
 						(int) Math.round(0.2*p.getLikes() + 0.8*p.getReplies().size()));
 				if(queue.size() < n_posts) {
 					queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
 				} else {
 					Entry<Integer, PostWithReplies> e = queue.peek();
-					if(queue.size() >= n_posts) { // TODO: Query A
+					if(queue.size() >= n_posts) {
 						if(e.getKey() < hotness) {
 							queue.poll();
 							queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
