@@ -2,6 +2,11 @@ package scc.storage;
 
 public class Config {
 
+    //Redis Config Setting
+    private static final String REDIS_HOST_NAME = "cloud-47134-48043-redis.redis.cache.windows.net";
+    private static final String CACHE_KEY = "PFc1HwoQzGSL9YxfaH7YllCSPpJIJPd60PwGK5Xs2sg=";
+
+
     //Blob Storage Config setting
     private static final String BLOB_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=cloud4713448043blob;AccountKey=1k4A4Tgj/3BNpZbCSzKtWwXKE1qfXy3bTQrkLsrTWwjcauExiHwf7JfknyLZZbJifPg8h+ltAO3QCH00sYZEyA==;EndpointSuffix=core.windows.net";
 
@@ -13,6 +18,7 @@ public class Config {
     public static void load() {
     	CosmosClient.init(COSMOS_DB_DATABASE, COSMOS_DB_MASTER_KEY, COSMOS_DB_ENDPOINT);
     	BlobStorageClient.init(BLOB_STORAGE_CONNECTION_STRING);
+
     }
     
 }
