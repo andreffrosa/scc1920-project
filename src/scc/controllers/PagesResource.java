@@ -25,7 +25,7 @@ import scc.storage.CosmosClient;
 public class PagesResource {
 
 	static final String PATH = "/page";
-	static final int DEFAULT_LEVEL = 1;
+	static final int DEFAULT_LEVEL = 3;
 
 	@GET
 	@Path("/thread/{id}")
@@ -34,7 +34,7 @@ public class PagesResource {
 
 		PostWithReplies post = CosmosClient.getByIdUnparse(PostResource.CONTAINER, id, PostWithReplies.class);
 		if(post == null)
-			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Post does not exists").build());
+			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Post does not exists").build() );
 
 		Queue<PostWithReplies> queue = new LinkedList<>();
 		queue.add(post);

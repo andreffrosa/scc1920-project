@@ -1,4 +1,4 @@
-package scc.storage;
+package scc.utils;
 
 import com.google.gson.Gson;
 
