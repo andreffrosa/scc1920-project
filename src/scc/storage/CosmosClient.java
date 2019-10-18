@@ -242,18 +242,25 @@ public class CosmosClient {
 		return list;
 	}
 
-	public static <T> List<T> queryAndUnparse(String container_name, String query, Class<T> class_) {
+	public static <T> List<T> queryAndUnparse(String container_name, String query, String continuationToken, int pageSize, Class<T> class_) {
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
 		String final_query = String.format(query, container_name);
 
 		FeedOptions queryOptions = new FeedOptions();
+		queryOptions.setMaxItemCount(pageSize);
+		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
-		Iterator<FeedResponse<Document>> it = 
+		if (continuationToken != null)
+			queryOptions.setRequestContinuation(continuationToken);
+
+		Observable<FeedResponse<Document>> queryObservable =
 				cosmosClient.queryDocuments(collectionLink,
-						final_query, queryOptions).toBlocking()
-				.getIterator();
+						query, queryOptions);
+
+		//Observable to Interator
+		Iterator<FeedResponse<Document>> it = queryObservable.toBlocking().getIterator();
 
 		List<T> list = new LinkedList<T>();
 		while(it.hasNext()) {

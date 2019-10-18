@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response.Status;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import com.microsoft.azure.cosmosdb.FeedOptions;
 import scc.models.PostWithReplies;
 import scc.storage.CosmosClient;
 
@@ -78,7 +79,8 @@ public class PagesResource {
 	@GET
 	@Path("/initial")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("p") int n_posts) {
+	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("p") int n_posts,
+												@QueryParam("continuationToken") String continuationToken) {
 
 		try {
 			Comparator<Entry<Integer, PostWithReplies>> comp = (x, y) -> x.getKey().compareTo(y.getKey());
@@ -87,11 +89,12 @@ public class PagesResource {
 			long time = System.currentTimeMillis() - 24*60*60*1000;
 
 			String query = "SELECT * FROM %s p WHERE p.parent=null";
-			List<PostWithReplies> posts = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
+
+			List<PostWithReplies> posts = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, continuationToken, n_posts, PostWithReplies.class);
 			for(PostWithReplies p : posts) {
 				// Replies in last 24h
 				query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "' AND p.creationTime>=" + time;
-				List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
+				List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, null, n_posts,PostWithReplies.class); //AHH SHIT
 				p.setReplies(replies);
 
 				// Também se pode ir ver as replies das replies ....
