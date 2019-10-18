@@ -95,7 +95,7 @@ public class PagesResource {
 			// Também se pode ir ver as replies das replies ....
 
 			// Likes in last 24h
-			query = "SELECT COUNT(c) as Likes FROM %s l WHERE l.post_id='"+ p.getId() + "' AND l.creationTime>=" + time;
+			query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='"+ p.getId() + "' AND l.creationTime>=" + time;
 			List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query); 
 			if(!likes.isEmpty()) {
 				JsonElement root = new JsonParser().parse(likes.get(0));
