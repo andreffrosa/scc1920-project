@@ -30,7 +30,6 @@ public class Debug {
 		return Response.ok(VERSION).build();
 	}
 
-
 	@GET
 	@Path("/test")
 	@Produces(MediaType.APPLICATION_JSON)
