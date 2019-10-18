@@ -6,4 +6,11 @@ como meter consistência eventual apenas nos likes?
 
 Initial page colocado na cache
 Posts mais populares?
-guardar nº de likes na cache?
+guardar nº de likes na cache? -> HyperLogLogs?
+
+Ir buscar um thread todo de uma vez?
+
+TODO:
+- remover o creation time do Like porque o cosmos já o mete
+
+Fazer paginação do thread e como fazer com as replies que não são mostradas?
