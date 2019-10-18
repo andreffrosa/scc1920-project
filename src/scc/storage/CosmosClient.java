@@ -1,8 +1,10 @@
 package scc.storage;
 
+import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -28,13 +30,14 @@ public class CosmosClient {
 	private static AsyncDocumentClient cosmosClient;
 	private static String cosmosDatabase;
 
-	private CosmosClient() {}
+	private CosmosClient() {
+	}
 
-	public static AsyncDocumentClient getCosmosClient(){
+	public static AsyncDocumentClient getCosmosClient() {
 		return cosmosClient;
 	}
 
-	public static String getCosmosDatabase(){
+	public static String getCosmosDatabase() {
 		return cosmosDatabase;
 	}
 
@@ -58,11 +61,12 @@ public class CosmosClient {
 		Response execute(Throwable error);
 	}
 
-	public static String create(String container_name, Object o) throws DocumentClientException  {
+	public static String create(String container_name, Object o) throws DocumentClientException {
 
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
-		Observable<ResourceResponse<Document>> createDocumentObservable = cosmosClient.createDocument(collectionLink, o, null, false);
+		Observable<ResourceResponse<Document>> createDocumentObservable = cosmosClient.createDocument(collectionLink, o,
+				null, false);
 
 		final CountDownLatch completionLatch = new CountDownLatch(1);
 
@@ -71,16 +75,17 @@ public class CosmosClient {
 
 		// Subscribe to Document resource response emitted by the observable
 		createDocumentObservable.single() // We know there will be one response
-		.subscribe(documentResourceResponse -> {
-			at.set(documentResourceResponse.getResource().getId());
-			completionLatch.countDown();
-		}, error -> {			
-			if(error instanceof ConflictException) {
-				at2.set(new DocumentClientException(Response.Status.CONFLICT.getStatusCode(), (Exception) error));
-			}else
-				at2.set(new DocumentClientException(500, error.getMessage()));
-			completionLatch.countDown();
-		});
+				.subscribe(documentResourceResponse -> {
+					at.set(documentResourceResponse.getResource().getId());
+					completionLatch.countDown();
+				}, error -> {
+					if (error instanceof ConflictException) {
+						at2.set(new DocumentClientException(Response.Status.CONFLICT.getStatusCode(),
+								(Exception) error));
+					} else
+						at2.set(new DocumentClientException(500, error.getMessage()));
+					completionLatch.countDown();
+				});
 
 		// Wait till document creation completes
 		try {
@@ -90,7 +95,7 @@ public class CosmosClient {
 		}
 
 		DocumentClientException e = at2.get();
-		if(e == null) {
+		if (e == null) {
 			return at.get();
 		} else {
 			throw e;
@@ -98,7 +103,6 @@ public class CosmosClient {
 	}
 
 	public static void delete(String container_name, String id) throws DocumentClientException {
-
 
 		String documentLink = String.format("/dbs/%s/colls/%s/docs/%s", cosmosDatabase, container_name, id);
 		Observable<ResourceResponse<Document>> createDocumentObservable = cosmosClient.deleteDocument(documentLink,
@@ -108,15 +112,16 @@ public class CosmosClient {
 		AtomicReference<DocumentClientException> at = new AtomicReference<>();
 
 		createDocumentObservable.single() // we know there will be one response
-		.subscribe(documentResourceResponse -> {
-			completionLatch.countDown();
-		}, error -> {
-			if(error instanceof DocumentClientException)
-				at.set(new DocumentClientException(Response.Status.NOT_FOUND.getStatusCode(), (Exception) error));
-			else
-				at.set(new DocumentClientException(500, error.getMessage()));
-			completionLatch.countDown();
-		});
+				.subscribe(documentResourceResponse -> {
+					completionLatch.countDown();
+				}, error -> {
+					if (error instanceof DocumentClientException)
+						at.set(new DocumentClientException(Response.Status.NOT_FOUND.getStatusCode(),
+								(Exception) error));
+					else
+						at.set(new DocumentClientException(500, error.getMessage()));
+					completionLatch.countDown();
+				});
 
 		// Wait till document creation completes
 		try {
@@ -126,7 +131,7 @@ public class CosmosClient {
 		}
 
 		DocumentClientException e = at.get();
-		if(e != null) {
+		if (e != null) {
 			throw e;
 		}
 	}
@@ -135,7 +140,7 @@ public class CosmosClient {
 
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
-		//try {
+		// try {
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
@@ -146,8 +151,8 @@ public class CosmosClient {
 		// NOTE: multiple documents can be returned or none
 		if (it.hasNext()) {
 			List<Document> doc = it.next().getResults();
-			if(doc.size() > 0)
-				return	doc.get(0).toJson();
+			if (doc.size() > 0)
+				return doc.get(0).toJson();
 		}
 
 		return null;
@@ -157,7 +162,7 @@ public class CosmosClient {
 	public static String getById(String container_name, String id) {
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
-		//try {
+		// try {
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
@@ -168,7 +173,7 @@ public class CosmosClient {
 		// NOTE: multiple documents can be returned or none
 		if (it.hasNext()) {
 			List<Document> doc = it.next().getResults();
-			if(doc.size() > 0)
+			if (doc.size() > 0)
 				return doc.get(0).toJson();
 
 		}
@@ -179,7 +184,7 @@ public class CosmosClient {
 	public static <T> T getByIdUnparse(String container_name, String id, Class<T> class_) {
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
-		//try {
+		// try {
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
@@ -190,7 +195,7 @@ public class CosmosClient {
 		// NOTE: multiple documents can be returned or none
 		if (it.hasNext()) {
 			List<Document> doc = it.next().getResults();
-			if(doc.size() > 0) {
+			if (doc.size() > 0) {
 				return GSON.fromJson(doc.get(0).toJson(), class_);
 			}
 
@@ -199,10 +204,10 @@ public class CosmosClient {
 		return null;
 	}
 
-	public static <T> List<String> getNewest(String container_name){
+	public static <T> List<String> getNewest(String container_name) {
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
-		//try {
+		// try {
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
@@ -212,7 +217,7 @@ public class CosmosClient {
 
 		List<String> list = new LinkedList<String>();
 
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			List<String> l = it.next().getResults().parallelStream() // Ou apenas Stream?
 					.map(d -> d.toJson()).collect(Collectors.toList());
 			list.addAll(l);
@@ -227,22 +232,46 @@ public class CosmosClient {
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
-		Iterator<FeedResponse<Document>> it = cosmosClient.queryDocuments(collectionLink,
-				String.format(query, container_name), queryOptions).toBlocking()
+		Iterator<FeedResponse<Document>> it = cosmosClient
+				.queryDocuments(collectionLink, String.format(query, container_name), queryOptions).toBlocking()
 				.getIterator();
 
 		List<String> list = new LinkedList<String>();
 
-		while(it.hasNext()) {
-			List<String> l = it.next().getResults().parallelStream()
-					.map(d -> d.toJson()).collect(Collectors.toList());
+		while (it.hasNext()) {
+			List<String> l = it.next().getResults().parallelStream().map(d -> d.toJson()).collect(Collectors.toList());
 			list.addAll(l);
 		}
 
 		return list;
 	}
 
-	public static <T> List<T> queryAndUnparse(String container_name, String query, String continuationToken, int pageSize, Class<T> class_) {
+	public static <T> List<T> queryAndUnparse(String container_name, String query, Class<T> class_) {
+		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+
+		String final_query = String.format(query, container_name);
+
+		FeedOptions queryOptions = new FeedOptions();
+		queryOptions.setEnableCrossPartitionQuery(true);
+		queryOptions.setMaxDegreeOfParallelism(-1);
+		Observable<FeedResponse<Document>> queryObservable = cosmosClient.queryDocuments(collectionLink, final_query,
+				queryOptions);
+
+		// Observable to Interator
+		Iterator<FeedResponse<Document>> it = queryObservable.toBlocking().getIterator();
+
+		List<T> list = new LinkedList<T>();
+		while (it.hasNext()) {
+			List<T> l = it.next().getResults().parallelStream().map(d -> GSON.fromJson(d.toJson(), class_))
+					.collect(Collectors.toList());
+			list.addAll(l);
+		}
+
+		return list;
+	}
+
+	public static <T> Entry<String,List<T>> queryAndUnparsePaginated(String container_name, String query, String continuationToken,
+			int pageSize, Class<T> class_) {
 		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
 
 		String final_query = String.format(query, container_name);
@@ -250,26 +279,27 @@ public class CosmosClient {
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setMaxItemCount(pageSize);
 		queryOptions.setEnableCrossPartitionQuery(true);
-		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
 		if (continuationToken != null)
 			queryOptions.setRequestContinuation(continuationToken);
 
-		Observable<FeedResponse<Document>> queryObservable =
-				cosmosClient.queryDocuments(collectionLink,
-						query, queryOptions);
+		Observable<FeedResponse<Document>> queryObservable = cosmosClient.queryDocuments(collectionLink, final_query,
+				queryOptions);
 
-		//Observable to Interator
+		// Observable to Interator
 		Iterator<FeedResponse<Document>> it = queryObservable.toBlocking().getIterator();
 
 		List<T> list = new LinkedList<T>();
-		while(it.hasNext()) {
-			List<T> l = it.next().getResults().parallelStream()
-					.map(d -> GSON.fromJson(d.toJson(), class_)).collect(Collectors.toList());
+		if(it.hasNext()) {
+			FeedResponse<Document> page = it.next();
+			List<T> l = page.getResults().parallelStream().map(d -> GSON.fromJson(d.toJson(), class_))
+					.collect(Collectors.toList());
 			list.addAll(l);
+			
+			continuationToken = page.getResponseContinuation();
 		}
 
-		return list;
+		return new AbstractMap.SimpleEntry<>(continuationToken, list);
 	}
 
 }
