@@ -2,6 +2,7 @@ package scc.controllers;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -80,7 +81,8 @@ public class PagesResource {
 	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("p") int n_posts) {
 
 		try {
-			Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<>(n_posts);
+			Comparator<Entry<Integer, PostWithReplies>> comp = (x, y) -> x.getKey().compareTo(y.getKey());
+			Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<Entry<Integer, PostWithReplies>>(n_posts, comp);
 
 			long time = System.currentTimeMillis() - 24*60*60*1000;
 
