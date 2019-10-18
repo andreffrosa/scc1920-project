@@ -73,7 +73,7 @@ public class PagesResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public String getInitialPage() {
 		// TODO
-		return "HeLLo!";
+		return "yHeLLo!";
 	}
 	
 }

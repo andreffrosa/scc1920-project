@@ -3,3 +3,7 @@
 ... = ConnectionPolitcy.getDefault()
 
 como meter consistência eventual apenas nos likes?
+
+Initial page colocado na cache
+Posts mais populares?
+guardar nº de likes na cache?
