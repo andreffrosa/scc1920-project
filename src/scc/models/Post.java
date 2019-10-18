@@ -7,11 +7,11 @@ public class Post {
     private String author;
     private String community;
     private long creationTime;
-    public String message;
+    private String message;
     private String multiMediaObject;
     private String parent;
 
-    public Post() {   }
+    public Post() {}
 
 	public String getId() {
 		return id;

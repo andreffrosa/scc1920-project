@@ -1,6 +1,5 @@
 package scc.controllers;
 
-import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -8,7 +7,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -19,9 +17,6 @@ import scc.models.Community;
 
 @Path(CommunityResource.PATH)
 public class CommunityResource extends Resource {
-
-	@Context
-	static ServletContext context;
 
 	static final String PATH = "/community";
 	static final String CONTAINER = "Communities";
@@ -37,9 +32,10 @@ public class CommunityResource extends Resource {
 	public String createCommunity(Community c) {
 
 		if(!c.isValid())
-			throw new WebApplicationException(Response.status(Status.BAD_GATEWAY).entity("Invalid Params").build());
+			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Params").build());
 
 		try {
+			c.setCreation_date(System.currentTimeMillis());
 			return super.create(c);
 		} catch(DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())

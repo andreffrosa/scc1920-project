@@ -7,7 +7,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 import com.microsoft.azure.cosmosdb.ConnectionMode;
@@ -22,6 +21,7 @@ import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictExceptio
 import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 
 import rx.Observable;
+import scc.utils.GSON;
 
 public class CosmosClient {
 

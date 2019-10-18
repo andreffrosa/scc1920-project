@@ -33,7 +33,7 @@ public class PostResource extends Resource{
     public String create(Post post){
 
 		if(!post.validPost())
-			throw new WebApplicationException(Response.status(Status.BAD_GATEWAY).entity("Invalid Params").build());
+			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Params").build());
 
 		String author = CosmosClient.getByName(UserResouce.CONTAINER, post.getAuthor());
 		if(author == null)

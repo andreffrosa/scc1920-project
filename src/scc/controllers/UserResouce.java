@@ -30,7 +30,7 @@ public class UserResouce extends Resource {
 	public String create(User u){
 
 		if(!u.isValid())
-			throw new WebApplicationException(Response.status(Status.BAD_GATEWAY).entity("Invalid Params").build());
+			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Params").build());
 
 		try {
 			return super.create(u);
