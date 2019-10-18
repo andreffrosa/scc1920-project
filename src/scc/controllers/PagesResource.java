@@ -79,7 +79,8 @@ public class PagesResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("p") int n_posts) {
 
-		Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<>(DEFAULT_INITIAL_PAGE_SIZE);
+		try {
+		Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<>(n_posts);
 
 		long time = System.currentTimeMillis() - 24*60*60*1000;
 
@@ -94,7 +95,7 @@ public class PagesResource {
 			// Também se pode ir ver as replies das replies ....
 
 			// Likes in last 24h
-			query = "SELECT VALUE COUNT(1) FROM %s l WHERE l.post_id='"+ p.getId() + "' AND l.creationTime>=" + time;
+			query = "SELECT COUNT(c) as Likes FROM %s l WHERE l.post_id='"+ p.getId() + "' AND l.creationTime>=" + time;
 			List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query); 
 			if(!likes.isEmpty()) {
 				JsonElement root = new JsonParser().parse(likes.get(0));
@@ -123,8 +124,13 @@ public class PagesResource {
 		} 
 
 		List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
-
+		
 		return list;
+		} catch(Exception e) {
+			throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
+		}
+
+		
 	}
 
 }
