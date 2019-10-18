@@ -36,14 +36,12 @@ public class Redis {
     public static void putInList(String key, String[] jsonRepresentations){
         try (Jedis jedis = jedisPool.getResource()) {
             Long cnt = jedis.lpush(key, jsonRepresentations);
-            if (cnt > 5)
-                jedis.ltrim(key, 0, TOP_LIMIT);
         }
     }
 
-    public static List<String> getList(String key){
+    public static List<String> getList(String key, int pageSize){
         try (Jedis jedis = jedisPool.getResource()) {
-            return jedis.lrange(key, 0, TOP_LIMIT);
+            return jedis.lrange(key, 0, pageSize);
         }
     }
 
@@ -52,7 +50,7 @@ public class Redis {
     }
 
     public static String get(String key){
-        return getList(key).get(0);
+        return getList(key, 1).get(0);
     }
 
     public static void putRaw(String key, byte[] data){

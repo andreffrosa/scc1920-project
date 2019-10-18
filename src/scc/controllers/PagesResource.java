@@ -27,6 +27,7 @@ import com.google.gson.JsonParser;
 import com.microsoft.azure.cosmosdb.FeedOptions;
 import scc.models.PostWithReplies;
 import scc.storage.CosmosClient;
+import scc.storage.Redis;
 
 @Path(PagesResource.PATH)
 public class PagesResource {
@@ -34,6 +35,7 @@ public class PagesResource {
 	private static final int DEFAULT_INITIAL_PAGE_SIZE = 10;
 	static final String PATH = "/page";
 	static final int DEFAULT_LEVEL = 3;
+	private static final String INITIAL_PAGE = "initial_page";
 
 	@GET
 	@Path("/thread/{id}")
@@ -83,6 +85,7 @@ public class PagesResource {
 												@QueryParam("continuationToken") String continuationToken) {
 
 		try {
+
 			Comparator<Entry<Integer, PostWithReplies>> comp = (x, y) -> x.getKey().compareTo(y.getKey());
 			Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<Entry<Integer, PostWithReplies>>(n_posts, comp);
 
@@ -101,7 +104,7 @@ public class PagesResource {
 
 				// Likes in last 24h
 				query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='"+ p.getId() + "' AND l.creationTime>=" + time;
-				List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query); 
+				List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
 				if(!likes.isEmpty()) {
 					JsonElement root = new JsonParser().parse(likes.get(0));
 					int n_likes = root.getAsJsonObject().get("Likes").getAsInt();
@@ -126,11 +129,14 @@ public class PagesResource {
 						}
 					}
 				}
-			} 
+			}
 
 			List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
 
 			return list;
+
+			}
+
 		} catch(Exception e) {
 			throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
 		}

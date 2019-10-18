@@ -18,7 +18,7 @@ public class Config {
     public static void load() {
     	CosmosClient.init(COSMOS_DB_DATABASE, COSMOS_DB_MASTER_KEY, COSMOS_DB_ENDPOINT);
     	BlobStorageClient.init(BLOB_STORAGE_CONNECTION_STRING);
-
+        Redis.init(REDIS_HOST_NAME, CACHE_KEY);
     }
     
 }
