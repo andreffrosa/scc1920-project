@@ -34,3 +34,4 @@ public class Like {
     public boolean isValid(){ return username != null && !username.equals("") && post_id != null && !post_id.equals(""); }
     
 }
+

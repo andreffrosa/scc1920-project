@@ -54,4 +54,16 @@ public class Redis {
     public static String get(String key){
         return getList(key).get(0);
     }
+
+    public static void putRaw(String key, byte[] data){
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.set(key.getBytes(), data);
+        }
+    }
+
+    public static byte[] getRaw(String key){
+        try (Jedis jedis = jedisPool.getResource()) {
+            return jedis.get(key.getBytes());
+        }
+    }
 }
