@@ -81,23 +81,20 @@ public class PagesResource {
 	@GET
 	@Path("/initial")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("p") int n_posts,
-												@QueryParam("continuationToken") String continuationToken) {
+	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("p") int n_posts) {
 
 		try {
-
 			Comparator<Entry<Integer, PostWithReplies>> comp = (x, y) -> x.getKey().compareTo(y.getKey());
 			Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<Entry<Integer, PostWithReplies>>(n_posts, comp);
 
 			long time = System.currentTimeMillis() - 24*60*60*1000;
 
 			String query = "SELECT * FROM %s p WHERE p.parent=null";
-
-			List<PostWithReplies> posts = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, continuationToken, n_posts, PostWithReplies.class);
+			List<PostWithReplies> posts = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
 			for(PostWithReplies p : posts) {
 				// Replies in last 24h
 				query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "' AND p.creationTime>=" + time;
-				List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, null, n_posts,PostWithReplies.class); //AHH SHIT
+				List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
 				p.setReplies(replies);
 
 				// Também se pode ir ver as replies das replies ....
@@ -134,9 +131,6 @@ public class PagesResource {
 			List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
 
 			return list;
-
-			}
-
 		} catch(Exception e) {
 			throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
 		}
