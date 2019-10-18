@@ -77,7 +77,7 @@ public class PagesResource {
 	@GET
 	@Path("/initial")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<PostWithReplies> getInitialPage() {
+	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("p") int n_posts) {
 
 		Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<>(DEFAULT_INITIAL_PAGE_SIZE);
 
@@ -111,7 +111,7 @@ public class PagesResource {
 				queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
 			} else {
 				Entry<Integer, PostWithReplies> e = queue.peek();
-				if(queue.size() >= DEFAULT_INITIAL_PAGE_SIZE) {
+				if(queue.size() >= n_posts) { // TODO: Query A
 					if(e.getKey() < hotness) {
 						queue.poll();
 						queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
