@@ -1,9 +1,7 @@
 package scc.storage;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 public class Config {
@@ -28,7 +26,8 @@ public class Config {
 	private static synchronized void getProperties() throws IOException {
 		if( azureProperties == null || azureProperties.size() == 0) {
 			azureProperties = new Properties();
-			azureProperties.load(Config.class.getResourceAsStream(PROPS_FILE));
+			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(PROPS_FILE);
+			azureProperties.load(is);
 		}
 	}
 
