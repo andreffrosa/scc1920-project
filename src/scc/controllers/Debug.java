@@ -21,7 +21,7 @@ public class Debug {
 
 	@Context ServletContext context;
 	static final String PATH = "/debug" ;
-	private static final String VERSION = "29.7.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX";
+	private static final String VERSION = "30.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX";
 
 	@GET
 	@Path("/version")
@@ -46,19 +46,4 @@ public class Debug {
 		
 		return Response.ok(likes.get(0)).build();
 	}
-
-
-	/*@GET
-    @Path("/read")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response readFile(){
-        try {
-            InputStream is = context.getResourceAsStream("./config/Cosmos.conf");
-            Properties properties = new Properties();
-            properties.load(is);
-            return Response.ok(properties.getProperty("cosmos_db_database")).build();
-        } catch (Exception e){
-            return Response.serverError().entity(e).build();
-        }
-    }*/
 }

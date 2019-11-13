@@ -93,7 +93,6 @@ public class PagesResource {
 						.collect(Collectors.toList());
 
 			}else {
-
 				Comparator<Entry<Integer, PostWithReplies>> comp = (x, y) -> x.getKey().compareTo(y.getKey());
 				Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<Entry<Integer, PostWithReplies>>(n_posts, comp);
 

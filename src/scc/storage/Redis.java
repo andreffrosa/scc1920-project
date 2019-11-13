@@ -35,7 +35,7 @@ public class Redis {
 
     public static void putInList(String key, String[] jsonRepresentations){
         try (Jedis jedis = jedisPool.getResource()) {
-            Long cnt = jedis.lpush(key, jsonRepresentations);
+            jedis.lpush(key, jsonRepresentations);
         }
     }
 
