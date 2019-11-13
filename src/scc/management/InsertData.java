@@ -1,9 +1,12 @@
 package scc.management;
 
+import com.github.javafaker.Faker;
+
 public class InsertData {
 
 	public static void main(String[] args) {
-		// TODO:
+		Faker faker = new Faker();
+
 	}
 	
 }
