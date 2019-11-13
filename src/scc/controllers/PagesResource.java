@@ -1,14 +1,13 @@
 package scc.controllers;
 
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -24,7 +23,6 @@ import javax.ws.rs.core.Response.Status;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
-import com.microsoft.azure.cosmosdb.FeedOptions;
 import scc.models.PostWithReplies;
 import scc.storage.CosmosClient;
 import scc.storage.Redis;
@@ -61,7 +59,7 @@ public class PagesResource {
 			String query_likes = "SELECT COUNT(c) as Likes FROM %s c WHERE c.post_id='" + current_post.getId() +"'";
 			List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query_likes); 
 			if(!likes.isEmpty()) {
-				JsonElement root = new JsonParser().parse(likes.get(0));
+				JsonElement root = JsonParser.parseString(likes.get(0));
 				int n_likes = root.getAsJsonObject().get("Likes").getAsInt();
 				current_post.setLikes(n_likes);
 			}
@@ -110,7 +108,7 @@ public class PagesResource {
 					query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId() + "' AND l.creationTime>=" + time;
 					List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
 					if (!likes.isEmpty()) {
-						JsonElement root = new JsonParser().parse(likes.get(0));
+						JsonElement root = JsonParser.parseString(likes.get(0));
 						int n_likes = root.getAsJsonObject().get("Likes").getAsInt();
 						p.setLikes(n_likes);
 					}

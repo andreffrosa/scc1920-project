@@ -257,7 +257,7 @@ public class CosmosClient {
 		Observable<FeedResponse<Document>> queryObservable = cosmosClient.queryDocuments(collectionLink, final_query,
 				queryOptions);
 
-		// Observable to Interator
+		// Observable to Iterator
 		Iterator<FeedResponse<Document>> it = queryObservable.toBlocking().getIterator();
 
 		List<T> list = new LinkedList<T>();
@@ -283,10 +283,9 @@ public class CosmosClient {
 		if (continuationToken != null)
 			queryOptions.setRequestContinuation(continuationToken);
 
-		Observable<FeedResponse<Document>> queryObservable = cosmosClient.queryDocuments(collectionLink, final_query,
-				queryOptions);
+		Observable<FeedResponse<Document>> queryObservable = cosmosClient.queryDocuments(collectionLink, final_query, queryOptions);
 
-		// Observable to Interator
+		// Observable to Iterator
 		Iterator<FeedResponse<Document>> it = queryObservable.toBlocking().getIterator();
 
 		List<T> list = new LinkedList<T>();
@@ -300,6 +299,24 @@ public class CosmosClient {
 		}
 
 		return new AbstractMap.SimpleEntry<>(continuationToken, list);
+	}
+	
+	public static <T> Iterator<FeedResponse<Document>> queryIterator(String container_name, String query) {
+		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+
+		String final_query = String.format(query, container_name);
+
+		FeedOptions queryOptions = new FeedOptions();
+		queryOptions.setEnableCrossPartitionQuery(true);
+		queryOptions.setMaxDegreeOfParallelism(-1);
+
+		Observable<FeedResponse<Document>> queryObservable = cosmosClient.queryDocuments(collectionLink, final_query,
+				queryOptions);
+
+		// Observable to Iterator
+		Iterator<FeedResponse<Document>> it = queryObservable.toBlocking().getIterator();
+
+		return it;
 	}
 
 }
