@@ -141,7 +141,6 @@ public class PagesResource {
 			throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
 		}
 
-
 	}
 
 }

@@ -1,0 +1,1 @@
+az functionapp config appsettings set --name scc-serverless-4204 --resource-group scc-serverless-euwest-4204 --settings "AzureCosmosDBConnection=AccountEndpoint=https://scccosmos4204.documents.azure.com:443/;AccountKey=6oBdlUvTddUmeiyGtR1QHT4Ux0r5FlPth335JE76fiEpLIrgTZcRn2jiaLiZKdpVQaJ6i1YkRkeNAkGFtZl89w==;

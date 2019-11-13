@@ -9,6 +9,8 @@ import java.util.List;
 
 public class Redis {
 
+	private static final boolean ACTIVE = true; // TODO: ler de um ficheiro?
+	
     private static final int TOP_LIMIT = 5;
     private static JedisPool jedisPool;
 
@@ -33,7 +35,7 @@ public class Redis {
         return poolConfig;
     }
 
-    public static void putInList(String key, String[] jsonRepresentations){
+    public static void putInList(String key, String[] jsonRepresentations) {
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.lpush(key, jsonRepresentations);
         }
