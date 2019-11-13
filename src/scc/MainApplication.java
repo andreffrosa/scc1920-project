@@ -5,13 +5,14 @@ import scc.storage.Config;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
 @ApplicationPath("/")
 public class MainApplication extends Application {
 
-	public MainApplication() {
+	public MainApplication() throws IOException {
 		Config.load();
 	}
 	
