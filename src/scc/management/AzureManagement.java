@@ -287,6 +287,7 @@ public class AzureManagement {
 			} else {
 				Azure azure0 = cretaeManagementClient(AZURE_AUTH_LOCATION);
 				createResourceGroup( azure0, AZURE_RG_EUWEST, Region.EUROPE_WEST);
+				createResourceGroup( azure0, AZURE_RG_SERVERLESS_EUWEST, Region.EUROPE_WEST);
 				Files.deleteIfExists(Paths.get(AZURE_PROPS_LOCATION));
 				
 				if(!Files.exists(Paths.get(AZURE_PROPS_LOCATION)))
@@ -329,13 +330,14 @@ public class AzureManagement {
 						e.printStackTrace();
 					}
 				}).start();
+				
 				new Thread(() -> {
 					try {
 						Azure azure = cretaeManagementClient(AZURE_AUTH_LOCATION);
 						RedisCache cache = createRedis(azure, AZURE_RG_EUWEST, AZURE_REDIS_NAME, Region.EUROPE_WEST);
 						dumpRedisCacheInfo(AZURE_PROPS_LOCATION, cache);
 					} catch (Exception e) {
-						System.err.println("Error while creating functions resources");
+						System.err.println("Error while creating redis resources");
 						e.printStackTrace();
 					}
 				}).start();

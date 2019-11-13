@@ -15,10 +15,15 @@ public class Config {
     private static final String COSMOS_DB_MASTER_KEY = "COttb942kFWONxGzfIpzoubAK43NqOEm04Cia2uNKGWzycAcEgFyfxwxNJamXjUwJOjgKwE0ej3QKrpmm3GVZA==";
     private static final String COSMOS_DB_DATABASE = "cloud-47134-48043-database";
 
+    public static String msg = "EROR";
+    
     public static void load() {
-    	CosmosClient.init(COSMOS_DB_DATABASE, COSMOS_DB_MASTER_KEY, COSMOS_DB_ENDPOINT);
-    	BlobStorageClient.init(BLOB_STORAGE_CONNECTION_STRING);
-        Redis.init(REDIS_HOST_NAME, CACHE_KEY);
+    	
+    	msg = "\n\n\n\n\n LOADING CONFGIS \n\n\n\n\n\n";
+    	
+    	//CosmosClient.init(COSMOS_DB_DATABASE, COSMOS_DB_MASTER_KEY, COSMOS_DB_ENDPOINT);
+    	//BlobStorageClient.init(BLOB_STORAGE_CONNECTION_STRING);
+       // Redis.init(REDIS_HOST_NAME, CACHE_KEY);
     }
     
 }

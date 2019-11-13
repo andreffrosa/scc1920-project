@@ -1,7 +1,7 @@
-# Date : 09-11-2019 15:57
-COSMOSDB_KEY=LnrbggPpc70efzPKxTvR9kTXLScV9Rfbmakb6LF6TVLv2FqmKntMMtdNpxKk9v9V8C96TihPP3PbjOmpjkjCcg==
+# Date : 13-11-2019 10:51
+REDIS_KEY=d4sUfx5RZR09hpGHeBfDlvzhyFvaSlrHgQba7pcOfEw=
+REDIS_URL=scc-redis-48043.redis.cache.windows.net
+COSMOSDB_KEY=tORelz7GAjg8tfT7vd5bm9jBiVwiSJyUyfZ3mhPtfqtwOapiBtEFMLnII8tMDF5tYCj4gtsuif7sgXQ8YvJMlA==
 COSMOSDB_URL=https://scc-cosmos-48043.documents.azure.com:443/
 COSMOSDB_DATABASE=scc-cosmosdb-48043
-REDIS_KEY=jz0WmuX4NLIKiz370Qgspz1JRyPj46fe8NTRHH2oXuk=
-REDIS_URL=scc-redis-48043.redis.cache.windows.net
-BLOB_KEY=DefaultEndpointsProtocol=https;AccountName=sccstoregeeuwest48043;AccountKey=k54cjuLzeI3XvuWL1gYDVjVRWDVnL5gCGs02rEdwwETNvcc/V7wxxriWYZu1/hSTdCBDoZKSU0qKqkJZ3nlstQ==;EndpointSuffix=core.windows.net
+BLOB_KEY=DefaultEndpointsProtocol=https;AccountName=sccstoregeeuwest48043;AccountKey=0AOX+xtely0HFEhQtVJQmi99/nKnaAZ0fdgJv8oBpDgnwpuHPTpNCCGduC9H3+5MG4zIu1mofXMPNaK3rYneOA==;EndpointSuffix=core.windows.net

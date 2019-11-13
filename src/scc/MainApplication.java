@@ -25,7 +25,6 @@ public class MainApplication extends Application {
         set.add(UserResouce.class);
         set.add(PagesResource.class);
         return set;
-
     }
     
 }

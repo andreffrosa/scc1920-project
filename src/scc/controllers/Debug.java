@@ -14,6 +14,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 import scc.models.PostWithReplies;
+import scc.storage.Config;
 import scc.storage.CosmosClient;
 
 @Path(Debug.PATH)
@@ -21,13 +22,20 @@ public class Debug {
 
 	@Context ServletContext context;
 	static final String PATH = "/debug" ;
-	private static final String VERSION = "29.7.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX";
+	private static final String VERSION = "32.7.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX";
 
 	@GET
 	@Path("/version")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getVersion(){
 		return Response.ok(VERSION).build();
+	}
+	
+	@GET
+	@Path("/config")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getConfig(){
+		return Response.ok(Config.msg).build();
 	}
 
 	@GET
