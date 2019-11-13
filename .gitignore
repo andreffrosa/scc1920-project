@@ -155,3 +155,4 @@ buildNumber.properties
 /azure.auth
 /scc-backend.iml
 /.idea/
+/azurekeys.props
