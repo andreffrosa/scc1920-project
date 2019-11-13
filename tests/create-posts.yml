@@ -1,0 +1,36 @@
+#Create initial set of posts
+config:
+  target: 'https://scc-backend-4204.azurewebsites.net'
+  http:
+    pool: 10
+  processor: "./test-utils.js"
+  phases:
+    - duration: 1
+      arrivalCount: 1
+
+scenarios:
+  - name: 'Create posts'
+    flow:
+      - loop:
+        - function: "genNewPost"
+        - post:
+            url: "/media"
+            headers:
+              Content-Type: application/octet-stream
+              Accept: text/plain
+            beforeRequest: "setNewPostBody"
+            afterResponse: "genNewImageReply"            
+            ifTrue: "hasImage"
+        - post:
+            url: "/post/p"
+            headers:
+              Accept: text/plain
+            json:
+              community: "{{ community }}"
+              creator: "{{ creator }}"
+              msg: "{{ msg }}"
+              image: "{{ imageId }}"
+              parentId: "{{ parrentId }}"
+            afterResponse: "genNewPostReply"
+        count: 200
+          

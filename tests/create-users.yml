@@ -1,0 +1,24 @@
+#Create initial set of users
+config:
+  target: 'https://scc-backend-4204.azurewebsites.net'
+  http:
+    pool: 10
+  processor: "./test-utils.js"
+  phases:
+    - duration: 1
+      arrivalCount: 1
+
+scenarios:
+  - name: 'Create user'
+    flow:
+      - loop:
+        - function: "genNewUser"
+        - post:
+            url: "/user"
+            headers:
+              Accept: text/plain
+            json:
+              name: "{{ name }}"
+            afterResponse: "genNewUserReply"
+        count: 100
+          

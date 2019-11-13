@@ -10,10 +10,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-
-import scc.models.PostWithReplies;
 import scc.storage.Config;
 import scc.storage.CosmosClient;
 
@@ -22,20 +18,14 @@ public class Debug {
 
 	@Context ServletContext context;
 	static final String PATH = "/debug" ;
-	private static final String VERSION = "32.7.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX";
+
+	private static final String VERSION = "33.7.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX";
 
 	@GET
 	@Path("/version")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getVersion(){
 		return Response.ok(VERSION).build();
-	}
-	
-	@GET
-	@Path("/config")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getConfig(){
-		return Response.ok(Config.msg).build();
 	}
 
 	@GET
@@ -54,19 +44,4 @@ public class Debug {
 		
 		return Response.ok(likes.get(0)).build();
 	}
-
-
-	/*@GET
-    @Path("/read")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response readFile(){
-        try {
-            InputStream is = context.getResourceAsStream("./config/Cosmos.conf");
-            Properties properties = new Properties();
-            properties.load(is);
-            return Response.ok(properties.getProperty("cosmos_db_database")).build();
-        } catch (Exception e){
-            return Response.serverError().entity(e).build();
-        }
-    }*/
 }

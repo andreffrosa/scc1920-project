@@ -23,7 +23,6 @@ public class BlobStorageClient {
 			storageAccount = CloudStorageAccount.parse(connection_string);
 			blobClient = storageAccount.createCloudBlobClient();
 		} catch (InvalidKeyException | URISyntaxException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

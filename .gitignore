@@ -152,3 +152,6 @@ buildNumber.properties
 
 # End of https://www.gitignore.io/api/java,linux,maven,eclipse
 
+/azure.auth
+/scc-backend.iml
+/.idea/
