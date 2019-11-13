@@ -15,9 +15,9 @@ import javax.ws.rs.core.Response.Status;
 @Path(PostResource.PATH)
 public class PostResource extends Resource{
 
-	static final String PATH = "/post";
+	public static final String PATH = "/post";
 	public static final String CONTAINER = "Posts";
-	static final String LIKE_CONTAINER = "Likes";
+	public static final String LIKE_CONTAINER = "Likes";
 
 	@Context
 	static ServletContext context;
@@ -35,7 +35,7 @@ public class PostResource extends Resource{
 		if(!post.validPost())
 			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Params").build());
 
-		String author = CosmosClient.getByName(UserResouce.CONTAINER, post.getAuthor());
+		String author = CosmosClient.getByName(UserResource.CONTAINER, post.getAuthor());
 		if(author == null)
 			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Username does not exists").build());
 
@@ -72,7 +72,7 @@ public class PostResource extends Resource{
 	@Path("/{id}/like/{user_name}")
 	public String likePost(@PathParam("id") String postId, @PathParam("user_name") String user_name){
 
-		String author = CosmosClient.getByName(UserResouce.CONTAINER, user_name);
+		String author = CosmosClient.getByName(UserResource.CONTAINER, user_name);
 		if(author == null)
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Username does not exists").build());
 
@@ -95,7 +95,7 @@ public class PostResource extends Resource{
 	@Path("/{id}/dislike/{user_name}")
 	public void dislikePost(@PathParam("id") String postId, @PathParam("user_name") String user_name){
 
-		String author = CosmosClient.getByName(UserResouce.CONTAINER, user_name);
+		String author = CosmosClient.getByName(UserResource.CONTAINER, user_name);
 		if(author == null)
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Username does not exists").build());
 
@@ -107,7 +107,7 @@ public class PostResource extends Resource{
 			CosmosClient.delete(LIKE_CONTAINER, Like.buildId(postId, user_name));
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
-				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("You have already liked that post").build());
+				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("You have already liked that post").build()); // TODO: esta msg está mal
 			else
 				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("Unexpected error").build());
 		}

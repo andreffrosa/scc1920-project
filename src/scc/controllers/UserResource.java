@@ -10,16 +10,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-@Path(UserResouce.PATH)
-public class UserResouce extends Resource {
+@Path(UserResource.PATH)
+public class UserResource extends Resource {
 
-	static final String PATH = "/user";
+	public static final String PATH = "/user";
 	static final String CONTAINER = "Users";
 
 	@Context
 	static ServletContext context;
 
-	public UserResouce() throws Exception {
+	public UserResource() throws Exception {
 		super(CONTAINER);
 	}
 

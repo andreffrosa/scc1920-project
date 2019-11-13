@@ -21,7 +21,7 @@ import scc.utils.Encryption;
 @Path(ImageResource.PATH)
 public class ImageResource {
 
-	static final String PATH = "/image";
+	public static final String PATH = "/image";
 	public static final String CONTAINER_NAME = "images";
 
 	public ImageResource() {}
@@ -30,7 +30,7 @@ public class ImageResource {
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.APPLICATION_JSON)
-	public String upload(@Context ServletContext context, byte[] contents) {
+	public String upload(byte[] contents) {
 		try {
 			String hash = Encryption.computeHash(contents);
 

@@ -18,7 +18,7 @@ import scc.models.Community;
 @Path(CommunityResource.PATH)
 public class CommunityResource extends Resource {
 
-	static final String PATH = "/community";
+	public static final String PATH = "/community";
 	static final String CONTAINER = "Communities";
 
 	public CommunityResource() throws Exception {

@@ -13,6 +13,17 @@ public class Post {
 
     public Post() {}
 
+	public Post(String title, String author, String community, String message, String multiMediaObject, String parent) {
+		this.id = null;
+		this.title = title;
+		this.author = author;
+		this.community = community;
+		this.message = message;
+		this.multiMediaObject = multiMediaObject;
+		this.parent = parent;
+		this.creationTime = 0;
+	}
+
 	public String getId() {
 		return id;
 	}

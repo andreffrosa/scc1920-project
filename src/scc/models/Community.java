@@ -8,6 +8,10 @@ public class Community {
 
 	public Community() {}
 
+	public Community(String name) {
+		this.name = name;
+	}
+
 	public String getId() {
 		return id;
 	}
