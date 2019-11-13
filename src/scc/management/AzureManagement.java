@@ -45,7 +45,7 @@ public class AzureManagement {
 	private static final String AZURE_AUTH_LOCATION = "azure.auth";
 	private static final String AZURE_PROPS_LOCATION = "azurekeys.props";
 
-	private static final String MY_SUFFIX = "47134"; // Add your suffix here
+	private static final String MY_SUFFIX = "48043"; // Add your suffix here
 
 	private static final String AZURE_STORAGE_NAME = "sccstoregeeuwest" + MY_SUFFIX;
 	private static final String AZURE_BLOB_MEDIA = "images";
