@@ -27,9 +27,9 @@ public class Config {
 		if( azureProperties == null || azureProperties.size() == 0) {
 			azureProperties = new Properties();
 			try {
-				azureProperties.load( new FileInputStream(PROPS_FILE));
+				azureProperties.load( new FileInputStream(PROPS_FILE) );
 			} catch (IOException e) {
-				// do nothing
+				e.printStackTrace();
 			}
 		}
 	}

@@ -10,7 +10,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import scc.storage.Config;
 import scc.storage.CosmosClient;
 
 @Path(Debug.PATH)
