@@ -14,3 +14,17 @@ TODO:
 - remover o creation time do Like porque o cosmos já o mete
 
 Fazer paginação do thread e como fazer com as replies que não são mostradas?
+
+
+
+azure functions para fazer pagina inicial para calcualr de x em x tempo
+
+
+fazer os testes deployemnte nos usa para medir a latência
+
+ter flag na cache para testar com cache a funcionar e não ter cache
+
+
+TODO LIST:
+- Acabar a cache
+- Fazer a página inicial como deve ser
