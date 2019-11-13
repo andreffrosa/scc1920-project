@@ -16,9 +16,9 @@ import scc.storage.CosmosClient;
 public class Debug {
 
 	@Context ServletContext context;
-	static final String PATH = "/debug" ;
+	public static final String PATH = "/debug" ;
 
-	private static final String VERSION = "34.7.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX";
+	public static final String VERSION = "34.7.0-r2 alfa-snapshot-0.0.9.0.0.1 SilkyX-Vanilla";
 
 	@GET
 	@Path("/version")

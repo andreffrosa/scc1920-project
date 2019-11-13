@@ -12,6 +12,7 @@ public class Redis {
 	private static final boolean ACTIVE = true; // TODO: ler de um ficheiro?
 	
     private static final int TOP_LIMIT = 5;
+    
     private static JedisPool jedisPool;
 
     public Redis(){ }
