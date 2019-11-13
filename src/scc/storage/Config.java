@@ -1,24 +1,39 @@
 package scc.storage;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
 public class Config {
 
-    //Redis Config Setting
-    private static final String REDIS_HOST_NAME = "cloud-47134-48043-redis.redis.cache.windows.net";
-    private static final String CACHE_KEY = "PFc1HwoQzGSL9YxfaH7YllCSPpJIJPd60PwGK5Xs2sg=";
+    private static final String BLOB_STORAGE_CONNECTION_STRING = "BLOB_KEY";
+    private static final String COSMOS_DB_MASTER_KEY = "COSMOSDB_KEY";
+    private static final String COSMOS_DB_ENDPOINT = "COSMOSDB_URL";
+    private static final String COSMOSDB_DATABASE = "COSMOSDB_DATABASE";
+    private static final String REDIS_HOST_NAME = "REDIS_URL";
+    private static final String CACHE_KEY = "REDIS_KEY";
 
+    private static final String PROPS_FILE = "azurekeys.props";
+    private static Properties azureProperties;
 
-    //Blob Storage Config setting
-    private static final String BLOB_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=cloud4713448043blob;AccountKey=1k4A4Tgj/3BNpZbCSzKtWwXKE1qfXy3bTQrkLsrTWwjcauExiHwf7JfknyLZZbJifPg8h+ltAO3QCH00sYZEyA==;EndpointSuffix=core.windows.net";
+    public static synchronized void load() {
+        getProperties();
+        CosmosClient.init(azureProperties.getProperty(COSMOSDB_DATABASE), azureProperties.getProperty(COSMOS_DB_MASTER_KEY), azureProperties.getProperty(COSMOS_DB_ENDPOINT));
+    	BlobStorageClient.init(azureProperties.getProperty(BLOB_STORAGE_CONNECTION_STRING));
+        Redis.init(azureProperties.getProperty(REDIS_HOST_NAME), azureProperties.getProperty(CACHE_KEY));
+    }
 
-    //CosmosDB Config settings
-    private static final String COSMOS_DB_ENDPOINT = "https://cloud-47134-48043-cosmos.documents.azure.com:443/";
-    private static final String COSMOS_DB_MASTER_KEY = "COttb942kFWONxGzfIpzoubAK43NqOEm04Cia2uNKGWzycAcEgFyfxwxNJamXjUwJOjgKwE0ej3QKrpmm3GVZA==";
-    private static final String COSMOS_DB_DATABASE = "cloud-47134-48043-database";
+    private static synchronized void getProperties() {
 
-    public static void load() {
-    	CosmosClient.init(COSMOS_DB_DATABASE, COSMOS_DB_MASTER_KEY, COSMOS_DB_ENDPOINT);
-    	BlobStorageClient.init(BLOB_STORAGE_CONNECTION_STRING);
-        Redis.init(REDIS_HOST_NAME, CACHE_KEY);
+        if( azureProperties == null || azureProperties.size() == 0) {
+            azureProperties = new Properties();
+            try {
+                azureProperties.load( new FileInputStream(PROPS_FILE));
+            } catch (IOException e) {
+                // do nothing
+            }
+        }
+
     }
     
 }

@@ -1,7 +1,7 @@
 {
-  "clientId": "523d1b1f-1177-4b58-987e-3d289a29628b",
-  "clientSecret": "63f64661-b2a7-4686-9040-06b8e4a15779",
-  "subscriptionId": "5bee4552-9293-401d-8ed2-391bf1157a70",
+  "clientId": "7d423796-a9d5-46c2-ac1d-bcff59cee3de",
+  "clientSecret": "3ee460d4-da30-46f0-aef9-3b9ec89d55b9",
+  "subscriptionId": "2a7f3150-b79c-4ac4-981d-cb990c0c3ea4",
   "tenantId": "ae7e50a2-ed26-41f7-bd75-f49683f2433a",
   "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
   "resourceManagerEndpointUrl": "https://management.azure.com/",

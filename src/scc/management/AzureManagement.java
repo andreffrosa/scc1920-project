@@ -42,23 +42,23 @@ public class AzureManagement {
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 	// This file should be created by running in the console:
 	// az ad sp create-for-rbac --sdk-auth > azure.auth
-	static final String AZURE_AUTH_LOCATION = "azure.auth";
-	static final String AZURE_PROPS_LOCATION = "azurekeys.props";
+	private static final String AZURE_AUTH_LOCATION = "azure.auth";
+	private static final String AZURE_PROPS_LOCATION = "azurekeys.props";
 
-	static final String MY_SUFFIX = "48043"; // Add your suffix here
+	private static final String MY_SUFFIX = "47134"; // Add your suffix here
 
-	static final String AZURE_STORAGE_NAME = "sccstoregeeuwest" + MY_SUFFIX;
-	static final String AZURE_BLOB_MEDIA = "images";
+	private static final String AZURE_STORAGE_NAME = "sccstoregeeuwest" + MY_SUFFIX;
+	private static final String AZURE_BLOB_MEDIA = "images";
 
-	static final String AZURE_COSMOSDB_NAME = "scc-cosmos-" + MY_SUFFIX;
-	static final String AZURE_COSMOSDB_DATABASE = "scc-cosmosdb-" + MY_SUFFIX;
+	private static final String AZURE_COSMOSDB_NAME = "scc-cosmos-" + MY_SUFFIX;
+	private static final String AZURE_COSMOSDB_DATABASE = "scc-cosmosdb-" + MY_SUFFIX;
 
-	static final String AZURE_REDIS_NAME = "scc-redis-" + MY_SUFFIX;
+	private static final String AZURE_REDIS_NAME = "scc-redis-" + MY_SUFFIX;
 
-	static final String AZURE_SERVERLESS_NAME = "scc-serverless-" + MY_SUFFIX;
+	private static final String AZURE_SERVERLESS_NAME = "scc-serverless-" + MY_SUFFIX;
 
-	static final String AZURE_RG_EUWEST = "scc-backend-euwest-" + MY_SUFFIX;
-	static final String AZURE_RG_SERVERLESS_EUWEST = "scc-serverless-euwest-" + MY_SUFFIX;
+	private static final String AZURE_RG_EUWEST = "scc-backend-euwest-" + MY_SUFFIX;
+	private static final String AZURE_RG_SERVERLESS_EUWEST = "scc-serverless-euwest-" + MY_SUFFIX;
 
 	public static Azure cretaeManagementClient(String authFile) throws CloudException, IOException {
 		File credFile = new File(AZURE_AUTH_LOCATION);
@@ -178,8 +178,7 @@ public class AzureManagement {
 
 	/**
 	 * Returns the string to access a CosmosDB database
-	 * 
-	 * @param col
+	 *
 	 *            Name of collection
 	 * @return
 	 */
