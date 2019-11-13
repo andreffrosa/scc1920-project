@@ -28,6 +28,7 @@ import com.microsoft.azure.cosmosdb.FeedOptions;
 import scc.models.PostWithReplies;
 import scc.storage.CosmosClient;
 import scc.storage.Redis;
+import scc.utils.GSON;
 
 @Path(PagesResource.PATH)
 public class PagesResource {
@@ -84,48 +85,59 @@ public class PagesResource {
 	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("p") int n_posts) {
 
 		try {
-			Comparator<Entry<Integer, PostWithReplies>> comp = (x, y) -> x.getKey().compareTo(y.getKey());
-			Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<Entry<Integer, PostWithReplies>>(n_posts, comp);
 
-			long time = System.currentTimeMillis() - 24*60*60*1000;
+			List<String> fromCache = Redis.getList(INITIAL_PAGE, n_posts);
+			if(fromCache!= null && !fromCache.isEmpty()){
 
-			String query = "SELECT * FROM %s p WHERE p.parent=null";
-			List<PostWithReplies> posts = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
-			for(PostWithReplies p : posts) {
-				// Replies in last 24h
-				query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "' AND p.creationTime>=" + time;
-				List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
-				p.setReplies(replies);
-				
-				// Likes in last 24h
-				query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='"+ p.getId() + "' AND l.creationTime>=" + time;
-				List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
-				if(!likes.isEmpty()) {
-					JsonElement root = new JsonParser().parse(likes.get(0));
-					int n_likes = root.getAsJsonObject().get("Likes").getAsInt();
-					p.setLikes(n_likes);
-				}
-				
-				int hotness = Math.max((int) Math.round(0.8*p.getLikes() + 0.2*p.getReplies().size()),
-						(int) Math.round(0.2*p.getLikes() + 0.8*p.getReplies().size()));
-				if(queue.size() < n_posts) {
-					queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
-				} else {
-					Entry<Integer, PostWithReplies> e = queue.peek();
-					if(queue.size() >= n_posts) {
-						if(e.getKey() < hotness) {
-							queue.poll();
-							queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
-						} else if(e.getKey() == hotness) {
-							queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
+				return fromCache.parallelStream().map(d -> GSON.fromJson(d , PostWithReplies.class))
+						.collect(Collectors.toList());
+
+			}else {
+
+				Comparator<Entry<Integer, PostWithReplies>> comp = (x, y) -> x.getKey().compareTo(y.getKey());
+				Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<Entry<Integer, PostWithReplies>>(n_posts, comp);
+
+				long time = System.currentTimeMillis() - 24 * 60 * 60 * 1000;
+
+				String query = "SELECT * FROM %s p WHERE p.parent=null";
+				List<PostWithReplies> posts = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
+				for (PostWithReplies p : posts) {
+					// Replies in last 24h
+					query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "' AND p.creationTime>=" + time;
+					List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
+					p.setReplies(replies);
+
+					// Likes in last 24h
+					query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId() + "' AND l.creationTime>=" + time;
+					List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
+					if (!likes.isEmpty()) {
+						JsonElement root = new JsonParser().parse(likes.get(0));
+						int n_likes = root.getAsJsonObject().get("Likes").getAsInt();
+						p.setLikes(n_likes);
+					}
+
+					int hotness = Math.max((int) Math.round(0.8 * p.getLikes() + 0.2 * p.getReplies().size()),
+							(int) Math.round(0.2 * p.getLikes() + 0.8 * p.getReplies().size()));
+					if (queue.size() < n_posts) {
+						queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
+					} else {
+						Entry<Integer, PostWithReplies> e = queue.peek();
+						if (queue.size() >= n_posts) {
+							if (e.getKey() < hotness) {
+								queue.poll();
+								queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
+							} else if (e.getKey() == hotness) {
+								queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
+							}
 						}
 					}
 				}
+
+				List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
+				Redis.putInList(INITIAL_PAGE, queue.stream().map(e -> GSON.toJson(e.getValue())).toArray(String[]::new));
+
+				return list;
 			}
-
-			List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
-
-			return list;
 		} catch(Exception e) {
 			throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
 		}
