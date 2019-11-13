@@ -9,6 +9,11 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
 import com.github.javafaker.Faker;
+import scc.models.User;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 import scc.controllers.Debug;
 
@@ -35,10 +40,11 @@ public class InsertData {
 		} else
 			throw new RuntimeException("WalletClient Transfer: " + response.getStatus());
 		
-		Faker faker = new Faker();
-		
+		Faker faker = new Faker(new Locale("en-US"));
+
+		List<User> users = new ArrayList<>(50);
+
 		// TODO
-		
 	}
 	
 }
