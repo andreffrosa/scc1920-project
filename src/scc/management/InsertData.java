@@ -15,6 +15,7 @@ import com.github.javafaker.Faker;
 import scc.models.Community;
 import scc.models.Post;
 import scc.models.User;
+import scc.utils.GSON;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,24 +51,26 @@ public class InsertData {
 				.get();
 
 		if (response.getStatus() == 200) {
-			System.out.println(response.readEntity(String.class));
+			System.out.println("Version: " + response.readEntity(String.class));
 		} else
-			throw new RuntimeException("WalletClient Transfer: " + response.getStatus());
+			throw new RuntimeException("Exception: " + response.getStatus());
 
 		Faker faker = new Faker(new Locale("en-US"));
 
-		System.out.println("Starting...");
-
-		//List<User> users = new ArrayList<>(50);
+		System.out.println("\nStarting...");
+		
 		int n_users = 100;
-		int n_communities = 30;
+		int n_communities = 15;
 		int n_posts = 300;
 		int n_likes = 500;
 		int n_images = 0;
 
+		System.out.println("\n\t Images \n");
+		
 		List<String> _images = new ArrayList<>(50);
 
 		File folder = new File("./images");
+		int j = 0;
 		for (File fileEntry : folder.listFiles()) {
 			if (fileEntry.isFile()) {
 				Path fileLocation = Paths.get(fileEntry.getPath());
@@ -79,11 +82,12 @@ public class InsertData {
 							.post(Entity.entity(data, MediaType.APPLICATION_OCTET_STREAM));
 
 					if(response.getStatus() == 200) {
-						System.out.println("Created user " + fileEntry.getName() + " sucessfully!");
-						_images.add(response.readEntity(String.class));
+						String id = response.readEntity(String.class);
+						System.out.println("(" + j + ") " + "Uploaded image " + fileEntry.getName() + " sucessfully! -> " + id);
+						_images.add(id);
 					} else
-						System.out.println("Created user " + fileEntry.getName() + " error: " + response.getStatus());
-
+						System.out.println("(" + j + ") " + "Upload image " + fileEntry.getName() + " error: " + response.getStatus() + " " + response.readEntity(String.class));
+					j++;
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -92,19 +96,24 @@ public class InsertData {
 		}
 		String[] images = _images.toArray(new String[_images.size()]);
 
+		System.out.println("\n\t Users \n");
+		
 		User[] users = new User[n_users];
 		for(int i = 0; i < n_users; i++) {
 			users[i] = new User(faker.name().fullName());
 			response = target.path(UserResource.PATH + "/")
 					.request()
-					.post(Entity.entity(users[i], MediaType.APPLICATION_JSON));
+					.post(Entity.entity(GSON.toJson(users[i]), MediaType.APPLICATION_JSON));
+			
+			
 
 			if(response.getStatus() == 200)
-				System.out.println("Created user " + users[i].getName() + " sucessfully!");
+				System.out.println("(" + i + ") " + "Created user " + users[i].getName() + " sucessfully! -> " + response.readEntity(String.class));
 			else
-				System.out.println("Created user " + users[i].getName() + " error: " + response.getStatus());
+				System.out.println("(" + i + ") " + "Create user " + users[i].getName() + " error: " + response.getStatus() + " " + response.readEntity(String.class));
 		}
 
+		System.out.println("\n\t Communities \n");
 
 		Community[] communities = new Community[n_communities];
 		for(int i = 0; i < n_communities; i++) {
@@ -114,10 +123,12 @@ public class InsertData {
 					.post(Entity.entity(communities[i], MediaType.APPLICATION_JSON));
 
 			if(response.getStatus() == 200)
-				System.out.println("Created community " + communities[i].getName() + " sucessfully!");
+				System.out.println("(" + i + ") " + "Created community " + communities[i].getName() + " sucessfully! -> " + response.readEntity(String.class));
 			else
-				System.out.println("Created community " + communities[i].getName() + " error: " + response.getStatus());
+				System.out.println("(" + i + ") " + "Creat community " + communities[i].getName() + " error: " + response.getStatus() + " " + response.readEntity(String.class));
 		}
+		
+		System.out.println("\n\t Posts \n");
 
 		Post[] posts = new Post[n_posts];
 		for(int i = 0; i < n_posts; i++) {
@@ -134,11 +145,13 @@ public class InsertData {
 					.post(Entity.entity(users[i], MediaType.APPLICATION_JSON));
 
 			if(response.getStatus() == 200) {
-				System.out.println("Created post " + posts[i].getMessage() + " sucessfully!");
+				System.out.println("(" + i + ") " + "Created post " + posts[i].getMessage() + " sucessfully! -> " + response.readEntity(String.class));
 				posts[i].setId(response.readEntity(String.class));
 			} else
-				System.out.println("Created post " + posts[i].getMessage() + " error: " + response.getStatus());
+				System.out.println("(" + i + ") " + "Create post " + posts[i].getMessage() + " error: " + response.getStatus() + " " + response.readEntity(String.class));
 		}
+		
+		System.out.println("\n\t Likes \n");
 
 		for(int i = 0; i < n_likes; i++) {
 			String user = users[(int)(Math.random()*n_users)].getName();
@@ -152,13 +165,13 @@ public class InsertData {
 
 			String id = user +  "@" + post;
 			if(response.getStatus() == 200) {
-				System.out.println("Created like " + id + " sucessfully!");
+				System.out.println("(" + i + ") " + "Created like " + id + " sucessfully! -> " + response.readEntity(String.class));
 				posts[i].setId(response.readEntity(String.class));
 			} else
-				System.out.println("Created like " + id + " error: " + response.getStatus());
+				System.out.println("(" + i + ") " + "Create like " + id + " error: " + response.getStatus() + " " + response.readEntity(String.class));
 		}
 
-		System.out.println("Finished!");
+		System.out.println("\nFinished!");
 	}
 
 }

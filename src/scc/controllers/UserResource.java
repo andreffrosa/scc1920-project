@@ -16,9 +16,6 @@ public class UserResource extends Resource {
 	public static final String PATH = "/user";
 	static final String CONTAINER = "Users";
 
-	@Context
-	static ServletContext context;
-
 	public UserResource() throws Exception {
 		super(CONTAINER);
 	}
@@ -36,9 +33,9 @@ public class UserResource extends Resource {
 			return super.create(u);
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
-				throw new WebApplicationException(Response.status(Status.CONFLICT).entity("User already exists").build());
+				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("User already exists").build() );
 			else
-				throw new WebApplicationException( Response.serverError().entity("Unexpected error").build());
+				throw new WebApplicationException( Response.serverError().entity("Unexpected error").build() );
 		}
 	}
 
