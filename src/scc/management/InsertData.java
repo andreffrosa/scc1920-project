@@ -62,7 +62,7 @@ public class InsertData {
 		int n_users = 100;
 		int n_communities = 15;
 		int n_posts = 500;
-		int n_likes = 1000;
+		int n_likes = 1200;
 		int n_images = 0;
 
 		System.out.println("\n\t Images \n");
