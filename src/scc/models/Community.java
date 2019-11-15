@@ -5,6 +5,8 @@ public class Community {
 	private String id;
 	private String name;
 	private long creation_date;
+	//private String description;
+	//private String img;
 
 	public Community() {}
 

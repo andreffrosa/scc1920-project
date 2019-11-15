@@ -9,15 +9,13 @@ import java.util.List;
 
 public class Redis {
 
-	private static final boolean ACTIVE = true; // TODO: ler de um ficheiro?
-	
     private static final int TOP_LIMIT = 5;
     
     private static JedisPool jedisPool;
 
     public Redis(){ }
 
-    public static void init(String redisHostName, String password){
+    static void init(String redisHostName, String password){
         jedisPool = new JedisPool(getJedisPoolConfig(), redisHostName, 6380, 1000, password,true);
     }
 
@@ -36,6 +34,7 @@ public class Redis {
         return poolConfig;
     }
 
+    //Basic KV operations
     public static void putInList(String key, String[] jsonRepresentations) {
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.lpush(key, jsonRepresentations);
@@ -48,14 +47,29 @@ public class Redis {
         }
     }
 
-    public static void set(String key, String jsonRepresentation){
-        putInList(key, new String[]{jsonRepresentation});
-    }
-
     public static String get(String key){
         return getList(key, 1).get(0);
     }
 
+    public static void set(String key, String jsonRepresentation){
+
+    }
+
+    //HyperLogLog operations
+    public static void increment(String counterId){
+        try (Jedis jedis = jedisPool.getResource()){
+            jedis.pfadd(counterId, "plusOne");
+        }
+    }
+
+    public static long getProbabilisticCount(String counterId){
+        try( Jedis jedis = jedisPool.getResource()){
+            return jedis.pfcount(counterId);
+        }
+
+    }
+
+    /*
     public static void putRaw(String key, byte[] data){
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.set(key.getBytes(), data);
@@ -67,4 +81,9 @@ public class Redis {
             return jedis.get(key.getBytes());
         }
     }
+
+    public static void set(String key, String jsonRepresentation){
+        putInList(key, new String[]{jsonRepresentation});
+    }
+     */
 }

@@ -33,7 +33,7 @@ public class PagesResource {
 
 	private static final int DEFAULT_INITIAL_PAGE_SIZE = 10;
 	static final String PATH = "/page";
-	static final int DEFAULT_LEVEL = 3;
+	private static final int DEFAULT_LEVEL = 3;
 	private static final String INITIAL_PAGE = "initial_page";
 
 	@GET
@@ -132,6 +132,7 @@ public class PagesResource {
 
 				List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
 				Redis.putInList(INITIAL_PAGE, queue.stream().map(e -> GSON.toJson(e.getValue())).toArray(String[]::new));
+				//queue.stream().map( entry -> Redis.set(entry.getKey()) )
 
 				return list;
 			}
