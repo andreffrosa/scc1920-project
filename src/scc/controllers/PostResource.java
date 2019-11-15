@@ -17,6 +17,7 @@ import com.microsoft.azure.cosmosdb.DocumentClientException;
 import scc.models.Like;
 import scc.models.Post;
 import scc.storage.CosmosClient;
+import scc.storage.Redis;
 
 @Path(PostResource.PATH)
 public class PostResource extends Resource{
@@ -73,8 +74,7 @@ public class PostResource extends Resource{
 	@Path("/{id}/like/{user_name}")
 	public String likePost(@PathParam("id") String post_id, @PathParam("user_name") String user_name){
 
-		String author = CosmosClient.getByName(UserResource.CONTAINER, user_name);
-		if(author == null)
+		if(!UserResource.userExists(user_name))
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Username does not exists").build());
 
 		String post = CosmosClient.getById(CONTAINER, post_id);
@@ -83,7 +83,9 @@ public class PostResource extends Resource{
 
 		try {
 			Like like = new Like(post_id, user_name, System.currentTimeMillis());
-			return CosmosClient.create(LIKE_CONTAINER, like);
+			String likeId = CosmosClient.create(LIKE_CONTAINER, like);
+			Redis.increment(likeId);
+			return likeId;
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
 				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("You have already liked that post").build() );
@@ -113,18 +115,4 @@ public class PostResource extends Resource{
 				throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
 		}
 	}
-
-    /*@PUT
-    @Path("/{name}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response update(Post u){
-        return super.update(u);
-    }
-
-    @DELETE
-    @Path("/{name}")
-    public Response delete(@PathParam("name") String name){
-        return super.delete(name);
-    }*/
 }

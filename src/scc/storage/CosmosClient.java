@@ -83,7 +83,8 @@ public class CosmosClient {
 		AtomicReference<DocumentClientException> at2 = new AtomicReference<>();
 
 		// Subscribe to Document resource response emitted by the observable
-		createDocumentObservable.single() // We know there will be one response
+		createDocumentObservable
+				.single() // We know there will be one response
 				.subscribe(documentResourceResponse -> {
 					at.set(documentResourceResponse.getResource().getId());
 					completionLatch.countDown();

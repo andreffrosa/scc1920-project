@@ -56,23 +56,5 @@ public class CommunityResource extends Resource {
 		
 		return community;
 	}
-
-
-
-	/*@PUT
-	@Path("/{name}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response update(Community c){
-		return super.update(c);
-	}
-
-	@DELETE
-	@Path("/{name}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public Response delete(@PathParam("name") String name){
-		return super.delete(name);
-	}*/
-
 }
 

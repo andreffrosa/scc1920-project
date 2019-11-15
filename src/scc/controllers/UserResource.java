@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response.Status;
 import com.microsoft.azure.cosmosdb.DocumentClientException;
 
 import scc.models.User;
+import scc.storage.CosmosClient;
 
 @Path(UserResource.PATH)
 public class UserResource extends Resource {
@@ -54,6 +55,10 @@ public class UserResource extends Resource {
 			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("User not found").build());
 
 		return super.getByName(name);
+	}
+
+	public static boolean userExists(String username){
+		return CosmosClient.getByName(UserResource.CONTAINER, username) != null;
 	}
 
 	/*@PUT
