@@ -2,11 +2,9 @@ package scc.controllers;
 
 import java.util.List;
 
-import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -15,10 +13,9 @@ import scc.storage.CosmosClient;
 @Path(Debug.PATH)
 public class Debug {
 
-	@Context ServletContext context;
 	public static final String PATH = "/debug" ;
 
-	public static final String VERSION = "34.7.0-r2 alfa-snapshot-0.0.9.0.0.1 SilkyX-Vanilla";
+	public static final String VERSION = "44.0.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX-Vanilla Edition";
 
 	@GET
 	@Path("/version")

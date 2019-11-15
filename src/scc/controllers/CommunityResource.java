@@ -41,7 +41,7 @@ public class CommunityResource extends Resource {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
 				throw new WebApplicationException(Response.status(Status.CONFLICT).entity("Community with the specified name already exists in the system.").build());
 		
-			throw new WebApplicationException( Response.serverError().entity(e.getMessage()).build());
+			throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build() );
 		}
 	}
 

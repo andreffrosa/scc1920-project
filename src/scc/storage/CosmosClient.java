@@ -61,9 +61,18 @@ public class CosmosClient {
 		Response execute(Throwable error);
 	}
 
+	public static String getColllectionLink(String dabase_name, String container_name) {
+		return String.format("/dbs/%s/colls/%s", dabase_name, container_name);
+	}
+	
+	public static String getDocumentLink(String dabase_name, String container_name, String id) {
+		return String.format("/dbs/%s/colls/%s/docs/%s", dabase_name, container_name, id);
+	}
+	
+	
 	public static String create(String container_name, Object o) throws DocumentClientException {
 
-		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
 		Observable<ResourceResponse<Document>> createDocumentObservable = cosmosClient.createDocument(collectionLink, o,
 				null, false);
@@ -82,8 +91,11 @@ public class CosmosClient {
 					if (error instanceof ConflictException) {
 						at2.set(new DocumentClientException(Response.Status.CONFLICT.getStatusCode(),
 								(Exception) error));
-					} else
-						at2.set(new DocumentClientException(500, error.getMessage()));
+					} else {
+						at2.set(new DocumentClientException(500, (Exception) error));
+					}
+					error.printStackTrace();
+					
 					completionLatch.countDown();
 				});
 
@@ -104,7 +116,7 @@ public class CosmosClient {
 
 	public static void delete(String container_name, String id) throws DocumentClientException {
 
-		String documentLink = String.format("/dbs/%s/colls/%s/docs/%s", cosmosDatabase, container_name, id);
+		String documentLink = getDocumentLink(cosmosDatabase, container_name, id);
 		Observable<ResourceResponse<Document>> createDocumentObservable = cosmosClient.deleteDocument(documentLink,
 				null);
 
@@ -119,7 +131,10 @@ public class CosmosClient {
 						at.set(new DocumentClientException(Response.Status.NOT_FOUND.getStatusCode(),
 								(Exception) error));
 					else
-						at.set(new DocumentClientException(500, error.getMessage()));
+						at.set(new DocumentClientException(500, (Exception) error));
+					
+					error.printStackTrace();
+					
 					completionLatch.countDown();
 				});
 
@@ -137,8 +152,7 @@ public class CosmosClient {
 	}
 
 	public static <T> String getByName(String container_name, String name) {
-
-		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
 		// try {
 		FeedOptions queryOptions = new FeedOptions();
@@ -160,7 +174,7 @@ public class CosmosClient {
 	}
 
 	public static String getById(String container_name, String id) {
-		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
 		// try {
 		FeedOptions queryOptions = new FeedOptions();
@@ -182,7 +196,7 @@ public class CosmosClient {
 	}
 
 	public static <T> T getByIdUnparse(String container_name, String id, Class<T> class_) {
-		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
 		// try {
 		FeedOptions queryOptions = new FeedOptions();
@@ -205,7 +219,7 @@ public class CosmosClient {
 	}
 
 	public static <T> List<String> getNewest(String container_name) {
-		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
 		// try {
 		FeedOptions queryOptions = new FeedOptions();
@@ -227,7 +241,7 @@ public class CosmosClient {
 	}
 
 	public static List<String> query(String container_name, String query) {
-		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
@@ -247,7 +261,7 @@ public class CosmosClient {
 	}
 
 	public static <T> List<T> queryAndUnparse(String container_name, String query, Class<T> class_) {
-		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
 		String final_query = String.format(query, container_name);
 
@@ -270,9 +284,8 @@ public class CosmosClient {
 		return list;
 	}
 
-	public static <T> Entry<String,List<T>> queryAndUnparsePaginated(String container_name, String query, String continuationToken,
-			int pageSize, Class<T> class_) {
-		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+	public static <T> Entry<String,List<T>> queryAndUnparsePaginated(String container_name, String query, String continuationToken, int pageSize, Class<T> class_) {
+		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
 		String final_query = String.format(query, container_name);
 
@@ -302,7 +315,7 @@ public class CosmosClient {
 	}
 	
 	public static <T> Iterator<FeedResponse<Document>> queryIterator(String container_name, String query) {
-		String collectionLink = String.format("/dbs/%s/colls/%s", cosmosDatabase, container_name);
+		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
 		String final_query = String.format(query, container_name);
 

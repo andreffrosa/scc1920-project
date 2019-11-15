@@ -6,7 +6,7 @@ public class Like {
     private String username;
     private long creationTime;
 
-    public Like(String post_id, String author_username, long creation_time){
+    public Like(String post_id, String author_username, long creation_time) {
         id = buildId(post_id, author_username);
         this.post_id = post_id;
         this.username = author_username;
