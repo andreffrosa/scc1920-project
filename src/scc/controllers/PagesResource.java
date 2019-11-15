@@ -198,17 +198,20 @@ public class PagesResource {
 	
 	private static int getFreshness(PostWithReplies p) {
 		double days = (System.currentTimeMillis() - p.getCreationTime() + 1) / ((double)( 24 * 60 * 60 * 1000));
-		int freshness = Math.min(100, (int)(100.0/(2.0*days)));
+		//int freshness = Math.min(100, (int)(100.0/(2.0*days)));
+		int freshness = (int)Math.round((100.0/(2.0*days)));
 		return freshness;
 	}
 	
 	private static int getHotness(PostWithReplies p) {
 		int n_likes = p.getLikes();
 		int n_replies = p.getReplies().size();
-		int a = (int) Math.round(0.8 * n_likes + 0.2 * n_replies);
+		/*int a = (int) Math.round(0.8 * n_likes + 0.2 * n_replies);
 		int b = (int) Math.round(0.2 * n_likes + 0.8 * n_replies);
 		int c = (int) Math.round(0.5 * n_likes + 0.5 * n_replies);
-		int hotness = Math.max(n_likes, Math.max(n_replies, Math.max(a, Math.max(b, c))));
+		int hotness = Math.max(n_likes, Math.max(n_replies, Math.max(a, Math.max(b, c))));*/
+		//int hotness = (int) Math.round((100.0 * sigmoid(Math.max(n_likes, n_replies))));
+		int hotness = Math.max(n_likes, n_replies);
 		return hotness;
 	}
 	
@@ -222,5 +225,9 @@ public class PagesResource {
 		int score = (int)Math.round((0.35*freshness + 0.65*hotness));
 		return score;
 	}
+	
+	public static double sigmoid(double x) { // Converts into range [0;1]
+	    return (1/( 1 + Math.pow(Math.E,(-1*x))));
+	  }
 
 }
