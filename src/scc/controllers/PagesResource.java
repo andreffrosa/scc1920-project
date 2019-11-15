@@ -162,19 +162,23 @@ public class PagesResource {
 					
 					// TODO: QUando os likes e replies nas ultimas 24h são 0, o score é 0 e empatam todos e são todos colocados na página inicial
 					// -> caso a hotness seja 0, o que fazer? Usar a freshness (quanto menor for a data da criação maior o rating?) também?
+					// -> utilizar também o nº de views (guardar na cache) para medir a hotness
+					// -> o nº de replies que conta para a hotness deveria ser dos filhos dos filhos ... e não apenas as replies diretas porque se tiver poucas replies directas mas muitas indirectas também deveria aparecer aqui!
+					// -> calcular certas coisas (parametros) daqui com maiores intervalos que outras
+					// -> Depois de obter a lista da cache, atualizar o nº de likes em direto? (outra leitura à cache para não estar a enviar o nº de likes que existiam quando a paǵina foi calculada. 
+					// 
 
-					int hotness = Math.max((int) Math.round(0.8 * p.getLikes() + 0.2 * p.getReplies().size()),
-							(int) Math.round(0.2 * p.getLikes() + 0.8 * p.getReplies().size()));
+					int score = getScore(p);
 					if (queue.size() < n_posts) {
-						queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
+						queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
 					} else {
 						Entry<Integer, PostWithReplies> e = queue.peek();
 						if (queue.size() >= n_posts) {
-							if (e.getKey() < hotness) {
+							if (e.getKey() < score) {
 								queue.poll();
-								queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
-							} else if (e.getKey() == hotness) {
-								queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(hotness, p));
+								queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
+							} else if (e.getKey() == score) {
+								queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
 							}
 						}
 					}
@@ -190,6 +194,33 @@ public class PagesResource {
 			throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build() );
 		}
 
+	}
+	
+	private static int getFreshness(PostWithReplies p) {
+		double days = (System.currentTimeMillis() - p.getCreationTime() + 1) / ((double)( 24 * 60 * 60 * 1000));
+		int freshness = Math.min(100, (int)(100.0/(2.0*days)));
+		return freshness;
+	}
+	
+	private static int getHotness(PostWithReplies p) {
+		int n_likes = p.getLikes();
+		int n_replies = p.getReplies().size();
+		int a = (int) Math.round(0.8 * n_likes + 0.2 * n_replies);
+		int b = (int) Math.round(0.2 * n_likes + 0.8 * n_replies);
+		int c = (int) Math.round(0.5 * n_likes + 0.5 * n_replies);
+		int hotness = Math.max(n_likes, Math.max(n_replies, Math.max(a, Math.max(b, c))));
+		return hotness;
+	}
+	
+	private static int getScore(PostWithReplies p) {
+		int freshness = getFreshness(p);
+		int hotness = getHotness(p);
+		/*int a = (int) Math.round(0.8 * freshness + 0.2 * hotness);
+		int b = (int) Math.round(0.2 * freshness + 0.8 * hotness);
+		int c = (int) Math.round(0.5 * freshness + 0.5 * hotness);
+		int score = Math.max(freshness, Math.max(hotness, Math.max(a, Math.max(b, c))));*/
+		int score = (int)Math.round((0.35*freshness + 0.65*hotness));
+		return score;
 	}
 
 }
