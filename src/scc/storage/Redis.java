@@ -9,67 +9,75 @@ import java.util.List;
 
 public class Redis {
 
-    private static final int TOP_LIMIT = 5;
-    
-    private static JedisPool jedisPool;
+	private static final boolean ACTIVE = true;
+	private static final int TOP_LIMIT = 5;
 
-    public Redis(){ }
+	private static JedisPool jedisPool;
 
-    static void init(String redisHostName, String password){
-        jedisPool = new JedisPool(getJedisPoolConfig(), redisHostName, 6380, 1000, password,true);
-    }
+	public Redis(){ }
 
-    private static JedisPoolConfig getJedisPoolConfig() {
-        JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(128);
-        poolConfig.setMaxIdle(128);
-        poolConfig.setMinIdle(16);
-        poolConfig.setTestOnBorrow(true);
-        poolConfig.setTestOnReturn(true);
-        poolConfig.setTestWhileIdle(true);
-        poolConfig.setMinEvictableIdleTimeMillis(Duration. ofSeconds(60).toMillis());
-        poolConfig.setTimeBetweenEvictionRunsMillis(Duration. ofSeconds(30).toMillis());
-        poolConfig.setNumTestsPerEvictionRun(3);
-        poolConfig.setBlockWhenExhausted(true);
-        return poolConfig;
-    }
+	static void init(String redisHostName, String password){
+		jedisPool = new JedisPool(getJedisPoolConfig(), redisHostName, 6380, 1000, password,true);
+	}
 
-    //Basic KV operations
-    public static void putInList(String key, String[] jsonRepresentations) {
-        try (Jedis jedis = jedisPool.getResource()) {
-            jedis.lpush(key, jsonRepresentations);
-        }
-    }
+	private static JedisPoolConfig getJedisPoolConfig() {
+		JedisPoolConfig poolConfig = new JedisPoolConfig();
+		poolConfig.setMaxTotal(128);
+		poolConfig.setMaxIdle(128);
+		poolConfig.setMinIdle(16);
+		poolConfig.setTestOnBorrow(true);
+		poolConfig.setTestOnReturn(true);
+		poolConfig.setTestWhileIdle(true);
+		poolConfig.setMinEvictableIdleTimeMillis(Duration. ofSeconds(60).toMillis());
+		poolConfig.setTimeBetweenEvictionRunsMillis(Duration. ofSeconds(30).toMillis());
+		poolConfig.setNumTestsPerEvictionRun(3);
+		poolConfig.setBlockWhenExhausted(true);
+		return poolConfig;
+	}
 
-    public static List<String> getList(String key, int pageSize){
-        try (Jedis jedis = jedisPool.getResource()) {
-            return jedis.lrange(key, 0, pageSize);
-        }
-    }
+	public interface Operation {
+		public Object execute(Jedis jedis);
+	}
 
-    public static String get(String key){
-        return getList(key, 1).get(0);
-    }
+	@SuppressWarnings("unchecked")
+	private static Object executeOperation(Operation op) {
+		Object result = null;
+		if(ACTIVE) {
+			try (Jedis jedis = jedisPool.getResource()) {
+				result = op.execute(jedis);
+			}
+		}
+		return result;
+	}
 
-    public static void set(String key, String jsonRepresentation){
+	//Basic KV operations
+	public static void putInList(String key, String[] jsonRepresentations) {
+		executeOperation(jedis -> jedis.lpush(key, jsonRepresentations));
+	}
 
-    }
+	@SuppressWarnings("unchecked")
+	public static List<String> getList(String key, int pageSize){
+		return (List<String>) executeOperation(jedis -> jedis.lrange(key, 0, pageSize));
+	}
 
-    //HyperLogLog operations
-    public static void increment(String counterId){
-        try (Jedis jedis = jedisPool.getResource()){
-            jedis.pfadd(counterId, "plusOne");
-        }
-    }
+	public static String get(String key){
+		return getList(key, 1).get(0);
+	}
 
-    public static long getProbabilisticCount(String counterId){
-        try( Jedis jedis = jedisPool.getResource()){
-            return jedis.pfcount(counterId);
-        }
+	public static void set(String key, String jsonRepresentation){
+		// TODO:
+	}
 
-    }
+	//HyperLogLog operations
+	public static void increment(String counterId){
+		executeOperation(jedis -> jedis.pfadd(counterId, "plusOne"));
+	}
 
-    /*
+	public static Long getProbabilisticCount(String counterId) {
+		return (Long) executeOperation(jedis -> jedis.pfcount(counterId));
+	}
+
+	/*
     public static void putRaw(String key, byte[] data){
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.set(key.getBytes(), data);
@@ -85,5 +93,5 @@ public class Redis {
     public static void set(String key, String jsonRepresentation){
         putInList(key, new String[]{jsonRepresentation});
     }
-     */
+	 */
 }

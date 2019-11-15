@@ -37,50 +37,10 @@ public class PagesResource {
 	private static final int DEFAULT_LEVEL = 3;
 	private static final String INITIAL_PAGE = "initial_page";
 	private static final int DEFAULT_PAGE_SIZE = 5;
+	private static final int MAX_SIZE_ALLOWED = 2;
 
 	@GET
 	@Path("/thread/{id}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public PostWithReplies getThread(@PathParam("id") String id, @DefaultValue(""+DEFAULT_LEVEL) @QueryParam("d") int depth) {
-
-		PostWithReplies post = CosmosClient.getByIdUnparse(PostResource.CONTAINER, id, PostWithReplies.class);
-		if(post == null)
-			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Post does not exists").build() );
-
-		Queue<PostWithReplies> queue = new LinkedList<>();
-		queue.add(post);
-		int current_level = 0, amount_posts_current_level = 1;
-		while(!queue.isEmpty()) {
-			PostWithReplies current_post = queue.poll();
-			amount_posts_current_level--;
-
-			String query_replies = "SELECT * FROM %s p WHERE p.parent='" + current_post.getId() +"'";
-			List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query_replies, PostWithReplies.class);
-			current_post.setReplies(replies);
-
-			String query_likes = "SELECT COUNT(c) as Likes FROM %s c WHERE c.post_id='" + current_post.getId() +"'";
-			List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query_likes); 
-			if(!likes.isEmpty()) {
-				JsonElement root = JsonParser.parseString(likes.get(0));
-				int n_likes = root.getAsJsonObject().get("Likes").getAsInt();
-				current_post.setLikes(n_likes);
-			}
-
-			if(current_level < depth) {
-				queue.addAll(replies);
-			}
-
-			if(amount_posts_current_level == 0) {
-				current_level++;
-				amount_posts_current_level = queue.size();
-			}
-		}
-
-		return post;
-	}
-
-	@GET
-	@Path("/thread2/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public PostWithReplies getThread2(@PathParam("id") String id, @DefaultValue(""+DEFAULT_LEVEL) @QueryParam("d") int depth, @DefaultValue(""+DEFAULT_PAGE_SIZE) @QueryParam("p") int pageSize, @QueryParam("t") String continuationToken) {
 
@@ -128,7 +88,7 @@ public class PagesResource {
 	@GET
 	@Path("/initial")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("p") int n_posts) {
+	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("ps") int n_posts, @DefaultValue(""+MAX_SIZE_ALLOWED) @QueryParam("m") int max_size) {
 
 		try {
 			List<String> fromCache = Redis.getList(INITIAL_PAGE, n_posts);
@@ -165,8 +125,15 @@ public class PagesResource {
 								queue.poll();
 								queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
 							} else if (e.getKey() == score) {
-								queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
-							}
+								/*if(queue.size() < max_size*n_posts)
+									queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
+								else if(queue.size() == max_size*n_posts) {*/
+									if(Math.random() <= 0.5) { // Replace with 50% probability
+										queue.poll();
+										queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
+									}
+								}
+							//}
 						}
 					}
 				}
@@ -251,15 +218,21 @@ public class PagesResource {
 		return hotness;
 	}
 
+	private static int getTrending(PostWithReplies p) {
+		// TODO: Ir ver se está no Top Posts na cache
+		return 0; // se não estiver, 100 se estiver?
+	}
+	
 	private static int getScore(PostWithReplies p) {
 		int freshness = getFreshness(p);
 		int hotness = getHotness(p);
 		int popularity = getPopularity(p);
+		int trending = getTrending(p);
 		/*int a = (int) Math.round(0.8 * freshness + 0.2 * hotness);
 		int b = (int) Math.round(0.2 * freshness + 0.8 * hotness);
 		int c = (int) Math.round(0.5 * freshness + 0.5 * hotness);
 		int score = Math.max(freshness, Math.max(hotness, Math.max(a, Math.max(b, c))));*/
-		int score = (int)Math.round((0.2*popularity + 0.3*freshness + 0.5*hotness));
+		int score = (int)Math.round((0.12*popularity + 0.24*freshness + 0.24*trending + 0.4*hotness));
 		return score;
 	}
 
