@@ -48,7 +48,6 @@ public class PostResource extends Resource{
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Community does not exist").build());
 
 		try{
-			post.setCreationTime(System.currentTimeMillis());
 			return super.create(post);
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
@@ -82,7 +81,7 @@ public class PostResource extends Resource{
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity("Post does not exist").build());
 
 		try {
-			Like like = new Like(post_id, user_name, System.currentTimeMillis());
+			Like like = new Like(post_id, user_name);
 			String likeId = CosmosClient.create(LIKE_CONTAINER, like);
 			Redis.increment(likeId);
 			return likeId;

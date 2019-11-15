@@ -33,9 +33,8 @@ public class CommunityResource extends Resource {
 
 		if(!c.isValid())
 			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Params").build());
-
+		
 		try {
-			c.setCreation_date(System.currentTimeMillis());
 			return super.create(c);
 		} catch(DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())

@@ -2,16 +2,16 @@ package scc.models;
 
 public class Post {
 
-    private String id;
-    private String title;
-    private String author;
-    private String community;
-    private long creationTime;
-    private String message;
-    private String multiMediaObject;
-    private String parent;
+	private String id;
+	private String title;
+	private String author;
+	private String community;
+	private long _ts;
+	private String message;
+	private String multiMediaObject;
+	private String parent;
 
-    public Post() {}
+	public Post() {}
 
 	public Post(String title, String author, String community, String message, String multiMediaObject, String parent) {
 		this.id = null;
@@ -21,7 +21,7 @@ public class Post {
 		this.message = message;
 		this.multiMediaObject = multiMediaObject;
 		this.parent = parent;
-		this.creationTime = 0;
+		this._ts = 0;
 	}
 
 	public String getId() {
@@ -41,7 +41,7 @@ public class Post {
 	}
 
 	public long getCreationTime() {
-		return creationTime;
+		return _ts;
 	}
 
 	public String getMessage() {
@@ -54,10 +54,6 @@ public class Post {
 
 	public String getParent() {
 		return parent;
-	}
-
-	public void setCreationTime(Long creationTime){
-    	this.creationTime = creationTime;
 	}
 
 	public void setId(String id) {
@@ -76,8 +72,8 @@ public class Post {
 		this.community = community;
 	}
 
-	public void setCreationTime(long creationTime) {
-		this.creationTime = creationTime;
+	public void setCreationTime(long creation_time){
+		this._ts = creation_time;
 	}
 
 	public void setMessage(String message) {
@@ -93,11 +89,11 @@ public class Post {
 	}
 
 	public boolean validPost(){
-    	return community!= null && !community.equals("") && author != null && !author.equals("") && title != null && !title.equals("") && message != null && !message.equals("");
+		return community!= null && !community.equals("") && author != null && !author.equals("") && title != null && !title.equals("") && message != null && !message.equals("");
 	}
 
 	public boolean validReply(){
-    	return author != null && !author.equals("") && parent != null && !parent.equals("") && message != null && !message.equals("");
+		return author != null && !author.equals("") && parent != null && !parent.equals("") && message != null && !message.equals("");
 	}
 
 }
