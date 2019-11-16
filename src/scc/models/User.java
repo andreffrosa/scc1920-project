@@ -4,6 +4,7 @@ public class User {
 
 	private String id;
 	private String name;
+	private long _ts;
 
 	public User() {}
 
@@ -18,6 +19,14 @@ public class User {
 
 	public String getId() {
 		return id;
+	}
+	
+    public void setCreationTime(long creation_time){
+        this._ts = creation_time;
+    }
+
+	public long getCreationTime() {
+		return _ts;
 	}
 
 	public boolean isValid() {

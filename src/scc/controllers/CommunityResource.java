@@ -33,15 +33,14 @@ public class CommunityResource extends Resource {
 
 		if(!c.isValid())
 			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Params").build());
-
+		
 		try {
-			c.setCreation_date(System.currentTimeMillis());
 			return super.create(c);
 		} catch(DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
 				throw new WebApplicationException(Response.status(Status.CONFLICT).entity("Community with the specified name already exists in the system.").build());
 		
-			throw new WebApplicationException( Response.serverError().entity(e.getMessage()).build());
+			throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build() );
 		}
 	}
 

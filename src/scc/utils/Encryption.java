@@ -10,7 +10,7 @@ public class Encryption {
 	public static String computeHash(byte[] data) throws NoSuchAlgorithmException {
 		MessageDigest d = MessageDigest.getInstance(DIGEST_ALGORITHM);
 		d.update(data);
-		return java.util.Base64.getEncoder().encodeToString(d.digest()).replace('/', '-');
+		return MyBase64.encode(d.digest());
 	}
 
 }

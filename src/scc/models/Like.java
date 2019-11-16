@@ -4,13 +4,13 @@ public class Like {
 
     private String id, post_id;
     private String username;
-    private long creationTime;
+    private long _ts;
 
-    public Like(String post_id, String author_username, long creation_time){
-        id = buildId(post_id, author_username);
+    public Like(String post_id, String author_username) {
+        this.id = buildId(post_id, author_username);
         this.post_id = post_id;
         this.username = author_username;
-        this.creationTime = creation_time;
+        this._ts = 0;
     }
 
     public String getId(){ return id; }
@@ -19,12 +19,12 @@ public class Like {
 
     public String getAuthor_username(){ return  username; }
 
-    public void setCreationTime(Long creationTime){
-        this.creationTime = creationTime;
+    public void setCreationTime(long creation_time){
+        this._ts = creation_time;
     }
 
 	public long getCreationTime() {
-		return creationTime;
+		return _ts;
 	}
 
 	public static String buildId(String post_id, String author_username){
