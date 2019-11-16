@@ -65,7 +65,7 @@ public class Redis {
 	}
 
 	public static void set(String key, String jsonRepresentation){
-		// TODO:
+		executeOperation(jedis -> jedis.set(key, jsonRepresentation));
 	}
 
 	//HyperLogLog operations

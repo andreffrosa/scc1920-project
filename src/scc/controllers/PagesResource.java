@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response.Status;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import redis.clients.jedis.Jedis;
 import scc.models.PostWithReplies;
 import scc.storage.CosmosClient;
 import scc.storage.Redis;
@@ -140,7 +141,7 @@ public class PagesResource {
 
 				List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
 				Redis.putInList(INITIAL_PAGE, queue.stream().map(e -> GSON.toJson(e.getValue())).toArray(String[]::new));
-				//queue.stream().map( entry -> Redis.set(entry.getKey()) )
+				queue.forEach( e -> Redis.set(GSON.toJson(e.getKey()), GSON.toJson(e.getValue()))); //Inserting rating in the cache
 
 				return list;
 			}

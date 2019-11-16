@@ -65,7 +65,7 @@ public class PostResource extends Resource{
 
         if (post == null)
         	throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Post with that ID does not exist").build());
-
+        
         return post;
     }
 
