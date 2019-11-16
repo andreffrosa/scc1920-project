@@ -14,6 +14,8 @@ import javax.ws.rs.core.Response.Status;
 import com.microsoft.azure.cosmosdb.DocumentClientException;
 
 import scc.models.Community;
+import scc.storage.CosmosClient;
+import scc.utils.GSON;
 
 @Path(CommunityResource.PATH)
 public class CommunityResource extends Resource {
@@ -30,15 +32,14 @@ public class CommunityResource extends Resource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String createCommunity(Community c) {
-
 		if(!c.isValid())
-			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Params").build());
+			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
 		
 		try {
-			return super.create(c);
+			return CosmosClient.create(collection, c);
 		} catch(DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
-				throw new WebApplicationException(Response.status(Status.CONFLICT).entity("Community with the specified name already exists in the system.").build());
+				throw new WebApplicationException(Response.status(Status.CONFLICT).entity(String.format("Community %s already exist in the system.", c.getName())).build());
 		
 			throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build() );
 		}
@@ -48,12 +49,16 @@ public class CommunityResource extends Resource {
 	@Path("/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public String consultCommunity(@PathParam("name") String name) {
-		String community = super.getByName(name);
+		Community community = CosmosClient.getByNameUnparse(super.collection, name, Community.class);
 		
 		if(community == null)
-			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Community with the specified name does not exists.").build());
+			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity(String.format("Community %s does not exist.", name)).build());
 		
-		return community;
+		return GSON.toJson(community);
+	}
+	
+	public static boolean exists(String name) {
+		return CosmosClient.getByName(CONTAINER, name) != null;
 	}
 }
 

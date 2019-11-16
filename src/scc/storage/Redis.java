@@ -77,6 +77,10 @@ public class Redis {
 		return (Long) executeOperation(jedis -> jedis.pfcount(counterId));
 	}
 
+	public static void decrement(String counterId) {
+		// TODO Auto-generated method stub
+	}
+
 	/*
     public static void putRaw(String key, byte[] data){
         try (Jedis jedis = jedisPool.getResource()) {
