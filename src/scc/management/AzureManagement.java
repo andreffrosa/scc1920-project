@@ -123,7 +123,7 @@ public class AzureManagement {
 		createCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, USERS_COLLECTION, "/name", "/name");
 		createCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, POSTS_COLLECTION, "/community", null);
 		createCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, COMMUNITIES_COLLECTION, "/name", "/name");
-		createCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, LIKES_COLLECTION, "/post_id", "/post_id,/user_names");
+		createCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, LIKES_COLLECTION, "/post_id", null);
 	}
 
 	private static CosmosDBAccount createCosmosDBAccount(Azure azure, String rgName, String name, Region region,
