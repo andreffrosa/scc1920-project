@@ -55,6 +55,8 @@ public class PostResource extends Resource{
 		if(!CommunityResource.exists(post.getCommunity()))
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Community %s does not exist", post.getCommunity())).build());
 
+		//TODO: Se parent != null, verificar se o post ainda existe
+		
 		try{
 			return CosmosClient.create(super.collection, post);
 		} catch (DocumentClientException e) {
@@ -76,7 +78,7 @@ public class PostResource extends Resource{
         	throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity(String.format("Post %s does not exist.", id)).build());
 
         String toReturn = GSON.toJson(post);
-        Redis.putInBoundedList(MOST_RECENT_POSTS, toReturn, MAX_RECENT_POSTS);
+        Redis.putInBoundedList(MOST_RECENT_POSTS, MAX_RECENT_POSTS, toReturn);
         return toReturn;
     }
     
@@ -93,7 +95,7 @@ public class PostResource extends Resource{
 		try {
 			Like like = new Like(post_id, username);
 			String like_id = CosmosClient.create(LIKE_CONTAINER, like);
-			Redis.increment(like_id);
+			Redis.addToHyperLog(like_id, like_id);
 			return like_id;
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
@@ -114,7 +116,6 @@ public class PostResource extends Resource{
 		
 		try {
 			CosmosClient.delete(LIKE_CONTAINER, like_id);
-			Redis.decrement(like_id);
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
 				throw new WebApplicationException( Response.status(Status.CONFLICT).entity(String.format("User %s have already liked post %s", username, post_id)).build() );

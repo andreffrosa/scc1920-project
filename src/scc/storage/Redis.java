@@ -5,7 +5,9 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Redis {
 
@@ -49,38 +51,78 @@ public class Redis {
 		}
 		return result;
 	}
+	
+	// Strings
+	public static String getKey(String key) {
+		return (String) executeOperation(jedis -> jedis.get(key));
+	}
 
-	//Basic KV operations
-	public static void putInList(String key, String[] jsonRepresentations) {
-		executeOperation(jedis -> jedis.lpush(key, jsonRepresentations));
+	public static void setKey(String key, String value){
+		executeOperation(jedis -> jedis.set(key, value));
+	}
+
+	// List
+	public static void putInList(String key, String... values) {
+		executeOperation(jedis -> jedis.lpush(key, values));
 	}
 
 	@SuppressWarnings("unchecked")
-	public static List<String> getList(String key, int pageSize){
+	public static List<String> getList(String key, int pageSize){ // TODO: Para que é o size?
 		return (List<String>) executeOperation(jedis -> jedis.lrange(key, 0, pageSize));
 	}
-
-	public static String get(String key){
-		return getList(key, 1).get(0);
-	}
-
-	public static void set(String key, String jsonRepresentation){
-		executeOperation(jedis -> jedis.set(key, jsonRepresentation));
+	
+	public static void putInBoundedList(String key, int max_size, String... values) {
+		executeOperation(jedis -> {
+			Long count = jedis.lpush(key, values);
+			if(count > max_size)
+				jedis.ltrim(key, 0, max_size);
+			
+			return null;
+			});
 	}
 
 	//HyperLogLog operations
-	public static void increment(String counterId){
-		executeOperation(jedis -> jedis.pfadd(counterId, "plusOne"));
+	public static void addToHyperLog(String hyperlog_id, String value){
+		executeOperation(jedis -> jedis.pfadd(hyperlog_id, value));
 	}
 
-	public static Long getProbabilisticCount(String counterId) {
-		return (Long) executeOperation(jedis -> jedis.pfcount(counterId));
+	public static Long getProbabilisticCount(String hyperlog_id) {
+		return (Long) executeOperation(jedis -> jedis.pfcount(hyperlog_id));
+	}
+	
+	// Dictionary
+	public static void addToDictionary(String dictionary_key, String key, String value) {
+		executeOperation(jedis -> jedis.hset(dictionary_key, key, value));
 	}
 
-	public static void decrement(String counterId) {
-		// TODO Auto-generated method stub
+	public static String getFromDictionary(String dictionary_key, String key) {
+		return (String) executeOperation(jedis -> jedis.hget(dictionary_key, key));
 	}
-
+	
+	public static addToBoundedDictionary(String dictionary_key, int max_size, String key, String value) {
+		executeOperation(jedis -> {
+			remover
+			if not in, add to hashMap
+			
+			lpush
+			if count > max
+			   remover cauda/fazertrim & remover do cicionario
+			
+			boolean isNew = (jedis.hsetnx(dictionary_key, key, value) == 1);
+			jedis.zincrby(dictionary_key, 1, key;
+			
+			if(isNew) {
+			    int count = jedis.hlen(dictionary_key);	
+			    if(count > max_size) {
+			    	// remover o pior do sorted set e removê-lo também do mapa
+			    
+			    }
+			}
+			
+			return null;
+			});
+	}
+	
 	/*
     public static void putRaw(String key, byte[] data){
         try (Jedis jedis = jedisPool.getResource()) {

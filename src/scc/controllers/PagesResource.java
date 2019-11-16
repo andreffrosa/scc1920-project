@@ -43,11 +43,11 @@ public class PagesResource {
 	@GET
 	@Path("/thread/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public PostWithReplies getThread2(@PathParam("id") String id, @DefaultValue(""+DEFAULT_LEVEL) @QueryParam("d") int depth, @DefaultValue(""+DEFAULT_PAGE_SIZE) @QueryParam("p") int pageSize, @QueryParam("t") String continuationToken) {
+	public PostWithReplies getThread(@PathParam("id") String id, @DefaultValue(""+DEFAULT_LEVEL) @QueryParam("d") int depth, @DefaultValue(""+DEFAULT_PAGE_SIZE) @QueryParam("p") int pageSize, @QueryParam("t") String continuationToken) {
 
 		if(continuationToken != null)
 			continuationToken = MyBase64.decode(continuationToken);
-
+		
 		PostWithReplies post = CosmosClient.getByIdUnparse(PostResource.CONTAINER, id, PostWithReplies.class);
 		if(post == null)
 			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Post does not exists").build() );
@@ -55,7 +55,7 @@ public class PagesResource {
 		Queue<PostWithReplies> queue = new LinkedList<>();
 		queue.add(post);
 		int current_level = 0, amount_posts_current_level = 1;
-		while(!queue.isEmpty()) {
+		while(!queue.isEmpty()) { 
 			PostWithReplies current_post = queue.poll();
 			amount_posts_current_level--;
 
@@ -65,6 +65,10 @@ public class PagesResource {
 			current_post.setReplies(replies);
 			current_post.setContinuationToken(MyBase64.encode(entry.getKey()));
 
+			// TODO: fazer uma lpush com as replies e quando há uma nova reply, adicioná-la a essa lista.
+			
+			// TODO: Ir buscar à cache os likes
+			
 			String query_likes = "SELECT COUNT(c) as Likes FROM %s c WHERE c.post_id='" + current_post.getId() +"'";
 			List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query_likes); 
 			if(!likes.isEmpty()) {
@@ -82,6 +86,8 @@ public class PagesResource {
 				amount_posts_current_level = queue.size();
 			}
 		}
+		
+		
 
 		return post;
 	}
@@ -90,7 +96,7 @@ public class PagesResource {
 	@Path("/initial")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("ps") int n_posts, @DefaultValue(""+MAX_SIZE_ALLOWED) @QueryParam("m") int max_size) {
-
+		
 		try {
 			List<String> fromCache = Redis.getList(INITIAL_PAGE, n_posts);
 			if(fromCache!= null && !fromCache.isEmpty()){
@@ -140,9 +146,10 @@ public class PagesResource {
 				}
 
 				List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
-				Redis.putInList(INITIAL_PAGE, queue.stream().map(e -> GSON.toJson(e.getValue())).toArray(String[]::new));
-				queue.forEach( e -> Redis.set(GSON.toJson(e.getKey()), GSON.toJson(e.getValue()))); //Inserting rating in the cache
-
+				
+//				Redis.putInList(INITIAL_PAGE, queue.stream().map(e -> GSON.toJson(e.getValue())).toArray(String[]::new));
+//				queue.forEach( e -> Redis.set(GSON.toJson(e.getKey()), GSON.toJson(e.getValue()))); //Inserting rating in the cache
+				
 				return list;
 			}
 		} catch(Exception e) {
