@@ -26,6 +26,8 @@ public class PostResource extends Resource{
 	public static final String PATH = "/post";
 	public static final String CONTAINER = "Posts";
 	public static final String LIKE_CONTAINER = "Likes";
+	private static final int MAX_RECENT_POSTS = 100;
+	public static final String MOST_RECENT_POSTS = "MostRecentPosts";
 
 	public PostResource() throws Exception {
 		super(CONTAINER);
@@ -67,12 +69,15 @@ public class PostResource extends Resource{
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public String getPost(@PathParam("id") String id){
-    	Post post = CosmosClient.getByNameUnparse(super.collection, id, Post.class);
+
+		Post post = CosmosClient.getByNameUnparse(super.collection, id, Post.class);
 
         if (post == null)
         	throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity(String.format("Post %s does not exist.", id)).build());
 
-        return GSON.toJson(post);
+        String toReturn = GSON.toJson(post);
+        Redis.putInBoundedList(MOST_RECENT_POSTS, toReturn, MAX_RECENT_POSTS);
+        return toReturn;
     }
     
     @POST
