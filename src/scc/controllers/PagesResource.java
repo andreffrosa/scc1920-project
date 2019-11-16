@@ -33,9 +33,9 @@ import scc.utils.MyBase64;
 public class PagesResource {
 
 	public static final String PATH = "/page";
+	private static final String INITIAL_PAGE = "initial_page";
 	private static final int DEFAULT_INITIAL_PAGE_SIZE = 10;
 	private static final int DEFAULT_LEVEL = 3;
-	private static final String INITIAL_PAGE = "initial_page";
 	private static final int DEFAULT_PAGE_SIZE = 5;
 	private static final int MAX_SIZE_ALLOWED = 2;
 

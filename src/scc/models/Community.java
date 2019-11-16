@@ -4,7 +4,7 @@ public class Community {
 
 	private String id;
 	private String name;
-	private long _ts;
+	private Long _ts;
 	//private String description;
 	//private String img;
 
@@ -12,7 +12,7 @@ public class Community {
 
 	public Community(String name) {
 		this.name = name;
-		this._ts = 0;
+		this._ts = null;
 		this.id = null;
 	}
 
@@ -36,12 +36,12 @@ public class Community {
 		this.name = name;
 	}
 
-	 public void setCreationTime(long creation_time){
-	        this._ts = creation_time;
-	    }
+	public void setCreationTime(long creation_time){
+		this._ts = creation_time;
+	}
 
 	public long getCreationTime() {
-		return _ts;
+		return _ts == null ? -1 : _ts.longValue();
 	}
-	
+
 }

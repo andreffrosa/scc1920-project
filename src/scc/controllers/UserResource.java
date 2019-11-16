@@ -15,6 +15,7 @@ import com.microsoft.azure.cosmosdb.DocumentClientException;
 
 import scc.models.User;
 import scc.storage.CosmosClient;
+import scc.utils.GSON;
 
 @Path(UserResource.PATH)
 public class UserResource extends Resource {
@@ -30,16 +31,15 @@ public class UserResource extends Resource {
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public String create(User u){
-
-		if(!u.isValid())
-			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Params").build());
+	public String create(User user){
+		if(!user.isValid())
+			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
 
 		try {
-			return super.create(u);
+			return CosmosClient.create(super.collection, user);
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
-				throw new WebApplicationException( Response.status(Status.CONFLICT).entity("User already exists").build() );
+				throw new WebApplicationException( Response.status(Status.CONFLICT).entity(String.format("User %s already exists", user.getName())).build() );
 			else
 				throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build() );
 		}
@@ -49,29 +49,16 @@ public class UserResource extends Resource {
 	@Path("/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public String getByName(@PathParam("name") String name){
-		String user = super.getByName(name);
-
+		User user = CosmosClient.getByNameUnparse(super.collection, name, User.class);
+		
 		if(user == null)
-			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("User not found").build());
+			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity(String.format("User %s not found", name)).build());
 
-		return super.getByName(name);
+		return GSON.toJson(user);
 	}
 
-	public static boolean userExists(String username){
-		return CosmosClient.getByName(UserResource.CONTAINER, username) != null;
+	public static boolean exists(String username) {
+		return CosmosClient.getByName(CONTAINER, username) != null;
 	}
 
-	/*@PUT
-    @Path("/{name}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response update(User u){
-        return super.update(u);
-    }
-
-    @DELETE
-    @Path("/{name}")
-    public Response delete(@PathParam("name") String name){
-        return super.delete(name);
-    }*/
 }

@@ -4,13 +4,14 @@ public class User {
 
 	private String id;
 	private String name;
-	private long _ts;
+	private Long _ts;
 
 	public User() {}
 
 	public User(String name) {
 		this.id = null;
 		this.name = name;
+		this._ts = null;
 	}
 
 	public String getName() {
@@ -26,7 +27,7 @@ public class User {
     }
 
 	public long getCreationTime() {
-		return _ts;
+		return _ts == null ? -1 : _ts.longValue();
 	}
 
 	public boolean isValid() {

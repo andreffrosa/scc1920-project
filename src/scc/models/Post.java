@@ -6,7 +6,7 @@ public class Post {
 	private String title;
 	private String author;
 	private String community;
-	private long _ts;
+	private Long _ts;
 	private String message;
 	private String multiMediaObject;
 	private String parent;
@@ -21,7 +21,7 @@ public class Post {
 		this.message = message;
 		this.multiMediaObject = multiMediaObject;
 		this.parent = parent;
-		this._ts = 0;
+		this._ts = null;
 	}
 
 	public String getId() {
@@ -41,7 +41,7 @@ public class Post {
 	}
 
 	public long getCreationTime() {
-		return _ts;
+		return _ts == null ? -1 : _ts.longValue();
 	}
 
 	public String getMessage() {

@@ -58,7 +58,7 @@ public class InsertData {
 
 		Faker faker = new Faker(new Locale("en-US"));
 		{
-			User u = new User("test"); 
+		/*	User u = new User("test"); 
 			response = target.path(UserResource.PATH + "/").request().post(Entity.entity(GSON.toJson(u), MediaType.APPLICATION_JSON));
 			if(response.getStatus() == 200)
 				System.out.println("Created user " + u.getName() + " sucessfully! -> " + response.readEntity(String.class));
@@ -89,9 +89,9 @@ public class InsertData {
 				System.out.println("Created like " + tag + " sucessfully! -> " + id);
 			} else
 				System.out.println("Create like " + tag + " error: " + response.getStatus() + " " + response.readEntity(String.class));
-		}
+		*/}
 
-		System.exit(0);
+		//System.exit(0);
 
 		System.out.println("\nStarting...");
 

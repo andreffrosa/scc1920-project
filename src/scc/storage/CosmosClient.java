@@ -171,7 +171,29 @@ public class CosmosClient {
 		}
 
 		return null;
+	}
+	
+	public static <T> T getByNameUnparse(String container_name, String name, Class<T> class_) {
+		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
+		// try {
+		FeedOptions queryOptions = new FeedOptions();
+		queryOptions.setEnableCrossPartitionQuery(true);
+		queryOptions.setMaxDegreeOfParallelism(-1);
+		Iterator<FeedResponse<Document>> it = cosmosClient.queryDocuments(collectionLink,
+				"SELECT * FROM " + container_name + " c WHERE c.name = '" + name + "'", queryOptions).toBlocking()
+				.getIterator();
+
+		// NOTE: multiple documents can be returned or none
+		if (it.hasNext()) {
+			List<Document> doc = it.next().getResults();
+			if (doc.size() > 0) {
+				return GSON.fromJson(doc.get(0).toJson(), class_);
+			}
+
+		}
+
+		return null;
 	}
 
 	public static String getById(String container_name, String id) {
