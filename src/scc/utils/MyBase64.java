@@ -10,8 +10,12 @@ public class MyBase64 {
 		return str == null ? null : java.util.Base64.getEncoder().encodeToString(str.getBytes()).replace("/", "-");
 	}
 	
-	public static String decode(String code) {
-		return code == null ? null : new String(java.util.Base64.getDecoder().decode(code.replace("-", "/")));
+	public static byte[] decode(String code) {
+		return code == null ? null : java.util.Base64.getDecoder().decode(code.replace("-", "/"));
+	}
+	
+	public static String decodeString(String code) {
+		return code == null ? null : new String( java.util.Base64.getDecoder().decode(code.replace("-", "/")) );
 	}
 
 }

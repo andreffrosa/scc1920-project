@@ -23,112 +23,126 @@ import scc.utils.GSON;
 @Path(PostResource.PATH)
 public class PostResource extends Resource {
 
-    public static final String PATH = "/post";
-    public static final String CONTAINER = "Posts";
-    public static final String LIKE_CONTAINER = "Likes";
-    private static final int MAX_RECENT_POSTS = 100;
-    public static final String MOST_RECENT_POSTS = "MostRecentPosts";
+	public static final String PATH = "/post";
+	public static final String CONTAINER = "Posts";
+	public static final String LIKE_CONTAINER = "Likes";
+	private static final int MAX_RECENT_POSTS = 100;
+	public static final String MOST_RECENT_POSTS = "MostRecentPosts";
 
-    public PostResource() throws Exception {
-        super(CONTAINER);
-    }
+	/* public PostResource() throws Exception {
+        super();
+    }*/
+	
+	// TODO: Ir à cache ver isto
+	public static boolean exists(String post_id) {
+		return CosmosClient.getById(CONTAINER, post_id) != null;
+	}
 
-    public static boolean exists(String post_id) {
-        return CosmosClient.getById(CONTAINER, post_id) != null;
-    }
+	// Este não vale a pena ir à cache porque não é uma operação lá muito frequente
+	public static boolean existsLike(String like_id) {
+		return CosmosClient.getById(LIKE_CONTAINER, like_id) != null;
+	}
 
-    public static boolean existsLike(String like_id) {
-        return CosmosClient.getById(LIKE_CONTAINER, like_id) != null;
-    }
+	@POST
+	@Path("/")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public static String create(Post post) {
+		try {
+			if (!post.validPost())
+				throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
 
-    @POST
-    @Path("/")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public String create(Post post) {
-        try {
-            if (!post.validPost())
-                throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
+			if (!UserResource.exists(post.getAuthor()))
+				throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Username %s does not exist", post.getAuthor())).build());
 
-            if (!UserResource.exists(post.getAuthor()))
-                throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Username %s does not exist", post.getAuthor())).build());
+			if (!CommunityResource.exists(post.getCommunity()))
+				throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Community %s does not exist", post.getCommunity())).build());
 
-            if (!CommunityResource.exists(post.getCommunity()))
-                throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Community %s does not exist", post.getCommunity())).build());
+			if (post.isReply()) {
+				if (post.validReply()) {
+					String post_id = CosmosClient.insert(CONTAINER, post);
 
-            if (post.isReply()) {
-                if (post.validReply()) {
-                    String post_id = CosmosClient.create(super.collection, post);
-                    Redis.addToHyperLog(String.format("recent-replies-%s", post.getParent()), post_id);
-                    Redis.addToHyperLog(String.format("replies-%s", post.getParent()), post_id);
-                    return post_id;
-                }else
-                    throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
-            }else
-            	return CosmosClient.create(super.collection, post);
-        } catch (DocumentClientException e) {
-            if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
-                throw new WebApplicationException(Response.status(Status.CONFLICT).entity("Post with that ID already exists").build());
-            else
-                throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
-        }
-    }
+					// Update cache
+					if(post.getParent() != null) {
+						Redis.LRUHyperLogPut(Redis.TOTAL_REPLIES, Redis.TOTAL_REPLIES_LIMIT, post.getParent(), post_id);
+						Redis.LRUHyperLogPut(Redis.DAYLY_REPLIES, Redis.DAYLY_REPLIES_LIMIT, post.getParent(), post_id);
+						// TODO: potencial problema -> quando se mete apenas 1 like (e não está em cache) vai para a cache e depois é removido (quando excede o tamanho)
+					}
 
-    @GET
-    @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String getPost(@PathParam("id") String id) {
+					return post_id;
+				} else
+					throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
+			}else
+				return CosmosClient.insert(CONTAINER, post);
+		} catch (DocumentClientException e) {
+			if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
+				throw new WebApplicationException(Response.status(Status.CONFLICT).entity("Post with that ID already exists").build());
+			else
+				throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
+		}
+	}
 
-        Post post = CosmosClient.getByNameUnparse(super.collection, id, Post.class);
+	@GET
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public static String getPost(@PathParam("id") String id) {
 
-        if (post == null)
-            throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Post %s does not exist.", id)).build());
+		Post post = CosmosClient.getByNameUnparse(CONTAINER, id, Post.class);
 
-        String toReturn = GSON.toJson(post);
-        Redis.putInBoundedList(MOST_RECENT_POSTS, MAX_RECENT_POSTS, toReturn);
-        return toReturn;
-    }
+		if (post == null)
+			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Post %s does not exist.", id)).build());
 
-    @POST
-    @Path("/{id}/like/{username}")
-    public String likePost(@PathParam("id") String post_id, @PathParam("username") String username) {
+		String toReturn = GSON.toJson(post);
+		Redis.putInBoundedList(MOST_RECENT_POSTS, MAX_RECENT_POSTS, toReturn); // TODO: Isto já não existe
+		return toReturn;
+	}
 
-        if (!UserResource.exists(username))
-            throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Username %s does not exist", username)).build());
+	@POST
+	@Path("/{id}/like/{username}")
+	public static String likePost(@PathParam("id") String post_id, @PathParam("username") String username) {
 
-        if (!PostResource.exists(post_id))
-            throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Post %s does not exist", post_id)).build());
+		if (!UserResource.exists(username))
+			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Username %s does not exist", username)).build());
 
-        try {
-            Like like = new Like(post_id, username);
-            String like_id = CosmosClient.create(LIKE_CONTAINER, like);
-            Redis.addToHyperLog(String.format("likes-%s", post_id), like_id);
-            Redis.addToHyperLog(String.format("recent-likes-%s", post_id), like_id);
-            return like_id;
-        } catch (DocumentClientException e) {
-            if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
-                throw new WebApplicationException(Response.status(Status.CONFLICT).entity(String.format("User %s have already liked that post", username)).build());
-            else
-                throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
-        }
-    }
+		if (!PostResource.exists(post_id))
+			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Post %s does not exist", post_id)).build());
 
-    @DELETE
-    @Path("/{id}/dislike/{username}")
-    public void dislikePost(@PathParam("id") String post_id, @PathParam("username") String username) {
+		try {
+			Like like = new Like(post_id, username);
+			String like_id = CosmosClient.insert(LIKE_CONTAINER, like);
 
-        String like_id = Like.buildId(post_id, username);
+			// Update cache
+			Redis.LRUHyperLogPut(Redis.TOTAL_LIKES, Redis.TOTAL_LIKES_LIMIT, post_id, like_id);
+			Redis.LRUHyperLogPut(Redis.DAYLY_LIKES, Redis.DAYLY_LIKES_LIMIT, post_id, like_id);
+			// TODO: potencial problema -> quando se mete apenas 1 like (e não está em cache) vai para a cache e depois é removido (quando excede o tamanho)
 
-        if (!PostResource.existsLike(like_id))
-            throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("User %s have not yet liked that post", username)).build());
+			return like_id;
+		} catch (DocumentClientException e) {
+			if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
+				throw new WebApplicationException(Response.status(Status.CONFLICT).entity(String.format("User %s have already liked post %s", username, post_id)).build());
+			else
+				throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
+		}
+	}
 
-        try {
-            CosmosClient.delete(LIKE_CONTAINER, like_id);
-        } catch (DocumentClientException e) {
-            if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
-                throw new WebApplicationException(Response.status(Status.CONFLICT).entity(String.format("User %s have already liked post %s", username, post_id)).build());
-            else
-                throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
-        }
-    }
+	@DELETE
+	@Path("/{id}/dislike/{username}")
+	public static void dislikePost(@PathParam("id") String post_id, @PathParam("username") String username) {
+
+		// TODO: Utilizar um dirty bit para saber quais os Hyperlogs que valem a pena resetar -> aqueles que tenham tido algum dislike nas ultimas 24h.
+
+		String like_id = Like.buildId(post_id, username);
+
+		if (!PostResource.existsLike(like_id))
+			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("User %s have not yet liked that post %s", username, post_id)).build());
+
+		try {
+			CosmosClient.delete(LIKE_CONTAINER, like_id);
+		} catch (DocumentClientException e) {
+			if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
+				throw new WebApplicationException(Response.status(Status.CONFLICT).entity(String.format("User %s have already disliked post %s", username, post_id)).build());
+			else
+				throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
+		}
+	}
 }

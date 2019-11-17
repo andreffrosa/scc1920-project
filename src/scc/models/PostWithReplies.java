@@ -4,7 +4,7 @@ import java.util.List;
 
 public class PostWithReplies extends Post {
 
-	private int n_likes;
+	private long n_likes;
     private List<PostWithReplies> replies;
     private String continuationToken;
    
@@ -18,11 +18,11 @@ public class PostWithReplies extends Post {
 		this.replies = replies;
 	}
 
-	public void setLikes(int n_likes) {
+	public void setLikes(long n_likes) {
 		this.n_likes = n_likes;
 	}
 
-	public int getLikes() {
+	public long getLikes() {
 		return n_likes;
 	}
 

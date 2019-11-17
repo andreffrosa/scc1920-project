@@ -14,21 +14,23 @@ import com.microsoft.azure.storage.StorageErrorCode;
 import com.microsoft.azure.storage.StorageException;
 
 import scc.storage.BlobStorageClient;
+import scc.storage.Redis;
 import scc.utils.Encryption;
+import scc.utils.MyBase64;
 
 @Path(ImageResource.PATH)
-public class ImageResource {
+public class ImageResource extends Resource {
 
 	public static final String PATH = "/image";
 	public static final String CONTAINER_NAME = "images";
 
-	public ImageResource() {}
+	//public ImageResource() {}
 
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.APPLICATION_JSON)
-	public String upload(byte[] contents) {
+	public static String upload(byte[] contents) {
 		try {
 			String hash = Encryption.computeHash(contents);
 
@@ -44,9 +46,19 @@ public class ImageResource {
 	@Path("/{img_id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public byte[] download(@PathParam("img_id") String img_id) {
+	public static byte[] download(@PathParam("img_id") String img_id) {
 		try {
-			return BlobStorageClient.download(CONTAINER_NAME, img_id);
+			byte[] img = null;
+			
+			String img_base64 = Redis.LRUDictionaryGet(Redis.TOP_IMAGES, img_id);
+			if(img_base64 == null) {
+				img = BlobStorageClient.download(CONTAINER_NAME, img_id);
+				
+				Redis.LRUDictionaryPut(Redis.TOP_IMAGES, Redis.TOP_IMAGES_LIMIT, img_id, MyBase64.encode(img));
+			} else
+				img = MyBase64.decode(img_base64);
+			
+			return img;
 		} catch (StorageException e) {
 			if (e.getErrorCode().equals(StorageErrorCode.RESOURCE_NOT_FOUND.toString()))
 				throw new WebApplicationException(e.getMessage(), Status.NOT_FOUND);
