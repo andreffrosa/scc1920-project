@@ -3,11 +3,13 @@ package scc.storage;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Transaction;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Redis {
 
@@ -99,29 +101,89 @@ public class Redis {
 		return (String) executeOperation(jedis -> jedis.hget(dictionary_key, key));
 	}
 	
-	public static addToBoundedDictionary(String dictionary_key, int max_size, String key, String value) {
+	@SuppressWarnings("unchecked")
+	public static void LRUSetPut(String set_key, int max_size, String item_key, String value) {
 		executeOperation(jedis -> {
-			remover
-			if not in, add to hashMap
+			long score = System.currentTimeMillis();
 			
-			lpush
-			if count > max
-			   remover cauda/fazertrim & remover do cicionario
+			Transaction tx = jedis.multi();
+			tx.zadd("zset:" + set_key, score, item_key);
+			tx.zrange("zset:", 0, 0);
+			tx.zcount("zset:", Double.MIN_VALUE, Double.MAX_VALUE);
+			tx.hset("h:" + set_key, item_key, value);
+			List<Object> results = tx.exec();
 			
-			boolean isNew = (jedis.hsetnx(dictionary_key, key, value) == 1);
-			jedis.zincrby(dictionary_key, 1, key;
+			String lowest_id = ( (Set<String>) results.get(1) ).iterator().next();
+			int current_size = (int)((Long)results.get(2)).longValue();
 			
-			if(isNew) {
-			    int count = jedis.hlen(dictionary_key);	
-			    if(count > max_size) {
-			    	// remover o pior do sorted set e removê-lo também do mapa
-			    
-			    }
+			if(current_size > max_size) {
+				tx = jedis.multi();
+				tx.zrem("zset:" + set_key, lowest_id);
+				tx.hdel("h:" + set_key, lowest_id);
+				results = tx.exec();
 			}
 			
 			return null;
 			});
 	}
+	
+	public static String LRUSetGet(String set_key, String item_key) {
+		return (String) executeOperation(jedis -> {
+
+			String value = jedis.hget("h:" + set_key, item_key);
+			
+			if(value != null) {
+				long score = System.currentTimeMillis();
+				jedis.zadd("zset:" + set_key, score, item_key);
+			}
+			
+			return value;
+			});
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static void LRUProbabilisticSetPut(String set_key, int max_size, String item_key, String value) {
+		executeOperation(jedis -> {
+			long score = System.currentTimeMillis();
+			
+			Transaction tx = jedis.multi();
+			tx.zadd("zset:" + set_key, score, item_key);
+			tx.zrange("zset:", 0, 0);
+			tx.zcount("zset:", Double.MIN_VALUE, Double.MAX_VALUE);
+			//tx.hset("h:" + set_key, item_key, value);
+			tx.pfadd("pf:" + set_key + ":" + item_key, value);
+			List<Object> results = tx.exec();
+			
+			String lowest_id = ( (Set<String>) results.get(1) ).iterator().next();
+			int current_size = (int)((Long)results.get(2)).longValue();
+			
+			if(current_size > max_size) {
+				tx = jedis.multi();
+				tx.zrem("zset:" + set_key, lowest_id);
+				//tx.hdel("h:" + set_key, lowest_id);
+				tx.del("pf:" + set_key + ":" + item_key, value);
+				results = tx.exec();
+			}
+			
+			return null;
+			});
+	}
+	
+	public static long LRUProbabilisticSetGet(String set_key, String item_key) {
+		return (Long) executeOperation(jedis -> {
+
+			//String value = jedis.hget("h:" + set_key, item_key);
+			Long value = jedis.pfcount("pf:" + set_key + ":" + item_key);
+			
+			if(value != null) {
+				long score = System.currentTimeMillis();
+				jedis.zadd("zset:" + set_key, score, item_key);
+			}
+			
+			return value;
+			});
+	}
+	
 	
 	/*
     public static void putRaw(String key, byte[] data){
