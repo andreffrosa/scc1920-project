@@ -35,7 +35,7 @@ public class PagesResource {
 	private static final int DEFAULT_INITIAL_PAGE_SIZE = 10;
 	private static final int DEFAULT_LEVEL = 3;
 	private static final int DEFAULT_PAGE_SIZE = 5;
-	private static final int MAX_SIZE_ALLOWED = 2;
+	//private static final int MAX_SIZE_ALLOWED = 2;
 
 	@GET
 	@Path("/thread/{id}")
@@ -43,8 +43,9 @@ public class PagesResource {
 	public PostWithReplies getThread(@PathParam("id") String id, @DefaultValue(""+DEFAULT_LEVEL) @QueryParam("d") int depth, @DefaultValue(""+DEFAULT_PAGE_SIZE) @QueryParam("p") int pageSize, @QueryParam("t") String continuationToken) {
 
 		if(continuationToken != null)
-			continuationToken = MyBase64.decode(continuationToken);
-		
+			continuationToken = MyBase64.decodeString(continuationToken);
+
+		// TODO: Ir à cache tentar buscar isto
 		PostWithReplies post = CosmosClient.getByIdUnparse(PostResource.CONTAINER, id, PostWithReplies.class);
 		if(post == null)
 			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Post does not exists").build() );
@@ -63,16 +64,21 @@ public class PagesResource {
 			current_post.setContinuationToken(MyBase64.encode(entry.getKey()));
 
 			// TODO: fazer uma lpush com as replies e quando há uma nova reply, adicioná-la a essa lista.
-			
-			// TODO: Ir buscar à cache os likes
-			
-			String query_likes = "SELECT COUNT(c) as Likes FROM %s c WHERE c.post_id='" + current_post.getId() +"'";
-			List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query_likes); 
-			if(!likes.isEmpty()) {
-				JsonElement root = JsonParser.parseString(likes.get(0));
-				int n_likes = root.getAsJsonObject().get("Likes").getAsInt();
-				current_post.setLikes(n_likes);
+
+			String post_id = current_post.getId();
+			Long n_likes = Redis.LRUHyperLogGet(Redis.TOTAL_LIKES, post_id);
+			if(n_likes == null) {
+				String query_likes = "SELECT COUNT(c) as Likes FROM %s c WHERE c.post_id='" + current_post.getId() +"'";
+				List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query_likes); 
+				if(!likes.isEmpty()) {
+					JsonElement root = JsonParser.parseString(likes.get(0));
+					n_likes = root.getAsJsonObject().get("Likes").getAsLong();
+					// TODO: adicionar à cache
+				} else {
+					n_likes = 0L;
+				}
 			}
+			current_post.setLikes(n_likes.intValue());
 
 			if(current_level < depth) {
 				queue.addAll(replies);
@@ -83,8 +89,8 @@ public class PagesResource {
 				amount_posts_current_level = queue.size();
 			}
 		}
-		
-		
+
+
 
 		return post;
 	}
@@ -93,15 +99,15 @@ public class PagesResource {
 	@Path("/initial")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("ps") int n_posts/*, @DefaultValue(""+MAX_SIZE_ALLOWED) @QueryParam("m") int max_size*/) {
-		
+
 		//TODO: verificar se o n_posts é menor que o valor que está a ser calculado pela função.
-		
+
 		try {
 			List<String> fromCache = Redis.getList(INITIAL_PAGE, n_posts);
 			if(fromCache!= null && !fromCache.isEmpty()){
 
 				return fromCache.parallelStream().map(d -> GSON.fromJson(d , PostWithReplies.class))
-						.collect(Collectors.toList());
+						.collect(Collectors.toList()); // TODO: POrque não guardar apenas o Json da lista logo?
 
 			} else {
 				Comparator<Entry<Integer, PostWithReplies>> comp = (x, y) -> x.getKey().compareTo(y.getKey());
@@ -133,7 +139,7 @@ public class PagesResource {
 									queue.poll();
 									queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
 								} else if (e.getKey() == score) {
-								/*if(queue.size() < max_size*n_posts)
+									/*if(queue.size() < max_size*n_posts)
 									queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
 								else if(queue.size() == max_size*n_posts) {*/
 									if (Math.random() <= 0.5) { // Replace with 50% probability
@@ -148,10 +154,10 @@ public class PagesResource {
 				}
 
 				List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
-				
-//				Redis.putInList(INITIAL_PAGE, queue.stream().map(e -> GSON.toJson(e.getValue())).toArray(String[]::new));
-//				queue.forEach( e -> Redis.set(GSON.toJson(e.getKey()), GSON.toJson(e.getValue()))); //Inserting rating in the cache
-				
+
+				//				Redis.putInList(INITIAL_PAGE, queue.stream().map(e -> GSON.toJson(e.getValue())).toArray(String[]::new));
+				//				queue.forEach( e -> Redis.set(GSON.toJson(e.getKey()), GSON.toJson(e.getValue()))); //Inserting rating in the cache
+
 				return list;
 			}
 		} catch(Exception e) {
@@ -162,32 +168,39 @@ public class PagesResource {
 
 	private static int getFreshness(PostWithReplies p) {
 		double days = ((System.currentTimeMillis() / 1000) - p.getCreationTime() + 1) / ((double)( 24 * 60 * 60 ));
-		
+
 		if(days < 0.3)
 			days = 0.3;
-		//int freshness = Math.min(100, (int)(100.0/(2.0*days)));
-		//int freshness = (int)Math.round((100.0/(2.0*days)));
+
 		int freshness = (int)Math.round(100.0/days);
 		return freshness;
 	}
 
 	private static int getPopularity(PostWithReplies p) {
+
 		// Total Replies
 		String query = "SELECT * FROM %s p WHERE p.parent='" + p.getId();
 		List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
 		p.setReplies(replies);
+		//	TODO: Ir buscar à cache
 
 		// Total Likes
-		query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId();
-		List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
-		if (!likes.isEmpty()) {
-			JsonElement root = JsonParser.parseString(likes.get(0));
-			int n_likes = root.getAsJsonObject().get("Likes").getAsInt();
-			p.setLikes(n_likes);
-		}
+		Long total_likes = Redis.LRUHyperLogGet(Redis.TOTAL_LIKES, p.getId());
+		if(total_likes == null) {
+			query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId();
+			List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
+			if (!likes.isEmpty()) {
+				JsonElement root = JsonParser.parseString(likes.get(0));
+				total_likes = root.getAsJsonObject().get("Likes").getAsLong();
 
-		int n_likes = p.getLikes();
-		int n_replies = p.getReplies().size();
+				// TODO: acrescentar à cache -> como fazer a atualização disto?
+			} else
+				total_likes = 0L;
+		}
+		p.setLikes(total_likes.longValue());
+
+		int n_likes = p.getLikes() == 0 ? 0 :(int) Math.log10(p.getLikes());
+		int n_replies = p.getReplies().size() == 0 ? 0 :(int) Math.log10(p.getReplies().size());
 		int a = (int) Math.round(0.8 * n_likes + 0.2 * n_replies);
 		int b = (int) Math.round(0.2 * n_likes + 0.8 * n_replies);
 		int popularity = Math.max(a, b);
@@ -198,33 +211,35 @@ public class PagesResource {
 		long time = (System.currentTimeMillis() / 1000) - (24 * 60 * 60);
 
 		// Replies in last 24h
-		String query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "' AND p._ts>=" + time;
-		List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
-		//p.setReplies(replies);
-		int n_replies = replies.size();
+		Long n_replies = Redis.LRUHyperLogGet(Redis.DAYLY_REPLIES, p.getId());
+		if(n_replies == null) {
+			String query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "' AND p._ts>=" + time;
+			List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
+			n_replies = (long) replies.size();
+			// TODO: acrescentar à cache
+		} else
+			n_replies = 0L;
 
 		// Likes in last 24h
-		query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId() + "' AND l._ts>=" + time;
-		List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
-
-		int n_likes = 0;
-		if (!likes.isEmpty()) {
-			JsonElement root = JsonParser.parseString(likes.get(0));
-			n_likes = root.getAsJsonObject().get("Likes").getAsInt();
-			//p.setLikes(n_likes);
+		Long n_likes = Redis.LRUHyperLogGet(Redis.DAYLY_LIKES, p.getId());
+		if(n_likes == null) {
+			String query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId() + "' AND l._ts>=" + time;
+			List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
+			if (!likes.isEmpty()) {
+				JsonElement root = JsonParser.parseString(likes.get(0));
+				n_likes = root.getAsJsonObject().get("Likes").getAsLong();
+				// TODO: acrescentar à cache
+			} else
+				n_likes = 0L;
 		}
-
-		/*int a = (int) Math.round(0.8 * n_likes + 0.2 * n_replies);
-		int b = (int) Math.round(0.2 * n_likes + 0.8 * n_replies);
-		int c = (int) Math.round(0.5 * n_likes + 0.5 * n_replies);
-		int hotness = Math.max(n_likes, Math.max(n_replies, Math.max(a, Math.max(b, c))));*/
-		//int hotness = (int) Math.round((100.0 * sigmoid(Math.max(n_likes, n_replies))));
-		//int hotness = Math.max(n_likes, n_replies);
 		
+		n_likes = (n_likes == 0L ? 0L : (long)Math.log10(n_likes));
+		n_replies = (n_replies == 0L ? 0L : (long)Math.log10(n_replies));
+
 		int a = (int) Math.round(0.8 * n_likes + 0.2 * n_replies);
 		int b = (int) Math.round(0.2 * n_likes + 0.8 * n_replies);
 		int hotness = Math.max(a, b);
-		
+
 		return hotness;
 	}
 
@@ -232,22 +247,14 @@ public class PagesResource {
 		// TODO: Ir ver se está no Top Posts na cache
 		return 0; // se não estiver, 100 se estiver?
 	}
-	
+
 	private static int getScore(PostWithReplies p) {
 		int freshness = getFreshness(p);
 		int hotness = getHotness(p);
 		int popularity = getPopularity(p);
 		int trending = getTrending(p);
-		/*int a = (int) Math.round(0.8 * freshness + 0.2 * hotness);
-		int b = (int) Math.round(0.2 * freshness + 0.8 * hotness);
-		int c = (int) Math.round(0.5 * freshness + 0.5 * hotness);
-		int score = Math.max(freshness, Math.max(hotness, Math.max(a, Math.max(b, c))));*/
-		int score = (int)Math.round((0.12*popularity + 0.24*freshness + 0.24*trending + 0.4*hotness));
+		int score = (int)Math.round(0.12*popularity + 0.24*freshness + 0.24*trending + 0.4*hotness); // Utilizar também o nº de visualizações
 		return score;
 	}
-
-	/*public static double sigmoid(double x) { // Converts into range [0;1]
-	    return (1.0/( 1.0 + Math.pow(Math.E,(-1.0*x))));
-	  }*/
 
 }

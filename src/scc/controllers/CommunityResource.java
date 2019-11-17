@@ -15,6 +15,7 @@ import com.microsoft.azure.cosmosdb.DocumentClientException;
 
 import scc.models.Community;
 import scc.storage.CosmosClient;
+import scc.storage.Redis;
 import scc.utils.GSON;
 
 @Path(CommunityResource.PATH)
@@ -23,24 +24,24 @@ public class CommunityResource extends Resource {
 	public static final String PATH = "/community";
 	static final String CONTAINER = "Communities";
 
-	public CommunityResource() throws Exception {
-		super(CONTAINER);
-	}
+	/*public CommunityResource() {
+		super();
+	}*/
 
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public String createCommunity(Community c) {
+	public static String createCommunity(Community c) {
 		if(!c.isValid())
 			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
-		
+
 		try {
-			return CosmosClient.create(collection, c);
+			return CosmosClient.insert(CONTAINER, c);
 		} catch(DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
 				throw new WebApplicationException(Response.status(Status.CONFLICT).entity(String.format("Community %s already exist in the system.", c.getName())).build());
-		
+
 			throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build() );
 		}
 	}
@@ -48,17 +49,28 @@ public class CommunityResource extends Resource {
 	@GET
 	@Path("/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String consultCommunity(@PathParam("name") String name) {
-		Community community = CosmosClient.getByNameUnparse(super.collection, name, Community.class);
-		
-		if(community == null)
-			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity(String.format("Community %s does not exist.", name)).build());
-		
-		return GSON.toJson(community);
+	public static String consultCommunity(@PathParam("name") String name) {
+		String community_json = Redis.LRUDictionaryGet(Redis.TOP_COMMUNITIES, name);
+		if(community_json == null) {
+			Community community = CosmosClient.getByNameUnparse(CONTAINER, name, Community.class);
+
+			if(community == null)
+				throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity(String.format("Community %s does not exist.", name)).build());
+			
+			community_json = GSON.toJson(community);
+			
+			Redis.LRUDictionaryPut(Redis.TOP_COMMUNITIES, Redis.TOP_COMMUNITIES_LIMIT, name, community_json);
+		}
+
+		return community_json;
 	}
-	
+
 	public static boolean exists(String name) {
-		return CosmosClient.getByName(CONTAINER, name) != null;
+		try {
+			return consultCommunity(name) != null;
+		} catch(WebApplicationException e) {
+			return false;
+		}
 	}
 }
 

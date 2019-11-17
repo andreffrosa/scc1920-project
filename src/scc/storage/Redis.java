@@ -1,27 +1,41 @@
 package scc.storage;
 
+import java.time.Duration;
+import java.util.List;
+import java.util.Set;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Transaction;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 public class Redis {
 
-	private static final boolean ACTIVE = true;
-	private static final int TOP_LIMIT = 5;
+	// TODO: Ler isto de um ficheiro de configs? Não sei se vale a pena
+	public static final boolean ACTIVE = true;
+	public static final String TOP_POSTS = "top_posts";
+	public static final int TOP_POSTS_LIMIT = 200;
+	public static final String TOTAL_LIKES = "total_likes";
+	public static final int TOTAL_LIKES_LIMIT = 200;
+	public static final String DAYLY_LIKES = "dayly_likes";
+	public static final int DAYLY_LIKES_LIMIT = 200;
+	public static final String TOTAL_REPLIES = "total_replies";
+	public static final int TOTAL_REPLIES_LIMIT = 200;
+	public static final String DAYLY_REPLIES = "dayly_replies";
+	public static final int DAYLY_REPLIES_LIMIT = 200;
+	public static final String TOP_USERS = "top_users";
+	public static final int TOP_USERS_LIMIT = 30;
+	public static final String TOP_COMMUNITIES = "top_communities";
+	public static final int TOP_COMMUNITIES_LIMIT = 5;
+	public static final String TOP_IMAGES = "top_images";
+	public static final int TOP_IMAGES_LIMIT = 5;
 
 	private static JedisPool jedisPool;
 
-	public Redis(){ }
+	//public Redis(){ }
 
-	static void init(String redisHostName, String password){
-		jedisPool = new JedisPool(getJedisPoolConfig(), redisHostName, 6380, 1000, password,true);
+	static void init(String redisHostName, String password) {
+		jedisPool = new JedisPool(getJedisPoolConfig(), redisHostName, 6380, 1000, password, true);
 	}
 
 	private static JedisPoolConfig getJedisPoolConfig() {
@@ -32,8 +46,8 @@ public class Redis {
 		poolConfig.setTestOnBorrow(true);
 		poolConfig.setTestOnReturn(true);
 		poolConfig.setTestWhileIdle(true);
-		poolConfig.setMinEvictableIdleTimeMillis(Duration. ofSeconds(60).toMillis());
-		poolConfig.setTimeBetweenEvictionRunsMillis(Duration. ofSeconds(30).toMillis());
+		poolConfig.setMinEvictableIdleTimeMillis(Duration.ofSeconds(60).toMillis());
+		poolConfig.setTimeBetweenEvictionRunsMillis(Duration.ofSeconds(30).toMillis());
 		poolConfig.setNumTestsPerEvictionRun(3);
 		poolConfig.setBlockWhenExhausted(true);
 		return poolConfig;
@@ -43,7 +57,6 @@ public class Redis {
 		public Object execute(Jedis jedis);
 	}
 
-	@SuppressWarnings("unchecked")
 	private static Object executeOperation(Operation op) {
 		Object result = null;
 		if(ACTIVE) {
@@ -184,7 +197,7 @@ public class Redis {
 				(Jedis jedis, Transaction tx, String set_key_, String lowest_id) -> tx.del("pf:" + set_key + ":" + item_key, value));
 	}
 	
-	public static long LRUHyperLogGet(String set_key, String item_key) {
+	public static Long LRUHyperLogGet(String set_key, String item_key) {
 		return (Long) LRUSetGet(set_key, item_key, (Jedis jedis) -> jedis.pfcount("pf:" + set_key + ":" + item_key) );
 	}
 	

@@ -70,7 +70,7 @@ public class CosmosClient {
 	}
 	
 	
-	public static String create(String container_name, Object o) throws DocumentClientException {
+	public static String insert(String container_name, Object o) throws DocumentClientException {
 
 		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
