@@ -92,7 +92,9 @@ public class PagesResource {
 	@GET
 	@Path("/initial")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("ps") int n_posts, @DefaultValue(""+MAX_SIZE_ALLOWED) @QueryParam("m") int max_size) {
+	public List<PostWithReplies> getInitialPage(@DefaultValue(""+DEFAULT_INITIAL_PAGE_SIZE) @QueryParam("ps") int n_posts/*, @DefaultValue(""+MAX_SIZE_ALLOWED) @QueryParam("m") int max_size*/) {
+		
+		//TODO: verificar se o n_posts é menor que o valor que está a ser calculado pela função.
 		
 		try {
 			List<String> fromCache = Redis.getList(INITIAL_PAGE, n_posts);
