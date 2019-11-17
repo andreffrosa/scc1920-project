@@ -96,4 +96,6 @@ public class Post {
 		return author != null && !author.equals("") && parent != null && !parent.equals("") && message != null && !message.equals("");
 	}
 
+	public boolean isReply(){ return parent != null; }
+
 }

@@ -1,12 +1,7 @@
 package scc.controllers;
 
-import java.util.AbstractMap;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.DefaultValue;
@@ -23,6 +18,8 @@ import javax.ws.rs.core.Response.Status;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import com.microsoft.azure.cosmosdb.Document;
+import com.microsoft.azure.cosmosdb.FeedResponse;
 import redis.clients.jedis.Jedis;
 import scc.models.PostWithReplies;
 import scc.storage.CosmosClient;
@@ -109,38 +106,41 @@ public class PagesResource {
 				Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<Entry<Integer, PostWithReplies>>(n_posts, comp);
 
 				String query = "SELECT * FROM %s p WHERE p.parent=null";
-				List<PostWithReplies> posts = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
-				for (PostWithReplies p : posts) {
+				Iterator<FeedResponse<Document>> it = CosmosClient.queryIterator(PostResource.CONTAINER, query);
+				while( it.hasNext() ) {
+					Iterable<PostWithReplies> postsWithReplies = it.next().getResults().stream().map((Document d) -> GSON.fromJson(d.toJson(), PostWithReplies.class)).collect(Collectors.toList());
+					for (PostWithReplies p : postsWithReplies) {
 
 
-					// TODO: QUando os likes e replies nas ultimas 24h são 0, o score é 0 e empatam todos e são todos colocados na página inicial
-					// -> caso a hotness seja 0, o que fazer? Usar a freshness (quanto menor for a data da criação maior o rating?) também?
-					// -> utilizar também o nº de views (guardar na cache) para medir a hotness
-					// -> o nº de replies que conta para a hotness deveria ser dos filhos dos filhos ... e não apenas as replies diretas porque se tiver poucas replies directas mas muitas indirectas também deveria aparecer aqui!
-					// -> calcular certas coisas (parametros) daqui com maiores intervalos que outras
-					// -> Depois de obter a lista da cache, atualizar o nº de likes em direto? (outra leitura à cache para não estar a enviar o nº de likes que existiam quando a paǵina foi calculada. 
-					// 
-					// -> usar o estar em cache do post principal para o score também -> trending (?)
+						// TODO: QUando os likes e replies nas ultimas 24h são 0, o score é 0 e empatam todos e são todos colocados na página inicial
+						// -> caso a hotness seja 0, o que fazer? Usar a freshness (quanto menor for a data da criação maior o rating?) também?
+						// -> utilizar também o nº de views (guardar na cache) para medir a hotness
+						// -> o nº de replies que conta para a hotness deveria ser dos filhos dos filhos ... e não apenas as replies diretas porque se tiver poucas replies directas mas muitas indirectas também deveria aparecer aqui!
+						// -> calcular certas coisas (parametros) daqui com maiores intervalos que outras
+						// -> Depois de obter a lista da cache, atualizar o nº de likes em direto? (outra leitura à cache para não estar a enviar o nº de likes que existiam quando a paǵina foi calculada.
+						//
+						// -> usar o estar em cache do post principal para o score também -> trending (?)
 
-					int score = getScore(p);
-					if (queue.size() < n_posts) {
-						queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
-					} else {
-						Entry<Integer, PostWithReplies> e = queue.peek();
-						if (queue.size() >= n_posts) {
-							if (e.getKey() < score) {
-								queue.poll();
-								queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
-							} else if (e.getKey() == score) {
+						int score = getScore(p);
+						if (queue.size() < n_posts) {
+							queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
+						} else {
+							Entry<Integer, PostWithReplies> e = queue.peek();
+							if (queue.size() >= n_posts) {
+								if (e.getKey() < score) {
+									queue.poll();
+									queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
+								} else if (e.getKey() == score) {
 								/*if(queue.size() < max_size*n_posts)
 									queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
 								else if(queue.size() == max_size*n_posts) {*/
-									if(Math.random() <= 0.5) { // Replace with 50% probability
+									if (Math.random() <= 0.5) { // Replace with 50% probability
 										queue.poll();
 										queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
 									}
 								}
-							//}
+								//}
+							}
 						}
 					}
 				}
