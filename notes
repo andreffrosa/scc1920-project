@@ -28,3 +28,10 @@ ter flag na cache para testar com cache a funcionar e não ter cache
 TODO LIST:
 - Acabar a cache
 - Fazer a página inicial como deve ser
+
+
+cache:
+- top posts
+- replies
+- guardar os threads da página inicial (?)
+- ter função para resetar os contadores com dirtyBit

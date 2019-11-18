@@ -26,19 +26,16 @@ public class PostResource extends Resource {
 	public static final String PATH = "/post";
 	public static final String CONTAINER = "Posts";
 	public static final String LIKE_CONTAINER = "Likes";
-	private static final int MAX_RECENT_POSTS = 100;
-	public static final String MOST_RECENT_POSTS = "MostRecentPosts";
 
-	/* public PostResource() throws Exception {
-        super();
-    }*/
-	
-	// TODO: Ir à cache ver isto
 	public static boolean exists(String post_id) {
-		return CosmosClient.getById(CONTAINER, post_id) != null;
+		try {
+			return getPost(post_id) != null;
+		} catch(WebApplicationException e) {
+			return false;
+		}
 	}
 
-	// Este não vale a pena ir à cache porque não é uma operação lá muito frequente
+	// TODO: Este não vale a pena ir à cache porque não é uma operação lá muito frequente
 	public static boolean existsLike(String like_id) {
 		return CosmosClient.getById(LIKE_CONTAINER, like_id) != null;
 	}
@@ -66,13 +63,14 @@ public class PostResource extends Resource {
 					if(post.getParent() != null) {
 						Redis.LRUHyperLogPut(Redis.TOTAL_REPLIES, Redis.TOTAL_REPLIES_LIMIT, post.getParent(), post_id);
 						Redis.LRUHyperLogPut(Redis.DAYLY_REPLIES, Redis.DAYLY_REPLIES_LIMIT, post.getParent(), post_id);
-						// TODO: potencial problema -> quando se mete apenas 1 like (e não está em cache) vai para a cache e depois é removido (quando excede o tamanho)
+						
+						Redis.LRUListUpdate(Redis.TOP_REPLIES, post.getParent(), GSON.toJson(post), false);
 					}
 
 					return post_id;
 				} else
 					throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
-			}else
+			} else
 				return CosmosClient.insert(CONTAINER, post);
 		} catch (DocumentClientException e) {
 			if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
@@ -83,18 +81,22 @@ public class PostResource extends Resource {
 	}
 
 	@GET
-	@Path("/{id}")
+	@Path("/{post_id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public static String getPost(@PathParam("id") String id) {
+	public static String getPost(@PathParam("post_id") String post_id) {
+		String post_json = Redis.LRUDictionaryGet(Redis.TOP_POSTS, post_id);
+		if(post_json == null) {
+			Post post = CosmosClient.getByNameUnparse(CONTAINER, post_id, Post.class);
+			
+			if (post == null)
+				throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Post %s does not exist.", post_id)).build());
+			
+			post_json = GSON.toJson(post);
+			
+			Redis.LRUDictionaryPut(Redis.TOP_POSTS, Redis.TOP_POSTS_LIMIT, post_id, post_json);
+		}
 
-		Post post = CosmosClient.getByNameUnparse(CONTAINER, id, Post.class);
-
-		if (post == null)
-			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Post %s does not exist.", id)).build());
-
-		String toReturn = GSON.toJson(post);
-		Redis.putInBoundedList(MOST_RECENT_POSTS, MAX_RECENT_POSTS, toReturn); // TODO: Isto já não existe
-		return toReturn;
+		return post_json;
 	}
 
 	@POST
@@ -111,10 +113,9 @@ public class PostResource extends Resource {
 			Like like = new Like(post_id, username);
 			String like_id = CosmosClient.insert(LIKE_CONTAINER, like);
 
-			// Update cache
-			Redis.LRUHyperLogPut(Redis.TOTAL_LIKES, Redis.TOTAL_LIKES_LIMIT, post_id, like_id);
-			Redis.LRUHyperLogPut(Redis.DAYLY_LIKES, Redis.DAYLY_LIKES_LIMIT, post_id, like_id);
-			// TODO: potencial problema -> quando se mete apenas 1 like (e não está em cache) vai para a cache e depois é removido (quando excede o tamanho)
+			// If in cache, update
+			Redis.LRUHyperLogUpdate(Redis.TOTAL_LIKES, post_id, like_id, false);
+			Redis.LRUHyperLogUpdate(Redis.DAYLY_LIKES, post_id, like_id, false);
 
 			return like_id;
 		} catch (DocumentClientException e) {
@@ -129,8 +130,6 @@ public class PostResource extends Resource {
 	@Path("/{id}/dislike/{username}")
 	public static void dislikePost(@PathParam("id") String post_id, @PathParam("username") String username) {
 
-		// TODO: Utilizar um dirty bit para saber quais os Hyperlogs que valem a pena resetar -> aqueles que tenham tido algum dislike nas ultimas 24h.
-
 		String like_id = Like.buildId(post_id, username);
 
 		if (!PostResource.existsLike(like_id))
@@ -138,6 +137,11 @@ public class PostResource extends Resource {
 
 		try {
 			CosmosClient.delete(LIKE_CONTAINER, like_id);
+
+			// If in cache, set dirty bit to true
+			Redis.LRUSetDirtyBit(Redis.TOTAL_LIKES, post_id, true);
+			Redis.LRUSetDirtyBit(Redis.DAYLY_LIKES, post_id, true);
+			
 		} catch (DocumentClientException e) {
 			if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
 				throw new WebApplicationException(Response.status(Status.CONFLICT).entity(String.format("User %s have already disliked post %s", username, post_id)).build());

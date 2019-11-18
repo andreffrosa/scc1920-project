@@ -45,10 +45,12 @@ public class PagesResource {
 		if(continuationToken != null)
 			continuationToken = MyBase64.decodeString(continuationToken);
 
-		// TODO: Ir à cache tentar buscar isto
-		PostWithReplies post = CosmosClient.getByIdUnparse(PostResource.CONTAINER, id, PostWithReplies.class);
-		if(post == null)
-			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Post does not exists").build() );
+		//		PostWithReplies post = CosmosClient.getByIdUnparse(PostResource.CONTAINER, id, PostWithReplies.class);
+		//		if(post == null)
+		//			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Post does not exists").build() );
+		//		
+		String post_json = PostResource.getPost(id);
+		PostWithReplies post = GSON.fromJson(post_json, PostWithReplies.class);
 
 		Queue<PostWithReplies> queue = new LinkedList<>();
 		queue.add(post);
@@ -57,9 +59,14 @@ public class PagesResource {
 			PostWithReplies current_post = queue.poll();
 			amount_posts_current_level--;
 
-			String query_replies = "SELECT * FROM %s p WHERE p.parent='" + current_post.getId() +"'";
-			Entry<String,List<PostWithReplies>> entry = CosmosClient.queryAndUnparsePaginated(PostResource.CONTAINER, query_replies, continuationToken, pageSize, PostWithReplies.class);
-			List<PostWithReplies> replies = entry.getValue();
+			List<PostWithReplies> replies = null;
+			List<String> replies_json = Redis.LRUListGet(Redis.TOP_REPLIES, id);
+			if(replies_json == null) {
+				String query_replies = "SELECT * FROM %s p WHERE p.parent='" + current_post.getId() +"'";
+				Entry<String,List<PostWithReplies>> entry = CosmosClient.queryAndUnparsePaginated(PostResource.CONTAINER, query_replies, continuationToken, pageSize, PostWithReplies.class);
+				replies = entry.getValue();
+
+			}
 			current_post.setReplies(replies);
 			current_post.setContinuationToken(MyBase64.encode(entry.getKey()));
 
@@ -232,7 +239,7 @@ public class PagesResource {
 			} else
 				n_likes = 0L;
 		}
-		
+
 		n_likes = (n_likes == 0L ? 0L : (long)Math.log10(n_likes));
 		n_replies = (n_replies == 0L ? 0L : (long)Math.log10(n_replies));
 
