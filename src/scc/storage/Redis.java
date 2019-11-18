@@ -12,6 +12,7 @@ import redis.clients.jedis.Transaction;
 public class Redis {
 
 	// TODO: Ler isto de um ficheiro de configs? Não sei se vale a pena
+	/**Acho que vale*/
 	public static final boolean ACTIVE = true;
 	public static final String TOP_POSTS = "top_posts";
 	public static final int TOP_POSTS_LIMIT = 200;
@@ -200,27 +201,4 @@ public class Redis {
 	public static Long LRUHyperLogGet(String set_key, String item_key) {
 		return (Long) LRUSetGet(set_key, item_key, (Jedis jedis) -> jedis.pfcount("pf:" + set_key + ":" + item_key) );
 	}
-	
-	
-	
- 
-	
-	
-	/*
-    public static void putRaw(String key, byte[] data){
-        try (Jedis jedis = jedisPool.getResource()) {
-            jedis.set(key.getBytes(), data);
-        }
-    }
-
-    public static byte[] getRaw(String key){
-        try (Jedis jedis = jedisPool.getResource()) {
-            return jedis.get(key.getBytes());
-        }
-    }
-
-    public static void set(String key, String jsonRepresentation){
-        putInList(key, new String[]{jsonRepresentation});
-    }
-	 */
 }

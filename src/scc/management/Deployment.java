@@ -17,11 +17,10 @@ import static scc.management.AzureManagement.*;
 
 public class Deployment {
 
-
     public static void main(String[] args) {
         try {
-            Azure azure = createManagementClient(AZURE_AUTH_LOCATION);
             if (args.length == 1) {
+                Azure azure = createManagementClient(AZURE_AUTH_LOCATION);
                 switch (args[0].toLowerCase()) {
                     case "-delete":
                         deleteResourceGroup(azure, AZURE_RG_SERVERLESS_REGION1);
@@ -86,6 +85,7 @@ public class Deployment {
                     case "init-georeplicated":
 
                         //Creating Resource Groups
+                        //region1
                         Azure azure0 = createManagementClient(AZURE_AUTH_LOCATION);
                         createResourceGroup(azure0, AZURE_RG_REGION1, REGION1);
                         Files.deleteIfExists(Paths.get(AZURE_PROPS_REGION1_LOCATION));
@@ -96,6 +96,7 @@ public class Deployment {
                         Files.write(Paths.get(AZURE_FUNCTIONS_SETTINGS_REGION1), "".getBytes(),
                                 StandardOpenOption.CREATE, StandardOpenOption.WRITE);
 
+                        //region2
                         createResourceGroup(azure0, AZURE_RG_REGION2, REGION2);
                         Files.deleteIfExists(Paths.get(AZURE_PROPS_REGION2_LOCATION));
                         Files.write(Paths.get(AZURE_PROPS_REGION2_LOCATION),
@@ -108,6 +109,7 @@ public class Deployment {
                         //Creating Blob Storage
                         new Thread(() -> {
                             try {
+                                //Region 1
                                 Azure azure1 = createManagementClient(AZURE_AUTH_LOCATION);
                                 StorageAccount accountStorage = createStorageAccount(azure1, AZURE_RG_REGION1, AZURE_STORAGE_REGION1_NAME,
                                         REGION1);
@@ -115,6 +117,7 @@ public class Deployment {
                                         AZURE_SERVERLESS_REGION1_NAME, AZURE_RG_SERVERLESS_REGION1, accountStorage);
                                 createBlobContainer(azure1, AZURE_RG_REGION1, AZURE_STORAGE_REGION1_NAME, AZURE_BLOB_MEDIA);
 
+                                //Region2
                                 accountStorage = createStorageAccount(azure1, AZURE_RG_REGION2, AZURE_STORAGE_REGION2_NAME,
                                         REGION2);
                                 dumpStorageKey(AZURE_PROPS_REGION2_LOCATION, AZURE_FUNCTIONS_SETTINGS_REGION2,
@@ -132,17 +135,14 @@ public class Deployment {
                                 Azure azure2 = createManagementClient(AZURE_AUTH_LOCATION);
                                 CosmosDBAccount accountCosmosDB = createReplicatedCosmosDBAccount(azure2, AZURE_RG_REGION1,
                                         AZURE_COSMOSDB_NAME, REGION1, REGION2);
+
                                 dumpCosmosDBKey(AZURE_PROPS_REGION1_LOCATION, AZURE_FUNCTIONS_SETTINGS_REGION1,
                                         AZURE_SERVERLESS_REGION1_NAME, AZURE_RG_SERVERLESS_REGION1, accountCosmosDB);
 
                                 dumpCosmosDBKey(AZURE_PROPS_REGION2_LOCATION, AZURE_FUNCTIONS_SETTINGS_REGION2,
                                         AZURE_SERVERLESS_REGION2_NAME, AZURE_RG_SERVERLESS_REGION2, accountCosmosDB);
 
-                                AsyncDocumentClient cosmosClient = getDocumentClient(accountCosmosDB);
-                                createDatabase(cosmosClient, AZURE_COSMOSDB_DATABASE);
-                                createCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, "Users", "/name", "/name");
-                                createCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, "Posts", "/community", null);
-                                createCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, "Communities", "/name", null);
+                                createCosmosContainers(accountCosmosDB,true);
                             } catch (Exception e) {
                                 System.err.println("Error while creating cosmosdb resources");
                                 e.printStackTrace();
