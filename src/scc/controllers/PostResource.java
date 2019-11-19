@@ -1,5 +1,9 @@
 package scc.controllers;
 
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -24,8 +28,8 @@ import scc.utils.GSON;
 public class PostResource extends Resource {
 
 	public static final String PATH = "/post";
-	public static final String CONTAINER = "Posts";
-	public static final String LIKE_CONTAINER = "Likes";
+	public static final String POSTS_CONTAINER = "Posts";
+	public static final String LIKES_CONTAINER = "Likes";
 
 	public static boolean exists(String post_id) {
 		try {
@@ -37,7 +41,7 @@ public class PostResource extends Resource {
 
 	// TODO: Este não vale a pena ir à cache porque não é uma operação lá muito frequente
 	public static boolean existsLike(String like_id) {
-		return CosmosClient.getById(LIKE_CONTAINER, like_id) != null;
+		return CosmosClient.getById(LIKES_CONTAINER, like_id) != null;
 	}
 
 	@POST
@@ -57,21 +61,23 @@ public class PostResource extends Resource {
 
 			if (post.isReply()) {
 				if (post.validReply()) {
-					String post_id = CosmosClient.insert(CONTAINER, post);
+					String post_id = CosmosClient.insert(POSTS_CONTAINER, post);
 
 					// Update cache
 					if(post.getParent() != null) {
 						Redis.LRUHyperLogUpdate(Redis.TOTAL_REPLIES, post.getParent(), post_id, false);
 						Redis.LRUHyperLogUpdate(Redis.DAYLY_REPLIES, post.getParent(), post_id, false);
 						
-						//Redis.LRUListUpdate(Redis.TOP_REPLIES, post.getParent(), GSON.toJson(post), false); // TODO: Não pode ser isto
+						List<Entry<String, Entry<String, String>>> pages = Redis.LRUPairGetAll(Redis.TOP_REPLIES, post.getParent() + ":*");
+						List<String> toDelete = pages.stream().filter( p -> p.getValue().getValue() == null).map( p -> p.getKey()).collect(Collectors.toList());
+						Redis.del((String[])toDelete.toArray());
 					}
 
 					return post_id;
 				} else
 					throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
 			} else
-				return CosmosClient.insert(CONTAINER, post);
+				return CosmosClient.insert(POSTS_CONTAINER, post);
 		} catch (DocumentClientException e) {
 			if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
 				throw new WebApplicationException(Response.status(Status.CONFLICT).entity("Post with that ID already exists").build());
@@ -86,7 +92,7 @@ public class PostResource extends Resource {
 	public static String getPost(@PathParam("post_id") String post_id) {
 		String post_json = Redis.LRUDictionaryGet(Redis.TOP_POSTS, post_id);
 		if(post_json == null) {
-			Post post = CosmosClient.getByNameUnparse(CONTAINER, post_id, Post.class);
+			Post post = CosmosClient.getByNameUnparse(POSTS_CONTAINER, post_id, Post.class);
 			
 			if (post == null)
 				throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Post %s does not exist.", post_id)).build());
@@ -111,7 +117,7 @@ public class PostResource extends Resource {
 
 		try {
 			Like like = new Like(post_id, username);
-			String like_id = CosmosClient.insert(LIKE_CONTAINER, like);
+			String like_id = CosmosClient.insert(LIKES_CONTAINER, like);
 
 			// If in cache, update
 			Redis.LRUHyperLogUpdate(Redis.TOTAL_LIKES, post_id, like_id, false);
@@ -136,7 +142,7 @@ public class PostResource extends Resource {
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("User %s have not yet liked that post %s", username, post_id)).build());
 
 		try {
-			CosmosClient.delete(LIKE_CONTAINER, like_id);
+			CosmosClient.delete(LIKES_CONTAINER, like_id);
 
 			// If in cache, set dirty bit to true
 			Redis.LRUSetDirtyBit(Redis.TOTAL_LIKES, post_id, true);

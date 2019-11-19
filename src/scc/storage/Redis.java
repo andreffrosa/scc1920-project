@@ -1,7 +1,11 @@
 package scc.storage;
 
 import java.time.Duration;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
+
 import java.util.Set;
 
 import redis.clients.jedis.Jedis;
@@ -90,8 +94,8 @@ public class Redis {
 		return (List<String>) executeOperation(jedis -> jedis.lrange(key, 0, pageSize));
 	}
 	
-	public static void del(String key) {
-		executeOperation(jedis -> jedis.del(key));
+	public static void del(String... keys) {
+		executeOperation(jedis -> jedis.del(keys));
 	}
 
 	/*public static void putInBoundedList(String key, int max_size, String... values) {
@@ -134,6 +138,11 @@ public class Redis {
 		return (String) executeOperation(jedis -> {
 			return jedis.get(key);
 		});
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static List<String> getMatchingKeys(String pattern) {
+		return (List<String>) executeOperation( jedis -> jedis.keys(pattern));
 	}
 	
 	// LRU Set
@@ -279,6 +288,17 @@ public class Redis {
 				jedis -> jedis.pfadd("pf:" + set_key + ":" + item_key, value) , dirty );
 	}
 	
+	public static boolean LRUHyperLogUpdate(String set_key, String item_key, List<String> values, boolean dirty) {
+		return LRUSetUpdate(set_key, item_key, 
+				jedis -> {
+					Transaction tx = jedis.multi();
+					for(String value : values)
+						tx.pfadd("pf:" + set_key + ":" + item_key, value);
+					tx.exec();
+					return null;
+				} , dirty );
+	}
+	
 	public interface Op {
 		public Object execute(String arg);
 	}
@@ -312,6 +332,85 @@ public class Redis {
 	public static List<String> LRUListGet(String set_key, String item_key) {
 		return (List<String>) LRUSetGet(set_key, item_key, (Jedis jedis) -> jedis.lrange("list:" + set_key + ":" + item_key, 0, -1) );
 	}
+	
+	public static void LRUStringPut(String set_key, int max_size, String item_key, String value) {
+		LRUSetPut(set_key, max_size, item_key, 
+				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> tx.set("str:" + set_key + ":" + item_key, value), 
+				(Jedis jedis, Transaction tx, String set_key_, String lowest_id) -> tx.del("str:" + set_key + ":" + item_key));
+	}
+	
+	public static boolean LRUStringUpdate(String set_key, String item_key, String value, boolean dirty) {
+		return LRUSetUpdate(set_key, item_key, 
+				jedis -> jedis.set("str:" + set_key + ":" + item_key, value), dirty );
+	}
+	
+	public static String LRUStringGet(String set_key, String item_key) {
+		return (String) LRUSetGet(set_key, item_key, (Jedis jedis) -> jedis.get("str:" + set_key + ":" + item_key) );
+	}
+	
+	public static void LRUPairPut(String set_key, int max_size, String item_key, String value1, String value2) {
+		LRUSetPut(set_key, max_size, item_key, 
+				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> {
+					tx.set("pair:" + set_key + ":" + item_key + ":x", value1);
+					tx.set("pair:" + set_key + ":" + item_key + ":y", value2);
+					}, 
+				(Jedis jedis, Transaction tx, String set_key_, String lowest_id) -> {
+					tx.del("pair:" + set_key + ":" + item_key + ":x");
+					tx.del("pair:" + set_key + ":" + item_key + ":y");
+					});
+	}
+	
+	public static boolean LRUPairUpdate(String set_key, String item_key, String value1, String value2, boolean dirty) {
+		return LRUSetUpdate(set_key, item_key, 
+				jedis -> {
+					Transaction tx = jedis.multi();
+					tx.set("pair:" + set_key + ":" + item_key + ":x", value1);
+					tx.set("pair:" + set_key + ":" + item_key + ":y", value2);
+					tx.exec();
+					return null;
+					}, dirty );
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static Entry<String,String> LRUPairGet(String set_key, String item_key) {
+		List<Object> result = (List<Object>) LRUSetGet(set_key, item_key, (Jedis jedis) -> {
+			Transaction tx = jedis.multi();
+			tx.get("pair:" + set_key + ":" + item_key + ":x");
+			tx.get("pair:" + set_key + ":" + item_key + ":y");
+			return tx.exec();
+		});
+		
+		return new AbstractMap.SimpleEntry<String, String>((String)result.get(0), (String)result.get(1));
+	}
+	
+	@SuppressWarnings("unchecked")
+public static List<Entry<String,Entry<String,String>>> LRUPairGetAll(String set_key, String pattern) {
+		return (List<Entry<String, Entry<String, String>>>) executeOperation( jedis -> {
+			Set<String> keys = (Set<String>) jedis.keys("pair:"+ set_key + ":" + pattern + ":x").stream().map(k -> k.replace(":x", ""));
+			
+			Transaction tx = jedis.multi();
+			for(String k : keys) {
+				tx.get(k + ":x");
+				tx.get(k + ":y");
+			}
+			List<Object> results = tx.exec();
+			
+			List<Entry<String,Entry<String,String>>> result = new ArrayList<>(results.size()/2);
+			
+			java.util.Iterator<Object> it = results.iterator();
+			java.util.Iterator<String> it2 = keys.iterator();
+			while(it.hasNext()) {
+				String x = (String) it.next();
+				String y = (String) it.next();
+				
+				result.add(new AbstractMap.SimpleEntry<String, Entry<String, String>>(it2.next(), new AbstractMap.SimpleEntry<String, String>(x, y)));
+			}
+			
+			return result;
+		} );
+	}
+
+	
 	
 	//TODO: fazer rawDictionary para as imagens
 

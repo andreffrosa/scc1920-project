@@ -17,11 +17,11 @@ import javax.ws.rs.core.Response.Status;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-
+import com.google.gson.reflect.TypeToken;
 import com.microsoft.azure.cosmosdb.Document;
 import com.microsoft.azure.cosmosdb.FeedResponse;
-import redis.clients.jedis.Jedis;
 import scc.models.Like;
+import scc.models.Post;
 import scc.models.PostWithReplies;
 import scc.storage.CosmosClient;
 import scc.storage.Redis;
@@ -34,16 +34,13 @@ public class PagesResource {
 	public static final String PATH = "/page";
 	private static final int DEFAULT_INITIAL_PAGE_SIZE = 10;
 	private static final int DEFAULT_LEVEL = 3;
-	private static final int DEFAULT_PAGE_SIZE = 5;
+	private static final int DEFAULT_PAGE_SIZE = 3;
 	//private static final int MAX_SIZE_ALLOWED = 2;
 
 	@GET
 	@Path("/thread/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public PostWithReplies getThread(@PathParam("id") String id, @DefaultValue(""+DEFAULT_LEVEL) @QueryParam("d") int depth, @DefaultValue(""+DEFAULT_PAGE_SIZE) @QueryParam("p") int pageSize, @QueryParam("t") String continuationToken) {
-
-		if(continuationToken != null)
-			continuationToken = MyBase64.decodeString(continuationToken);
+	public PostWithReplies getThread(@PathParam("id") String id, @DefaultValue(""+DEFAULT_LEVEL) @QueryParam("d") int depth, @DefaultValue(""+DEFAULT_PAGE_SIZE) @QueryParam("p") int pageSize, @QueryParam("t") String continuation_token) {
 
 		String post_json = PostResource.getPost(id);
 		PostWithReplies post = GSON.fromJson(post_json, PostWithReplies.class);
@@ -55,33 +52,18 @@ public class PagesResource {
 			PostWithReplies current_post = queue.poll();
 			amount_posts_current_level--;
 
-			List<PostWithReplies> replies = null;
-			List<String> replies_json = Redis.LRUListGet(Redis.TOP_REPLIES, id);
-			if(replies_json == null) {
-				String query_replies = "SELECT * FROM %s p WHERE p.parent='" + current_post.getId() +"'";
-				Entry<String,List<PostWithReplies>> entry = CosmosClient.queryAndUnparsePaginated(PostResource.CONTAINER, query_replies, continuationToken, pageSize, PostWithReplies.class);
-				replies = entry.getValue();
-
-			}
-			current_post.setReplies(replies);
-			current_post.setContinuationToken(MyBase64.encode(entry.getKey()));
-
-			// TODO: fazer uma lpush com as replies e quando há uma nova reply, adicioná-la a essa lista.
-
 			String post_id = current_post.getId();
-			Long n_likes = Redis.LRUHyperLogGet(Redis.TOTAL_LIKES, post_id);
-			if(n_likes == null) {
-				String query_likes = "SELECT COUNT(c) as Likes FROM %s c WHERE c.post_id='" + current_post.getId() +"'";
-				List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query_likes); 
-				if(!likes.isEmpty()) {
-					JsonElement root = JsonParser.parseString(likes.get(0));
-					n_likes = root.getAsJsonObject().get("Likes").getAsLong();
-					// TODO: adicionar à cache
-				} else {
-					n_likes = 0L;
-				}
-			}
-			current_post.setLikes(n_likes.intValue());
+
+			Entry<String, List<PostWithReplies>> entry = getReplies(post_id, continuation_token);
+			List<PostWithReplies> replies = entry.getValue();
+			String next_continuation_token = entry.getKey();
+
+			current_post.setReplies(replies);
+			current_post.setContinuationToken(next_continuation_token);
+
+			// Total Likes
+			long total_likes = getTotalLikes(post_id);
+			current_post.setLikes(total_likes);
 
 			if(current_level < depth) {
 				queue.addAll(replies);
@@ -113,7 +95,7 @@ public class PagesResource {
 				Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<Entry<Integer, PostWithReplies>>(n_posts, comp);
 
 				String query = "SELECT * FROM %s p WHERE p.parent=null";
-				Iterator<FeedResponse<Document>> it = CosmosClient.queryIterator(PostResource.CONTAINER, query);
+				Iterator<FeedResponse<Document>> it = CosmosClient.queryIterator(PostResource.POSTS_CONTAINER, query);
 				while( it.hasNext() ) {
 					Iterable<PostWithReplies> postsWithReplies = it.next().getResults().stream().map((Document d) -> GSON.fromJson(d.toJson(), PostWithReplies.class)).collect(Collectors.toList());
 					for (PostWithReplies p : postsWithReplies) {
@@ -138,7 +120,7 @@ public class PagesResource {
 				}
 
 				List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
-				
+
 				Redis.del(Redis.INITIAL_PAGE);
 				Redis.putInList(Redis.INITIAL_PAGE, list.stream().map(e -> GSON.toJson(e)).toArray(String[]::new));
 
@@ -147,6 +129,61 @@ public class PagesResource {
 		} catch(Exception e) {
 			throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build() );
 		}
+	}
+
+	private static long getTotalLikes(String post_id) {
+		Long total_likes = Redis.LRUHyperLogGet(Redis.TOTAL_LIKES, post_id);
+		if(total_likes == null) {
+			if(Redis.ACTIVE) {
+				String query = "SELECT * FROM %s l WHERE l.post_id='" + post_id + "'";
+				List<Like> likes = CosmosClient.queryAndUnparse(PostResource.LIKES_CONTAINER, query, Like.class);
+				total_likes = (long) likes.size();
+				Redis.LRUHyperLogPut(Redis.TOTAL_LIKES, Redis.TOTAL_LIKES_LIMIT, post_id, likes.stream().map(l -> GSON.toJson(l)).collect(Collectors.toList()));
+			} else {
+				String query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + post_id + "'";
+				List<String> likes = CosmosClient.query(PostResource.LIKES_CONTAINER, query);
+				if (!likes.isEmpty()) {
+					JsonElement root = JsonParser.parseString(likes.get(0));
+					total_likes = root.getAsJsonObject().get("Likes").getAsLong();
+				} else
+					total_likes = 0L;
+			}
+		}
+		return total_likes.longValue();
+	}
+
+	private static Entry<String,List<PostWithReplies>> getReplies(String post_id, String continuation_token) {
+
+		boolean first = true;
+		List<PostWithReplies> replies = null;
+		Entry<String,List<PostWithReplies>> entry = null;
+		String next_continuation_token = null;
+
+		Entry<String,String> pair = Redis.LRUPairGet(Redis.TOP_REPLIES, post_id + ":" + continuation_token);
+		if(pair == null) {
+			String unparsed_continuation_token = continuation_token == null ? null : MyBase64.decodeString(continuation_token);
+			String query_replies = "SELECT * FROM %s p WHERE p.parent='" + post_id +"'";
+			entry = CosmosClient.queryAndUnparsePaginated(PostResource.POSTS_CONTAINER, query_replies, unparsed_continuation_token, DEFAULT_PAGE_SIZE, PostWithReplies.class);
+			next_continuation_token = MyBase64.encode(entry.getKey());
+			replies = entry.getValue();
+
+			Redis.LRUPairPut(Redis.TOP_REPLIES, Redis.TOP_REPLIES_LIMIT, post_id + ":" + continuation_token, GSON.toJson(replies), next_continuation_token);
+
+			List<String> replies_json = replies.stream().map(r -> GSON.toJson(r)).collect(Collectors.toList());
+
+			if(first) {
+				first = false;
+				Redis.LRUHyperLogPut(Redis.TOTAL_REPLIES, Redis.TOTAL_REPLIES_LIMIT, post_id, replies_json);
+			} else {
+				Redis.LRUHyperLogUpdate(Redis.TOTAL_REPLIES, post_id, replies_json, false);
+			}
+		} else {
+			replies = GSON.fromJson(pair.getValue(), new TypeToken<List<PostWithReplies>>(){}.getType());
+			next_continuation_token = pair.getKey();
+			entry = new AbstractMap.SimpleEntry<String, List<PostWithReplies>>(next_continuation_token, replies);
+		}
+
+		return entry;
 	}
 
 	private static int getFreshness(PostWithReplies p) {
@@ -162,33 +199,45 @@ public class PagesResource {
 	private static int getPopularity(PostWithReplies p) {
 
 		// Total Replies
-		String query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "'";
-		List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
-		p.setReplies(replies);
-		//	TODO: Ir buscar à cache
-
-		// Total Likes
-		Long total_likes = Redis.LRUHyperLogGet(Redis.TOTAL_LIKES, p.getId());
-		if(total_likes == null) {
+		Long total_replies = Redis.LRUHyperLogGet(Redis.TOTAL_REPLIES, p.getId());
+		if(total_replies == null) {
 			if(Redis.ACTIVE) {
-				query = "SELECT * FROM %s l WHERE l.post_id='" + p.getId() + "'";
-				List<Like> likes = CosmosClient.queryAndUnparse(PostResource.LIKE_CONTAINER, query, Like.class);
-				total_likes = (long) likes.size();
-				Redis.LRUHyperLogPut(Redis.TOTAL_LIKES, Redis.TOTAL_LIKES_LIMIT, p.getId(), likes.stream().map(l -> GSON.toJson(l)).collect(Collectors.toList()));
+				String continuation_token = null;
+				boolean first = true;
+				do {
+					total_replies = 0L;
+
+					Entry<String, List<PostWithReplies>> entry = getReplies(p.getId(), continuation_token);
+					List<PostWithReplies> replies = entry.getValue();
+					continuation_token = entry.getKey();
+
+					if(first) {
+						first = false;
+						p.setReplies(replies);
+						p.setContinuationToken(continuation_token);
+					}
+
+					total_replies += replies.size();
+				} while( continuation_token != null );
 			} else {
-				query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId() + "'";
-				List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
+				String query = "SELECT COUNT(p) as Replies FROM %s p WHERE p.parent='" + p.getId() + "'";
+				List<String> likes = CosmosClient.query(PostResource.POSTS_CONTAINER, query);
 				if (!likes.isEmpty()) {
 					JsonElement root = JsonParser.parseString(likes.get(0));
-					total_likes = root.getAsJsonObject().get("Likes").getAsLong();
+					total_replies = root.getAsJsonObject().get("Replies").getAsLong();
 				} else
-					total_likes = 0L;
+					total_replies = 0L;
 			}
 		}
-		p.setLikes(total_likes.longValue());
 
-		int n_likes = p.getLikes() == 0 ? 0 :(int) Math.log10(p.getLikes());
-		int n_replies = p.getReplies().size() == 0 ? 0 :(int) Math.log10(p.getReplies().size());
+		p.setReplies(null);
+
+		// Total Likes
+		long total_likes = getTotalLikes(p.getId());
+		p.setLikes(total_likes);
+
+		int n_likes = total_likes == 0 ? 0 :(int) Math.log10(total_likes);
+		int n_replies = total_replies == 0 ? 0 :(int) Math.log10(total_replies);
 		int a = (int) Math.round(0.8 * n_likes + 0.2 * n_replies);
 		int b = (int) Math.round(0.2 * n_likes + 0.8 * n_replies);
 		int popularity = Math.max(a, b);
@@ -202,13 +251,24 @@ public class PagesResource {
 		Long n_replies = Redis.LRUHyperLogGet(Redis.DAYLY_REPLIES, p.getId());
 		if(n_replies == null) {
 			if(Redis.ACTIVE) {
-				String query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "' AND p._ts>=" + time;
-				List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
-				n_replies = (long) replies.size();
-				Redis.LRUHyperLogPut(Redis.DAYLY_REPLIES, Redis.DAYLY_REPLIES_LIMIT, p.getId(), replies.stream().map(r -> GSON.toJson(r)).collect(Collectors.toList()));
+				String query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "' AND p._ts>=" + time;	
+				Iterator<FeedResponse<Document>> it = CosmosClient.queryIterator(PostResource.POSTS_CONTAINER, query);
+				if(it.hasNext() ) {
+					List<Post> replies = it.next().getResults().stream().map((Document d) -> GSON.fromJson(d.toJson(), Post.class)).collect(Collectors.toList());
+					Redis.LRUHyperLogPut(Redis.DAYLY_REPLIES, Redis.DAYLY_REPLIES_LIMIT, p.getId(), replies.stream().map(r -> r.getId()).collect(Collectors.toList()));
+					n_replies = (long) replies.size();
+				} else
+					n_replies = 0L;
+
+				while( it.hasNext() ) {
+					List<String> posts = it.next().getResults().stream().map((Document d) -> GSON.toJson(GSON.fromJson(d.toJson(), Post.class))).collect(Collectors.toList());
+					Redis.LRUHyperLogUpdate(Redis.DAYLY_REPLIES, p.getId(), posts, false);
+
+					n_replies += posts.size();
+				}
 			} else {
 				String query = "SELECT COUNT(p) as Replies FROM %s p WHERE p.parent='" + p.getId() + "' AND p._ts>=" + time;
-				List<String> replies = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
+				List<String> replies = CosmosClient.query(PostResource.POSTS_CONTAINER, query);
 				if (!replies.isEmpty()) {
 					JsonElement root = JsonParser.parseString(replies.get(0));
 					n_replies = root.getAsJsonObject().get("Replies").getAsLong();
@@ -222,12 +282,24 @@ public class PagesResource {
 		if(n_likes == null) {
 			if(Redis.ACTIVE) {
 				String query = "SELECT * FROM %s l WHERE l.post_id='" + p.getId() + "' AND l._ts>=" + time;
-				List<Like> likes = CosmosClient.queryAndUnparse(PostResource.LIKE_CONTAINER, query, Like.class);
-				n_likes = (long) likes.size();
-				Redis.LRUHyperLogPut(Redis.DAYLY_LIKES, Redis.DAYLY_LIKES_LIMIT, p.getId(), likes.stream().map(l -> GSON.toJson(l)).collect(Collectors.toList()));
+				Iterator<FeedResponse<Document>> it = CosmosClient.queryIterator(PostResource.LIKES_CONTAINER, query);
+				if(it.hasNext() ) {
+					List<Like> likes = it.next().getResults().stream().map((Document d) -> GSON.fromJson(d.toJson(), Like.class)).collect(Collectors.toList());
+					Redis.LRUHyperLogPut(Redis.DAYLY_LIKES, Redis.DAYLY_LIKES_LIMIT, p.getId(), likes.stream().map(l -> l.getId()).collect(Collectors.toList()));
+					n_likes = (long) likes.size();
+				} else
+					n_likes = 0L;
+
+				while( it.hasNext() ) {
+					List<Like> likes = it.next().getResults().stream().map((Document d) -> GSON.fromJson(d.toJson(), Like.class)).collect(Collectors.toList());
+					for (Like l : likes)
+						Redis.LRUHyperLogUpdate(Redis.DAYLY_LIKES, p.getId(), l.getId(), false);
+
+					n_likes += likes.size();
+				}
 			} else {
 				String query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId() + "' AND l._ts>=" + time;
-				List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
+				List<String> likes = CosmosClient.query(PostResource.LIKES_CONTAINER, query);
 				if (!likes.isEmpty()) {
 					JsonElement root = JsonParser.parseString(likes.get(0));
 					n_likes = root.getAsJsonObject().get("Likes").getAsLong();

@@ -34,3 +34,6 @@ cache:
 - replies
 - guardar os threads da página inicial (?)
 - ter função para resetar os contadores com dirtyBit
+
+
+IR ao post e meter para quando se insere uma nova reply eliminar da cache a ultima página (se estiver) daquele post
