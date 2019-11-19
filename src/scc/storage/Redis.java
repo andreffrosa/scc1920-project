@@ -1,9 +1,7 @@
 package scc.storage;
 
 import java.time.Duration;
-import java.util.AbstractMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import redis.clients.jedis.Jedis;
@@ -11,12 +9,12 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.params.SetParams;
-import redis.clients.jedis.params.ZAddParams;
 
 public class Redis {
 
 	// TODO: Ler isto de um ficheiro de configs? Não sei se vale a pena
 	public static final boolean ACTIVE = true;
+	public static final String INITIAL_PAGE = "initial_page";
 	public static final String TOP_POSTS = "top_posts";
 	public static final int TOP_POSTS_LIMIT = 300;
 	public static final String TOP_REPLIES = "top_posts";
@@ -88,8 +86,12 @@ public class Redis {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static List<String> getList(String key, int pageSize){ // TODO: Para que é o size?
+	public static List<String> getPaginatedList(String key, int pageSize){
 		return (List<String>) executeOperation(jedis -> jedis.lrange(key, 0, pageSize));
+	}
+	
+	public static void del(String key) {
+		executeOperation(jedis -> jedis.del(key));
 	}
 
 	/*public static void putInBoundedList(String key, int max_size, String... values) {
@@ -212,8 +214,22 @@ public class Redis {
 	}
 
 	public static void LRUSetDirtyBit(String set_key, String item_key, boolean dirty) {
+		executeOperation(jedis -> 
+			jedis.set("dirty_bit:" + set_key + ":" + item_key, Boolean.toString(dirty), SetParams.setParams().xx())
+		);
+	}
+	
+	public static void LRUSetUpdateDirty(String set_key, PutOperation op) {
 		executeOperation(jedis -> {
-			jedis.set("dirty_bit:" + set_key + ":" + item_key, Boolean.toString(dirty), SetParams.setParams().xx());
+			Set<String> dirty = jedis.keys("dirty_bit:*");
+			
+			Transaction tx = jedis.multi();
+			for(String d : dirty) {
+				String[] s = d.split(":");
+				op.execute(jedis, tx, set_key, s[2]);
+				tx.set("dirty_bit:" + set_key + ":" + s[2], Boolean.FALSE.toString(), SetParams.setParams());
+			}
+			tx.exec();
 			return null;
 		});
 	}
@@ -261,6 +277,20 @@ public class Redis {
 	public static boolean LRUHyperLogUpdate(String set_key, String item_key, String value, boolean dirty) {
 		return LRUSetUpdate(set_key, item_key, 
 				jedis -> jedis.pfadd("pf:" + set_key + ":" + item_key, value) , dirty );
+	}
+	
+	public interface Op {
+		public Object execute(String arg);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static void LRUHyperLogUpdateDirty(String set_key, Op op) {
+		LRUSetUpdateDirty(set_key, (Jedis jedis, Transaction tx, String set_key_, String item_key) -> {
+			List<String> new_values = (List<String>) op.execute(item_key);
+				tx.del("pf:" + set_key + ":" + item_key);
+				for(String value : new_values)
+					tx.pfadd("pf:" + set_key + ":" + item_key, value);
+			});
 	}
 
 	public static Long LRUHyperLogGet(String set_key, String item_key) {

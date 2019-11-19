@@ -32,7 +32,6 @@ import scc.utils.MyBase64;
 public class PagesResource {
 
 	public static final String PATH = "/page";
-	private static final String INITIAL_PAGE = "initial_page";
 	private static final int DEFAULT_INITIAL_PAGE_SIZE = 10;
 	private static final int DEFAULT_LEVEL = 3;
 	private static final int DEFAULT_PAGE_SIZE = 5;
@@ -105,10 +104,10 @@ public class PagesResource {
 		//TODO: verificar se o n_posts é menor que o valor que está a ser calculado pela função.
 
 		try {
-			List<String> fromCache = Redis.getList(INITIAL_PAGE, n_posts);
+			List<String> fromCache = Redis.getPaginatedList(Redis.INITIAL_PAGE, n_posts);
 			if(fromCache!= null && !fromCache.isEmpty()){
 				return fromCache.stream().map(d -> GSON.fromJson(d , PostWithReplies.class))
-						.collect(Collectors.toList()); // TODO: POrque não guardar apenas o Json da lista logo? -> ara poder obter apenas parte da lista
+						.collect(Collectors.toList()); // TODO: Porque não guardar apenas o Json da lista logo? -> ara poder obter apenas parte da lista
 			} else {
 				Comparator<Entry<Integer, PostWithReplies>> comp = (x, y) -> x.getKey().compareTo(y.getKey());
 				Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<Entry<Integer, PostWithReplies>>(n_posts, comp);
@@ -140,7 +139,8 @@ public class PagesResource {
 
 				List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
 				
-				Redis.putInList(INITIAL_PAGE, list.stream().map(e -> GSON.toJson(e)).toArray(String[]::new));
+				Redis.del(Redis.INITIAL_PAGE);
+				Redis.putInList(Redis.INITIAL_PAGE, list.stream().map(e -> GSON.toJson(e)).toArray(String[]::new));
 
 				return list;
 			}

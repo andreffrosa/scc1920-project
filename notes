@@ -31,7 +31,6 @@ TODO LIST:
 
 
 cache:
-- top posts
 - replies
 - guardar os threads da página inicial (?)
 - ter função para resetar os contadores com dirtyBit
