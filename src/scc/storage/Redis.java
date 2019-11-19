@@ -74,13 +74,13 @@ public class Redis {
 	}
 
 	// Strings
-	public static String getKey(String key) {
+	/*public static String getKey(String key) {
 		return (String) executeOperation(jedis -> jedis.get(key));
-	}
+	}*/
 
 	/*public static void setKey(String key, String value){
 		executeOperation(jedis -> jedis.set(key, value));
-	}
+	}*/
 
 	// List
 	public static void putInList(String key, String... values) {
@@ -92,7 +92,7 @@ public class Redis {
 		return (List<String>) executeOperation(jedis -> jedis.lrange(key, 0, pageSize));
 	}
 
-	public static void putInBoundedList(String key, int max_size, String... values) {
+	/*public static void putInBoundedList(String key, int max_size, String... values) {
 		executeOperation(jedis -> {
 			Long count = jedis.lpush(key, values);
 			if(count > max_size)
@@ -120,6 +120,20 @@ public class Redis {
 		return (String) executeOperation(jedis -> jedis.hget(dictionary_key, key));
 	}*/
 
+	
+	public static void set(String key, String value) {
+		executeOperation(jedis -> {
+			jedis.set(key, value);
+			return null;
+		});
+	}
+	
+	public static String get(String key) {
+		return (String) executeOperation(jedis -> {
+			return jedis.get(key);
+		});
+	}
+	
 	// LRU Set
 
 	public interface PutOperation {
@@ -156,13 +170,14 @@ public class Redis {
 
 	public static boolean LRUSetUpdate( String set_key, String item_key, Operation op, boolean dirty ) {
 		return (boolean) executeOperation(jedis -> {
-			long score = System.currentTimeMillis();
+			//long score = System.currentTimeMillis();
 
-			Transaction tx = jedis.multi();
+			/*Transaction tx = jedis.multi();
 			tx.zadd("zset:" + set_key, score, item_key, ZAddParams.zAddParams().xx().ch());
-			tx.set("dirty_bit:" + set_key + ":" + item_key, Boolean.toString(dirty), SetParams.setParams().xx());
+			tx.set("dirty_bit:" + set_key + ":" + item_key, Boolean.toString(dirty), SetParams.setParams().xx());*/
+			boolean wasUpdated = jedis.set("dirty_bit:" + set_key + ":" + item_key, Boolean.toString(dirty), SetParams.setParams().xx()) != null;
 
-			boolean wasUpdated = jedis.zadd("zset:" + set_key, score, item_key, ZAddParams.zAddParams().xx().ch()).longValue() == 1;
+			//boolean wasUpdated = jedis.zadd("zset:" + set_key, score, item_key, ZAddParams.zAddParams().xx().ch()).longValue() == 1;
 
 			if(wasUpdated)
 				op.execute(jedis);
@@ -234,10 +249,13 @@ public class Redis {
 		return (String) LRUSetGet(set_key, item_key, (Jedis jedis) -> jedis.hget("h:" + set_key, item_key) );
 	}
 
-	public static void LRUHyperLogPut(String set_key, int max_size, String item_key, String value) {
+	public static void LRUHyperLogPut(String set_key, int max_size, String item_key, List<String> values) {
 		LRUSetPut(set_key, max_size, item_key, 
-				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> tx.pfadd("pf:" + set_key + ":" + item_key, value), 
-				(Jedis jedis, Transaction tx, String set_key_, String lowest_id) -> tx.del("pf:" + set_key + ":" + item_key, value));
+				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> {
+					for(String value : values)
+						tx.pfadd("pf:" + set_key + ":" + item_key, value);
+					}, 
+				(Jedis jedis, Transaction tx, String set_key_, String lowest_id) -> tx.del("pf:" + set_key + ":" + item_key));
 	}
 
 	public static boolean LRUHyperLogUpdate(String set_key, String item_key, String value, boolean dirty) {

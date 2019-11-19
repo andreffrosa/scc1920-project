@@ -21,6 +21,7 @@ import com.google.gson.JsonParser;
 import com.microsoft.azure.cosmosdb.Document;
 import com.microsoft.azure.cosmosdb.FeedResponse;
 import redis.clients.jedis.Jedis;
+import scc.models.Like;
 import scc.models.PostWithReplies;
 import scc.storage.CosmosClient;
 import scc.storage.Redis;
@@ -45,10 +46,6 @@ public class PagesResource {
 		if(continuationToken != null)
 			continuationToken = MyBase64.decodeString(continuationToken);
 
-		//		PostWithReplies post = CosmosClient.getByIdUnparse(PostResource.CONTAINER, id, PostWithReplies.class);
-		//		if(post == null)
-		//			throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity("Post does not exists").build() );
-		//		
 		String post_json = PostResource.getPost(id);
 		PostWithReplies post = GSON.fromJson(post_json, PostWithReplies.class);
 
@@ -97,8 +94,6 @@ public class PagesResource {
 			}
 		}
 
-
-
 		return post;
 	}
 
@@ -112,10 +107,8 @@ public class PagesResource {
 		try {
 			List<String> fromCache = Redis.getList(INITIAL_PAGE, n_posts);
 			if(fromCache!= null && !fromCache.isEmpty()){
-
-				return fromCache.parallelStream().map(d -> GSON.fromJson(d , PostWithReplies.class))
-						.collect(Collectors.toList()); // TODO: POrque não guardar apenas o Json da lista logo?
-
+				return fromCache.stream().map(d -> GSON.fromJson(d , PostWithReplies.class))
+						.collect(Collectors.toList()); // TODO: POrque não guardar apenas o Json da lista logo? -> ara poder obter apenas parte da lista
 			} else {
 				Comparator<Entry<Integer, PostWithReplies>> comp = (x, y) -> x.getKey().compareTo(y.getKey());
 				Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<Entry<Integer, PostWithReplies>>(n_posts, comp);
@@ -125,17 +118,6 @@ public class PagesResource {
 				while( it.hasNext() ) {
 					Iterable<PostWithReplies> postsWithReplies = it.next().getResults().stream().map((Document d) -> GSON.fromJson(d.toJson(), PostWithReplies.class)).collect(Collectors.toList());
 					for (PostWithReplies p : postsWithReplies) {
-
-
-						// TODO: QUando os likes e replies nas ultimas 24h são 0, o score é 0 e empatam todos e são todos colocados na página inicial
-						// -> caso a hotness seja 0, o que fazer? Usar a freshness (quanto menor for a data da criação maior o rating?) também?
-						// -> utilizar também o nº de views (guardar na cache) para medir a hotness
-						// -> o nº de replies que conta para a hotness deveria ser dos filhos dos filhos ... e não apenas as replies diretas porque se tiver poucas replies directas mas muitas indirectas também deveria aparecer aqui!
-						// -> calcular certas coisas (parametros) daqui com maiores intervalos que outras
-						// -> Depois de obter a lista da cache, atualizar o nº de likes em direto? (outra leitura à cache para não estar a enviar o nº de likes que existiam quando a paǵina foi calculada.
-						//
-						// -> usar o estar em cache do post principal para o score também -> trending (?)
-
 						int score = getScore(p);
 						if (queue.size() < n_posts) {
 							queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
@@ -146,31 +128,25 @@ public class PagesResource {
 									queue.poll();
 									queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
 								} else if (e.getKey() == score) {
-									/*if(queue.size() < max_size*n_posts)
-									queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
-								else if(queue.size() == max_size*n_posts) {*/
 									if (Math.random() <= 0.5) { // Replace with 50% probability
 										queue.poll();
 										queue.add(new AbstractMap.SimpleEntry<Integer, PostWithReplies>(score, p));
 									}
 								}
-								//}
 							}
 						}
 					}
 				}
 
 				List<PostWithReplies> list = queue.stream().map(e -> e.getValue()).collect(Collectors.toList());
-
-				//				Redis.putInList(INITIAL_PAGE, queue.stream().map(e -> GSON.toJson(e.getValue())).toArray(String[]::new));
-				//				queue.forEach( e -> Redis.set(GSON.toJson(e.getKey()), GSON.toJson(e.getValue()))); //Inserting rating in the cache
+				
+				Redis.putInList(INITIAL_PAGE, list.stream().map(e -> GSON.toJson(e)).toArray(String[]::new));
 
 				return list;
 			}
 		} catch(Exception e) {
 			throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build() );
 		}
-
 	}
 
 	private static int getFreshness(PostWithReplies p) {
@@ -186,7 +162,7 @@ public class PagesResource {
 	private static int getPopularity(PostWithReplies p) {
 
 		// Total Replies
-		String query = "SELECT * FROM %s p WHERE p.parent='" + p.getId();
+		String query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "'";
 		List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
 		p.setReplies(replies);
 		//	TODO: Ir buscar à cache
@@ -194,15 +170,20 @@ public class PagesResource {
 		// Total Likes
 		Long total_likes = Redis.LRUHyperLogGet(Redis.TOTAL_LIKES, p.getId());
 		if(total_likes == null) {
-			query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId();
-			List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
-			if (!likes.isEmpty()) {
-				JsonElement root = JsonParser.parseString(likes.get(0));
-				total_likes = root.getAsJsonObject().get("Likes").getAsLong();
-
-				// TODO: acrescentar à cache -> como fazer a atualização disto?
-			} else
-				total_likes = 0L;
+			if(Redis.ACTIVE) {
+				query = "SELECT * FROM %s l WHERE l.post_id='" + p.getId() + "'";
+				List<Like> likes = CosmosClient.queryAndUnparse(PostResource.LIKE_CONTAINER, query, Like.class);
+				total_likes = (long) likes.size();
+				Redis.LRUHyperLogPut(Redis.TOTAL_LIKES, Redis.TOTAL_LIKES_LIMIT, p.getId(), likes.stream().map(l -> GSON.toJson(l)).collect(Collectors.toList()));
+			} else {
+				query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId() + "'";
+				List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
+				if (!likes.isEmpty()) {
+					JsonElement root = JsonParser.parseString(likes.get(0));
+					total_likes = root.getAsJsonObject().get("Likes").getAsLong();
+				} else
+					total_likes = 0L;
+			}
 		}
 		p.setLikes(total_likes.longValue());
 
@@ -220,24 +201,39 @@ public class PagesResource {
 		// Replies in last 24h
 		Long n_replies = Redis.LRUHyperLogGet(Redis.DAYLY_REPLIES, p.getId());
 		if(n_replies == null) {
-			String query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "' AND p._ts>=" + time;
-			List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
-			n_replies = (long) replies.size();
-			// TODO: acrescentar à cache
-		} else
-			n_replies = 0L;
+			if(Redis.ACTIVE) {
+				String query = "SELECT * FROM %s p WHERE p.parent='" + p.getId() + "' AND p._ts>=" + time;
+				List<PostWithReplies> replies = CosmosClient.queryAndUnparse(PostResource.CONTAINER, query, PostWithReplies.class);
+				n_replies = (long) replies.size();
+				Redis.LRUHyperLogPut(Redis.DAYLY_REPLIES, Redis.DAYLY_REPLIES_LIMIT, p.getId(), replies.stream().map(r -> GSON.toJson(r)).collect(Collectors.toList()));
+			} else {
+				String query = "SELECT COUNT(p) as Replies FROM %s p WHERE p.parent='" + p.getId() + "' AND p._ts>=" + time;
+				List<String> replies = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
+				if (!replies.isEmpty()) {
+					JsonElement root = JsonParser.parseString(replies.get(0));
+					n_replies = root.getAsJsonObject().get("Replies").getAsLong();
+				} else
+					n_replies = 0L;
+			}
+		}
 
 		// Likes in last 24h
 		Long n_likes = Redis.LRUHyperLogGet(Redis.DAYLY_LIKES, p.getId());
 		if(n_likes == null) {
-			String query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId() + "' AND l._ts>=" + time;
-			List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
-			if (!likes.isEmpty()) {
-				JsonElement root = JsonParser.parseString(likes.get(0));
-				n_likes = root.getAsJsonObject().get("Likes").getAsLong();
-				// TODO: acrescentar à cache
-			} else
-				n_likes = 0L;
+			if(Redis.ACTIVE) {
+				String query = "SELECT * FROM %s l WHERE l.post_id='" + p.getId() + "' AND l._ts>=" + time;
+				List<Like> likes = CosmosClient.queryAndUnparse(PostResource.LIKE_CONTAINER, query, Like.class);
+				n_likes = (long) likes.size();
+				Redis.LRUHyperLogPut(Redis.DAYLY_LIKES, Redis.DAYLY_LIKES_LIMIT, p.getId(), likes.stream().map(l -> GSON.toJson(l)).collect(Collectors.toList()));
+			} else {
+				String query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + p.getId() + "' AND l._ts>=" + time;
+				List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query);
+				if (!likes.isEmpty()) {
+					JsonElement root = JsonParser.parseString(likes.get(0));
+					n_likes = root.getAsJsonObject().get("Likes").getAsLong();
+				} else
+					n_likes = 0L;
+			}
 		}
 
 		n_likes = (n_likes == 0L ? 0L : (long)Math.log10(n_likes));
@@ -251,8 +247,8 @@ public class PagesResource {
 	}
 
 	private static int getTrending(PostWithReplies p) {
-		// TODO: Ir ver se está no Top Posts na cache
-		return 0; // se não estiver, 100 se estiver?
+		boolean inCache = Redis.LRUDictionaryGet(Redis.TOP_POSTS, p.getId()) != null;
+		return (inCache ? 1 : 0) * 100;
 	}
 
 	private static int getScore(PostWithReplies p) {

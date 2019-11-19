@@ -61,10 +61,10 @@ public class PostResource extends Resource {
 
 					// Update cache
 					if(post.getParent() != null) {
-						Redis.LRUHyperLogPut(Redis.TOTAL_REPLIES, Redis.TOTAL_REPLIES_LIMIT, post.getParent(), post_id);
-						Redis.LRUHyperLogPut(Redis.DAYLY_REPLIES, Redis.DAYLY_REPLIES_LIMIT, post.getParent(), post_id);
+						Redis.LRUHyperLogUpdate(Redis.TOTAL_REPLIES, post.getParent(), post_id, false);
+						Redis.LRUHyperLogUpdate(Redis.DAYLY_REPLIES, post.getParent(), post_id, false);
 						
-						Redis.LRUListUpdate(Redis.TOP_REPLIES, post.getParent(), GSON.toJson(post), false);
+						//Redis.LRUListUpdate(Redis.TOP_REPLIES, post.getParent(), GSON.toJson(post), false); // TODO: Não pode ser isto
 					}
 
 					return post_id;
