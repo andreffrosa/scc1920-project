@@ -42,7 +42,7 @@ public class AzureManagement {
 
     static final Region REGION1 = Region.EUROPE_WEST; // Define the regions to deploy resources here
     static final String REGION1_SUFFIX = "westeu";
-    static final Region REGION2 = null; // Region.US_WEST2;
+    static final Region REGION2 = Region.US_EAST2;
     static final String REGION2_SUFFIX = "westus";
 
     static final String AZURE_PROPS_REGION1_LOCATION = "azurekeys-" + REGION1_SUFFIX + ".props";
