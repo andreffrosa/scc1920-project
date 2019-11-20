@@ -22,17 +22,28 @@ import scc.utils.GSON;
 public class UserResource extends Resource {
 
 	public static final String PATH = "/user";
-	static final String CONTAINER = "Users";
+	public static final String CONTAINER = "Users";
 
-	/*public UserResource() {
+	public UserResource() {
 		super();
-	}*/
+	}
 
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public static String create(User user){
+	public String create(User user){
+		return createUser(user);
+	}
+
+	@GET
+	@Path("/{name}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String get(@PathParam("name") String name){
+		return getUser(name);
+	}
+
+	public static String createUser(User user){
 		if(!user.isValid())
 			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
 
@@ -45,11 +56,8 @@ public class UserResource extends Resource {
 				throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build() );
 		}
 	}
-
-	@GET
-	@Path("/{name}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public static String getByName(@PathParam("name") String name){
+	
+	public static String getUser(String name){
 		String user_json = Redis.LRUDictionaryGet(Redis.TOP_USERS, name);
 		if(user_json == null) {
 			User user = CosmosClient.getByNameUnparse(CONTAINER, name, User.class);
@@ -64,10 +72,10 @@ public class UserResource extends Resource {
 
 		return user_json;
 	}
-
+	
 	public static boolean exists(String username) {		
 		try {
-			return getByName(username) != null;
+			return getUser(username) != null;
 		} catch(WebApplicationException e) {
 			return false;
 		}

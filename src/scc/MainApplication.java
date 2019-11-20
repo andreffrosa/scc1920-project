@@ -24,7 +24,7 @@ public class MainApplication extends Application {
         set.add(ImageResource.class);
         set.add(PostResource.class);
         set.add(UserResource.class);
-        set.add(PagesResource.class);
+        set.add(PageResource.class);
         return set;
     }
     

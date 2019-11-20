@@ -24,29 +24,27 @@ public class ImageResource extends Resource {
 	public static final String PATH = "/image";
 	public static final String CONTAINER_NAME = "images";
 
-	//public ImageResource() {}
+	public ImageResource() {
+		super();
+	}
 
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.APPLICATION_JSON)
-	public static String upload(byte[] contents) {
-		try {
-			String hash = Encryption.computeHash(contents);
-
-			BlobStorageClient.upload(CONTAINER_NAME, hash, contents);
-
-			return hash;
-		} catch(Exception e) {
-			throw new WebApplicationException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
-		}
+	public String upload(byte[] contents) {
+		return uploadImage(contents);
 	}
 
 	@GET
 	@Path("/{img_id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public static byte[] download(@PathParam("img_id") String img_id) {
+	public byte[] download(@PathParam("img_id") String img_id) {
+		return downloadImage(img_id);
+	}
+	
+	public static byte[] downloadImage(String img_id) {
 		try {
 			byte[] img = null;
 			
@@ -64,6 +62,18 @@ public class ImageResource extends Resource {
 				throw new WebApplicationException(e.getMessage(), Status.NOT_FOUND);
 
 			throw new WebApplicationException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
+		} catch(Exception e) {
+			throw new WebApplicationException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	public static String uploadImage(byte[] contents) {
+		try {
+			String hash = Encryption.computeHash(contents);
+
+			BlobStorageClient.upload(CONTAINER_NAME, hash, contents);
+
+			return hash;
 		} catch(Exception e) {
 			throw new WebApplicationException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
 		}

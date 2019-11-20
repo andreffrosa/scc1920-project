@@ -22,16 +22,27 @@ import scc.utils.GSON;
 public class CommunityResource extends Resource {
 
 	public static final String PATH = "/community";
-	static final String CONTAINER = "Communities";
+	public static final String CONTAINER = "Communities";
 
-	/*public CommunityResource() {
+	public CommunityResource() {
 		super();
-	}*/
+	}
 
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	public String newCommunity(Community c) {
+		return createCommunity(c);
+	}
+
+	@GET
+	@Path("/{name}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String getCommunity(@PathParam("name") String name) {
+		return consultCommunity(name);
+	}
+	
 	public static String createCommunity(Community c) {
 		if(!c.isValid())
 			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
@@ -45,10 +56,7 @@ public class CommunityResource extends Resource {
 			throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build() );
 		}
 	}
-
-	@GET
-	@Path("/{name}")
-	@Produces(MediaType.APPLICATION_JSON)
+	
 	public static String consultCommunity(@PathParam("name") String name) {
 		String community_json = Redis.LRUDictionaryGet(Redis.TOP_COMMUNITIES, name);
 		if(community_json == null) {
