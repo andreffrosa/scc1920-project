@@ -30,7 +30,7 @@ public class Debug {
 	public Response test(){
 		// SELECT VALUE COUNT(1) FROM l WHERE l.post_id='1'
 		String query_likes = "SELECT VALUE COUNT(1) AS likes FROM l WHERE l.post_id='" + "1" +"'";
-		List<String> likes = CosmosClient.query(PostResource.LIKE_CONTAINER, query_likes); 
+		List<String> likes = CosmosClient.query(PostResource.LIKES_CONTAINER, query_likes); 
 		
 		/*int n_likes = 0;
 		if(!likes.isEmpty()) {
