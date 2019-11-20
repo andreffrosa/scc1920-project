@@ -1,5 +1,6 @@
 'use strict';
 
+
 /***
  * Exported functions to be used in the testing scripts.
  */
@@ -267,9 +268,8 @@ function startBrowse(context, events, done) {
  */
 function endBrowse(context, next) {
 	const continueLooping = random(100) > context.vars.browsecount
-	return next(context.vars.idstoread.length > 0 && continueLooping)
+	return next(context.vars.idstoread.length > 0 && continueLooping && context.vars.continuationToken.length > 0)
 }
-
 
 
 
@@ -305,6 +305,7 @@ function selectFromPostList(requestParams, response, context, ee, next) {
 		} else {
 			context.vars.hasNextimageid = false
 		}
+		context.vars.continuationToken = resp.continuationToken
 	}
     delete context.vars.like
     delete context.vars.reply
