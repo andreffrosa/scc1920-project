@@ -6,42 +6,20 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.params.SetParams;
-import scc.controllers.PageResource;
 
 public class Redis {
 
-	// TODO: Ler isto de um ficheiro de configs? Não sei se vale a pena
 	public static final boolean ACTIVE = true;
-	public static final String INITIAL_PAGE = "initial_page";
-	public static final String TOP_POSTS = "top_posts";
-	public static final int TOP_POSTS_LIMIT = 300;
-	public static final String TOP_REPLIES = "top_posts";
-	public static final int TOP_REPLIES_LIMIT = 150;
-	public static final String TOTAL_LIKES = "total_likes";
-	public static final int TOTAL_LIKES_LIMIT = 400;
-	public static final String DAYLY_LIKES = "dayly_likes";
-	public static final int DAYLY_LIKES_LIMIT = 400;
-	public static final String TOTAL_REPLIES = "total_replies";
-	public static final int TOTAL_REPLIES_LIMIT = 400;
-	public static final String DAYLY_REPLIES = "dayly_replies";
-	public static final int DAYLY_REPLIES_LIMIT = 400;
-	public static final String TOP_USERS = "top_users";
-	public static final int TOP_USERS_LIMIT = 50;
-	public static final String TOP_COMMUNITIES = "top_communities";
-	public static final int TOP_COMMUNITIES_LIMIT = 5;
-	public static final String TOP_IMAGES = "top_images";
-	public static final int TOP_IMAGES_LIMIT = 10;
 	
 	private static final int TIMEOUT = 2000;
 	
@@ -51,7 +29,7 @@ public class Redis {
 
 	//public Redis(){ }
 
-	static void init(String redisHostName, String password) {
+	public static void init(String redisHostName, String password) {
 		jedisPool = new JedisPool(getJedisPoolConfig(), redisHostName, 6380, TIMEOUT, password, true);
 	}
 

@@ -1,13 +1,6 @@
-package scc.controllers;
+package scc.resources;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -16,39 +9,17 @@ import com.microsoft.azure.cosmosdb.DocumentClientException;
 import scc.models.User;
 import scc.storage.CosmosClient;
 import scc.storage.Redis;
+import scc.utils.Config;
 import scc.utils.GSON;
 
-@Path(UserResource.PATH)
 public class UserResource extends Resource {
 
-	public static final String PATH = "/user";
-	public static final String CONTAINER = "Users";
-
-	public UserResource() {
-		super();
-	}
-
-	@POST
-	@Path("/")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public String create(User user){
-		return createUser(user);
-	}
-
-	@GET
-	@Path("/{name}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public String get(@PathParam("name") String name){
-		return getUser(name);
-	}
-
-	public static String createUser(User user){
+	public static String create(User user){
 		if(!user.isValid())
 			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
 
 		try {
-			return CosmosClient.insert(CONTAINER, user);
+			return CosmosClient.insert(Config.USERS_CONTAINER, user);
 		} catch (DocumentClientException e) {
 			if(e.getStatusCode() == Status.CONFLICT.getStatusCode())
 				throw new WebApplicationException( Response.status(Status.CONFLICT).entity(String.format("User %s already exists", user.getName())).build() );
@@ -57,25 +28,27 @@ public class UserResource extends Resource {
 		}
 	}
 	
-	public static String getUser(String name){
-		String user_json = Redis.LRUDictionaryGet(Redis.TOP_USERS, name);
+	public static User get(String name){
+		String user_json = Redis.LRUDictionaryGet(Config.TOP_USERS, name);
 		if(user_json == null) {
-			User user = CosmosClient.getByNameUnparse(CONTAINER, name, User.class);
+			User user = CosmosClient.getByNameUnparse(Config.USERS_CONTAINER, name, User.class);
 
 			if(user == null)
 				throw new WebApplicationException( Response.status(Status.NOT_FOUND).entity(String.format("User %s not found", name)).build());
 			
 			user_json = GSON.toJson(user);
 			
-			Redis.LRUDictionaryPut(Redis.TOP_USERS, Redis.TOP_USERS_LIMIT, name, user_json);
+			Redis.LRUDictionaryPut(Config.TOP_USERS, Integer.parseInt(Config.getRedisProperty(Config.TOP_USERS_LIMIT)), name, user_json);
+			
+			return user;
 		}
 
-		return user_json;
+		return GSON.fromJson(user_json, User.class);
 	}
 	
 	public static boolean exists(String username) {		
 		try {
-			return getUser(username) != null;
+			return get(username) != null;
 		} catch(WebApplicationException e) {
 			return false;
 		}

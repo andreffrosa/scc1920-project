@@ -11,6 +11,10 @@ public class PostWithReplies extends Post {
     public PostWithReplies() {
     	super();
     }
+    
+    public PostWithReplies(Post p) {
+    	super(p.getTitle(), p.getAuthor(), p.getCommunity(), p.getMessage(), p.getMultiMediaObject(), p.getParent());
+    }
 
 	public List<PostWithReplies> getReplies() {
 		return replies;

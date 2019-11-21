@@ -1,7 +1,8 @@
 package scc;
 
-import scc.controllers.*;
-import scc.storage.Config;
+import scc.endpoints.*;
+
+import scc.utils.Config;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
@@ -19,12 +20,12 @@ public class MainApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         Set<Class<?>> set = new HashSet<>();
-        set.add(Debug.class);
-        set.add(CommunityResource.class);
-        set.add(ImageResource.class);
-        set.add(PostResource.class);
-        set.add(UserResource.class);
-        set.add(PageResource.class);
+        set.add(DebugEndpoint.class);
+        set.add(CommunityEndpoint.class);
+        set.add(ImageEndpoint.class);
+        set.add(PostEndpoint.class);
+        set.add(UserEndpoint.class);
+        set.add(PageEndpoint.class);
         return set;
     }
     

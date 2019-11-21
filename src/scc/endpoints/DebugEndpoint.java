@@ -1,4 +1,4 @@
-package scc.controllers;
+package scc.endpoints;
 
 import java.util.Iterator;
 import java.util.List;
@@ -22,10 +22,11 @@ import com.microsoft.azure.cosmosdb.FeedResponse;
 import scc.models.Like;
 import scc.storage.CosmosClient;
 import scc.storage.Redis;
+import scc.utils.Config;
 import scc.utils.GSON;
 
-@Path(Debug.PATH)
-public class Debug {
+@Path(DebugEndpoint.PATH)
+public class DebugEndpoint {
 
 	public static final String PATH = "/debug";
 
@@ -35,7 +36,7 @@ public class Debug {
 	@Path("/version")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getVersion(){
-		Logger logger = LoggerFactory.getLogger(Debug.class);
+		Logger logger = LoggerFactory.getLogger(DebugEndpoint.class);
 	    logger.info(VERSION);
 		return Response.ok(VERSION).build();
 	}
@@ -58,16 +59,16 @@ public class Debug {
 	
 	public String getTotalLikes(String post_id) {
 		String result = "";
-		Long total_likes = Redis.LRUHyperLogGet(Redis.TOTAL_LIKES, post_id);
+		Long total_likes = Redis.LRUHyperLogGet(Config.TOTAL_LIKES, post_id);
 		if(total_likes == null) {
 			result += "1";
 			if(Redis.ACTIVE) {	
 				result += "2";
 				String query = "SELECT * FROM %s l WHERE l.post_id='" + post_id + "'";
-				Iterator<FeedResponse<Document>> it = CosmosClient.queryIterator(PostResource.LIKES_CONTAINER, query);
+				Iterator<FeedResponse<Document>> it = CosmosClient.queryIterator(Config.LIKES_CONTAINER, query);
 				if(it.hasNext() ) {
 					List<Like> likes = it.next().getResults().stream().map((Document d) -> GSON.fromJson(d.toJson(), Like.class)).collect(Collectors.toList());
-					Redis.LRUHyperLogPut(Redis.TOTAL_LIKES, Redis.TOTAL_LIKES_LIMIT, post_id, likes.stream().map(l -> GSON.toJson(l)).collect(Collectors.toList()));
+					Redis.LRUHyperLogPut(Config.TOTAL_LIKES, Integer.parseInt(Config.getRedisProperty(Config.TOTAL_LIKES_LIMIT)), post_id, likes.stream().map(l -> GSON.toJson(l)).collect(Collectors.toList()));
 					total_likes = (long) likes.size();
 					result += "3";
 				} else
@@ -75,14 +76,14 @@ public class Debug {
 				while( it.hasNext() ) {
 					result += "4";
 					List<String> likes = it.next().getResults().stream().map((Document d) -> GSON.toJson(GSON.fromJson(d.toJson(), Like.class))).collect(Collectors.toList());
-					Redis.LRUHyperLogUpdate(Redis.TOTAL_LIKES, post_id, likes, false);
+					Redis.LRUHyperLogUpdate(Config.TOTAL_LIKES, post_id, likes, false);
 
 					total_likes += likes.size();
 				}
 			} else {
 				result += "5";
 				String query = "SELECT COUNT(l) as Likes FROM %s l WHERE l.post_id='" + post_id + "'";
-				List<String> likes = CosmosClient.query(PostResource.LIKES_CONTAINER, query);
+				List<String> likes = CosmosClient.query(Config.LIKES_CONTAINER, query);
 				if (!likes.isEmpty()) {
 					result += "6";
 					JsonElement root = JsonParser.parseString(likes.get(0));
