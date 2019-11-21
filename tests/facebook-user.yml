@@ -28,8 +28,8 @@ scenarios:
           - post:                        # Like some posts here and there
               ifTrue: "hasNextid"
               url: "/post/{{ nextid }}/like{{ sessionuser }}"
-              afterResponse: "selectFromPostThread"   # select posts to browse next and decide whether to reply or like this post
-          - loop:                                    # load the image for the main post
+              afterResponse: "selectFromPostThread"   # select posts to browse next
+          - loop:                                     # load the image for the main post
               - get:
                   ifTrue: "hasNextimageid"
                   url: "/image/{{ nextimageid }}"

@@ -13,10 +13,8 @@ import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static scc.management.AzureManagement.*;
-
 public class Deployment {
-
+/*
     public static void main(String[] args) {
         try {
             if (args.length == 1) {
@@ -176,4 +174,6 @@ public class Deployment {
             e.printStackTrace();
         }
     }
+    */
+
 }
