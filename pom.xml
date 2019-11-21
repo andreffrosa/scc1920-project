@@ -21,7 +21,7 @@
       <artifactId>javax.ws.rs-api</artifactId>  
       <version>2.1</version> 
     </dependency>  
-    <dependency> 
+    <!--  <dependency>
       <groupId>org.glassfish.jersey.core</groupId>  
       <artifactId>jersey-client</artifactId>  
       <version>2.29.1</version> 
@@ -36,12 +36,13 @@
       <artifactId>jersey-media-json-jackson</artifactId>  
       <version>2.29.1</version> 
     </dependency>  
+ -->  
     <dependency> 
       <groupId>org.slf4j</groupId>  
       <artifactId>slf4j-simple</artifactId>  
       <version>1.7.24</version> 
     </dependency>  
-    <dependency> 
+    <!--    <dependency>
       <groupId>com.spotify</groupId>  
       <artifactId>docker-client</artifactId>  
       <version>8.1.2</version> 
@@ -51,6 +52,7 @@
       <artifactId>guava</artifactId>  
       <version>21.0</version> 
     </dependency>  
+ -->  
     <dependency> 
       <groupId>com.google.code.gson</groupId>  
       <artifactId>gson</artifactId>  
@@ -61,11 +63,12 @@
       <artifactId>jersey-hk2</artifactId>  
       <version>2.29.1</version> 
     </dependency>  
-    <dependency> 
+    <!--    <dependency>
       <groupId>com.microsoft.azure</groupId>  
       <artifactId>azure</artifactId>  
       <version>1.27.0</version> 
     </dependency>  
+ -->  
     <dependency> 
       <groupId>com.microsoft.azure</groupId>  
       <artifactId>azure-storage</artifactId>  
@@ -99,11 +102,12 @@
       <type>jar</type>  
       <scope>compile</scope> 
     </dependency>  
-    <dependency> 
+    <!--   <dependency>
       <groupId>com.github.javafaker</groupId>  
       <artifactId>javafaker</artifactId>  
       <version>0.12</version> 
     </dependency> 
+ --> 
   </dependencies>  
   <build> 
     <sourceDirectory>src</sourceDirectory>  
@@ -140,7 +144,7 @@
         <version>1.7.0</version>  
         <configuration> 
           <schemaVersion>V2</schemaVersion>  
-          <pricingTier>F1</pricingTier>  
+          <pricingTier>B1</pricingTier>  
           <region>westeurope</region>  
           <runtime> 
             <os>linux</os>  
