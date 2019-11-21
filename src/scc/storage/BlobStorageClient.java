@@ -27,6 +27,12 @@ public class BlobStorageClient {
 		}
 	}
 
+	public static boolean checkIfExists(String container_name, String blob_id) throws URISyntaxException, StorageException {
+		CloudBlobContainer container = blobClient.getContainerReference(container_name);
+		CloudBlob blob = container.getBlockBlobReference(blob_id);
+		return blob.exists();
+	}
+
 	public static void upload(String container_name, String blob_id, byte[] contents) throws URISyntaxException, StorageException, IOException {
 		CloudBlobContainer container = blobClient.getContainerReference(container_name);
 		

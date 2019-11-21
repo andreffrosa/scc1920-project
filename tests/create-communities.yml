@@ -1,6 +1,6 @@
 #Create initial set of communities
 config:
-  target: 'https://scc-backend-4204.azurewebsites.net'
+  target: 'https://scc-backend-westeu-nmp.azurewebsites.net'
   http:
     pool: 10
   processor: "./test-utils.js"
@@ -19,5 +19,5 @@ scenarios:
               Accept: text/plain
             json:
               name: "{{ name }}"
-        count: 30
+        count: 250
           

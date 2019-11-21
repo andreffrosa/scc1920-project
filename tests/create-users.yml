@@ -1,6 +1,6 @@
 #Create initial set of users
 config:
-  target: 'https://scc-backend-4204.azurewebsites.net'
+  target: 'https://scc-backend-westeu-nmp.azurewebsites.net'
   http:
     pool: 10
   processor: "./test-utils.js"
@@ -20,5 +20,5 @@ scenarios:
             json:
               name: "{{ name }}"
             afterResponse: "genNewUserReply"
-        count: 100
+        count: 5000
           

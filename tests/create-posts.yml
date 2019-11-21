@@ -1,6 +1,8 @@
 #Create initial set of posts
 config:
-  target: 'https://scc-backend-4204.azurewebsites.net'
+  target: 'https://scc-backend-westeu-nmp.azurewebsites.net'
+  plugins:
+    metrics-by-endpoint: {}
   http:
     pool: 10
   processor: "./test-utils.js"
@@ -18,11 +20,11 @@ scenarios:
             headers:
               Content-Type: application/octet-stream
               Accept: text/plain
-            beforeRequest: "setNewPostBody"
+            beforeRequest: "setNewPostImageBody"
             afterResponse: "genNewImageReply"            
             ifTrue: "hasImage"
         - post:
-            url: "/post/p"
+            url: "/post/"
             headers:
               Accept: text/plain
             json:
@@ -30,7 +32,7 @@ scenarios:
               creator: "{{ creator }}"
               msg: "{{ msg }}"
               image: "{{ imageId }}"
-              parentId: "{{ parrentId }}"
+              parentId: "{{ parentId }}"
             afterResponse: "genNewPostReply"
         count: 200
           
