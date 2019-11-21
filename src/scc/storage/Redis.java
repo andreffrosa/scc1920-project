@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,8 +91,17 @@ public class Redis {
 		return (List<String>) executeOperation(jedis -> jedis.lrange(key, (page_number-1)*page_size, page_size));
 	}
 	
-	public static void del(String... keys) {
-		executeOperation(jedis -> jedis.del(keys));
+	public static void del(String key) {
+		executeOperation(jedis -> jedis.del(key));
+	}
+	
+	public static void del(List<String> keys) {
+		executeOperation(jedis -> {
+			Transaction tx = jedis.multi();
+			for(String key : keys)
+				tx.del(key);
+			return tx.exec();
+		});
 	}
 
 	/*public static void putInBoundedList(String key, int max_size, String... values) {
@@ -324,7 +334,7 @@ public class Redis {
 
 	public static void LRUListPut(String set_key, int max_size, String item_key, List<String> values) {
 		LRUSetPut(set_key, max_size, item_key, 
-				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> tx.lpush("list:" + set_key + ":" + item_key, (String[])(values.stream().map(v -> parse(v))).toArray()), 
+				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> tx.lpush("list:" + set_key + ":" + item_key, (String[])(values.stream().map(v -> parse(v)).toArray())), 
 				(Jedis jedis, Transaction tx, String set_key_, String lowest_id) -> tx.del("list:" + set_key + ":" + item_key));
 	}
 	
@@ -335,7 +345,7 @@ public class Redis {
 	
 	@SuppressWarnings("unchecked")
 	public static List<String> LRUListGet(String set_key, String item_key) {
-		return (List<String>) LRUSetGet(set_key, item_key, (Jedis jedis) -> jedis.lrange("list:" + set_key + ":" + item_key, 0, -1).stream().map( v -> unparse(v) ) );
+		return (List<String>) LRUSetGet(set_key, item_key, (Jedis jedis) -> jedis.lrange("list:" + set_key + ":" + item_key, 0, -1).stream().map( v -> unparse(v) ).collect(Collectors.toList()));
 	}
 	
 	public static void LRUStringPut(String set_key, int max_size, String item_key, String value) {
@@ -393,7 +403,7 @@ public class Redis {
 	@SuppressWarnings("unchecked")
 public static List<Entry<String,Entry<String,String>>> LRUPairGetAll(String set_key, String pattern) {
 		return (List<Entry<String, Entry<String, String>>>) executeOperation( jedis -> {
-			Set<String> keys = (Set<String>) jedis.keys("pair:"+ set_key + ":" + pattern + ":x").stream().map(k -> k.replace(":x", ""));
+			Set<String> keys = (Set<String>) jedis.keys("pair:"+ set_key + ":" + pattern + ":x").stream().map(k -> k.replace(":x", "")).collect(Collectors.toSet());
 			
 			Transaction tx = jedis.multi();
 			for(String k : keys) {

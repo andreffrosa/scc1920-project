@@ -63,7 +63,7 @@ public class PostResource extends Resource {
 
 						List<Entry<String, Entry<String, String>>> pages = Redis.LRUPairGetAll(Config.TOP_REPLIES, post.getParent() + ":*");
 						List<String> toDelete = pages.stream().filter( p -> p.getValue().getValue() == null).map( p -> p.getKey()).collect(Collectors.toList());
-						Redis.del((String[])toDelete.toArray());
+						Redis.del(toDelete);
 					}
 
 					return post_id;

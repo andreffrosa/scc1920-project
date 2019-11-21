@@ -1,5 +1,6 @@
 package scc.endpoints;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,19 +25,22 @@ import scc.storage.CosmosClient;
 import scc.storage.Redis;
 import scc.utils.Config;
 import scc.utils.GSON;
+import scc.utils.Config.PropType;
 
 @Path(DebugEndpoint.PATH)
 public class DebugEndpoint {
 
 	public static final String PATH = "/debug";
 
-	public static final String VERSION = "69.0.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX-Vanilla Edition";
+	public static final String VERSION = "76.0.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX-Vanilla Edition";
 
+	static Logger logger = LoggerFactory.getLogger(DebugEndpoint.class);
+	
 	@GET
 	@Path("/version")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getVersion(){
-		Logger logger = LoggerFactory.getLogger(DebugEndpoint.class);
+		
 	    logger.info(VERSION);
 		return Response.ok(VERSION).build();
 	}
@@ -45,8 +49,21 @@ public class DebugEndpoint {
 	@Path("/cache")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCache() {
-		String cache = GSON.toJson(Redis.getMatchingKeys("*"));
-		return Response.ok(cache).build();
+//		String cache = GSON.toJson(Redis.getMatchingKeys("*"));
+//		return Response.ok(cache).build();
+		
+		//Boolean isNull = Config.getRedisProperty(Config.TOP_USERS_LIMIT) == null;
+		
+		try {
+			Config.getProperties(PropType.REDIS);
+			return Response.ok(Config.getProperties(PropType.REDIS) == null).build();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return Response.ok(e).build();
+		}
+		
+		
 	}
 	
 	@GET
