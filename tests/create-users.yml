@@ -1,6 +1,6 @@
 #Create initial set of users
 config:
-  target: 'https://scc-backend-westeu-nmp.azurewebsites.net'
+  target: 'https://scc-backend-euwest-app-47134.azurewebsites.net'
   http:
     pool: 10
   processor: "./test-utils.js"
