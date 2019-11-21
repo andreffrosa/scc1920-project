@@ -57,7 +57,7 @@ public class CommunityResource extends Resource {
 		}
 	}
 	
-	public static String consultCommunity(@PathParam("name") String name) {
+	public static String consultCommunity(String name) {
 		String community_json = Redis.LRUDictionaryGet(Redis.TOP_COMMUNITIES, name);
 		if(community_json == null) {
 			Community community = CosmosClient.getByNameUnparse(CONTAINER, name, Community.class);
