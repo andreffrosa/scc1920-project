@@ -6,9 +6,11 @@ public class PostWithReplies extends Post {
 
 	private long n_likes;
     private List<PostWithReplies> replies;
-    private String continuationToken;
+    private String continuation_token;
    
-    public PostWithReplies() {}
+    public PostWithReplies() {
+    	super();
+    }
 
 	public List<PostWithReplies> getReplies() {
 		return replies;
@@ -27,11 +29,11 @@ public class PostWithReplies extends Post {
 	}
 
 	public String getContinuationToken() {
-		return continuationToken;
+		return continuation_token;
 	}
 
 	public void setContinuationToken(String continuationToken) {
-		this.continuationToken = continuationToken;
+		this.continuation_token = continuationToken;
 	}
 	
 }

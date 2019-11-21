@@ -3,6 +3,8 @@ package scc.models;
 import java.util.List;
 
 public class InitialPage {
+	
+	// TODO: Esta class não está a ser utilizada
 
 	private List<PostWithReplies> posts;
 	private String continuationToken;
