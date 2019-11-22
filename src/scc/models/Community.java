@@ -7,11 +7,10 @@ public class Community extends Resource {
 	//private String img;
 
 	public Community() {
-		super("/name");
+		super();
 	}
 
 	public Community(String name) {
-		super(null, null, "/name");
 		this.name = name;
 	}
 

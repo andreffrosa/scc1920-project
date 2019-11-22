@@ -6,7 +6,7 @@ public class Like extends Resource {
     private String username;
 
     public Like(String post_id, String author_username) {
-    	super(buildId(post_id, author_username), null, "/post_id");
+        super();
         this.post_id = post_id;
         this.username = author_username;
     }
@@ -21,6 +21,6 @@ public class Like extends Resource {
     }
 
     public boolean isValid(){ return username != null && !username.equals("") && post_id != null && !post_id.equals(""); }
-    
+
 }
 

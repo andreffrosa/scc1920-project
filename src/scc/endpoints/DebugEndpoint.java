@@ -33,7 +33,7 @@ public class DebugEndpoint {
 
 	public static final String PATH = "/debug";
 
-	public static final String VERSION = "78.0.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX-Vanilla Edition";
+	public static final String VERSION = "80.0.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX-Vanilla Edition";
 
 	static Logger logger = LoggerFactory.getLogger(DebugEndpoint.class);
 	
