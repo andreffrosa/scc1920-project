@@ -76,7 +76,7 @@ public class PageResource {
 
 		// TODO: Porque não guardar apenas o Json da lista? -> para poder obter apenas parte da lista
 		try {
-			List<String> fromCache = Redis.getPaginatedList(Config.getRedisProperty(Config.INITIAL_PAGE), page_size, page_number);
+			List<String> fromCache = Redis.getPaginatedList(Config.INITIAL_PAGE, page_size, page_number);
 			if(fromCache!= null && !fromCache.isEmpty()){
 				logger.info("Initial page retrieved from Cache: " + page_size + " posts/page p=" + page_number);
 				List<PostWithReplies> requested_page = fromCache.stream().map( d -> GSON.fromJson(d , PostWithReplies.class) ).collect(Collectors.toList()); 
@@ -86,10 +86,12 @@ public class PageResource {
 				Redis.del(Config.INITIAL_PAGE);
 				Redis.putInList(Config.INITIAL_PAGE, initial_page.stream().map( p -> GSON.toJson(p) ).toArray(String[]::new));
 
-				List<PostWithReplies> requested_page = initial_page.subList((page_number-1)*page_size, Math.min((page_number*page_size)+1, Integer.parseInt(Config.getSystemProperty(Config.MAX_INITIAL_PAGE_POSTS))));
+				List<PostWithReplies> requested_page = initial_page.subList((page_number-1)*page_size,
+						Math.min((page_number*page_size), Integer.parseInt(Config.getSystemProperty(Config.MAX_INITIAL_PAGE_POSTS))));
 				return requested_page;
 			}
 		} catch(Exception e) {
+			e.printStackTrace();
 			throw new WebApplicationException( Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build() );
 		}
 	}
