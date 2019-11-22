@@ -145,7 +145,7 @@
         <configuration> 
           <schemaVersion>V2</schemaVersion>  
           <pricingTier>B1</pricingTier>  
-          <region>centralus</region>  
+          <region>westeurope</region>  
           <runtime> 
             <os>linux</os>  
             <javaVersion>jre8</javaVersion>  
@@ -163,8 +163,8 @@
 								</resource> --> 
             </resources> 
           </deployment>  
-          <resourceGroup>scc-backend-uscentral-47134</resourceGroup>  
-          <appName>scc-backend-uscentral-47134</appName> 
+          <resourceGroup>scc-backend-euwest-47134</resourceGroup>  
+          <appName>scc-backend-euwest-app-47134</appName> 
         </configuration> 
       </plugin> 
     </plugins> 

@@ -28,7 +28,6 @@ import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictExceptio
 import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 
 import rx.Observable;
-import scc.models.Resource;
 import scc.utils.GSON;
 
 public class CosmosClient {
