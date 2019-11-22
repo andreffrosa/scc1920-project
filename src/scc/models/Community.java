@@ -1,23 +1,18 @@
 package scc.models;
 
-public class Community {
+public class Community extends Resource {
 
-	private String id;
 	private String name;
-	private Long _ts;
 	//private String description;
 	//private String img;
 
-	public Community() {}
-
-	public Community(String name) {
-		this.name = name;
-		this._ts = null;
-		this.id = null;
+	public Community() {
+		super("/name");
 	}
 
-	public String getId() {
-		return id;
+	public Community(String name) {
+		super(null, null, "/name");
+		this.name = name;
 	}
 
 	public String getName() {
@@ -28,20 +23,8 @@ public class Community {
 		return name != null && !name.equals("");
 	}
 
-	public void setId(String id) {
-		this.id = id;
-	}
-
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public void setCreationTime(long creation_time){
-		this._ts = creation_time;
-	}
-
-	public long getCreationTime() {
-		return _ts == null ? -1 : _ts.longValue();
 	}
 
 }

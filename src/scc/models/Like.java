@@ -1,31 +1,20 @@
 package scc.models;
 
-public class Like {
+public class Like extends Resource {
 
-    private String id, post_id;
+    private String post_id;
     private String username;
-    private Long _ts;
 
     public Like(String post_id, String author_username) {
-        this.id = buildId(post_id, author_username);
+    	super(buildId(post_id, author_username), null, "/post_id");
         this.post_id = post_id;
         this.username = author_username;
-        this._ts = null;
     }
-
-    public String getId(){ return id; }
 
     public String getPost_id(){ return  post_id; }
 
     public String getAuthor_username(){ return  username; }
 
-    public void setCreationTime(long creation_time){
-        this._ts = creation_time;
-    }
-
-	public long getCreationTime() {
-		return _ts == null ? -1 : _ts.longValue();
-	}
 
 	public static String buildId(String post_id, String author_username){
         return author_username + "@" + post_id;

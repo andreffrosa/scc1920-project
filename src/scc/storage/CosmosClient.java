@@ -11,6 +11,9 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.microsoft.azure.cosmosdb.ConnectionMode;
 import com.microsoft.azure.cosmosdb.ConnectionPolicy;
 import com.microsoft.azure.cosmosdb.ConsistencyLevel;
@@ -18,11 +21,15 @@ import com.microsoft.azure.cosmosdb.Document;
 import com.microsoft.azure.cosmosdb.DocumentClientException;
 import com.microsoft.azure.cosmosdb.FeedOptions;
 import com.microsoft.azure.cosmosdb.FeedResponse;
+import com.microsoft.azure.cosmosdb.PartitionKey;
+import com.microsoft.azure.cosmosdb.RequestOptions;
 import com.microsoft.azure.cosmosdb.ResourceResponse;
 import com.microsoft.azure.cosmosdb.internal.directconnectivity.ConflictException;
 import com.microsoft.azure.cosmosdb.rx.AsyncDocumentClient;
 
 import rx.Observable;
+import scc.models.Community;
+import scc.models.Resource;
 import scc.utils.GSON;
 
 public class CosmosClient {
@@ -115,43 +122,7 @@ public class CosmosClient {
 		}
 	}
 
-	public static void delete(String container_name, String id) throws DocumentClientException {
-
-		String documentLink = getDocumentLink(cosmosDatabase, container_name, id);
-		Observable<ResourceResponse<Document>> createDocumentObservable = cosmosClient.deleteDocument(documentLink,
-				null);
-
-		final CountDownLatch completionLatch = new CountDownLatch(1);
-		AtomicReference<DocumentClientException> at = new AtomicReference<>();
-
-		createDocumentObservable.single() // we know there will be one response
-				.subscribe(documentResourceResponse -> {
-					completionLatch.countDown();
-				}, error -> {
-					if (error instanceof DocumentClientException)
-						at.set(new DocumentClientException(Response.Status.NOT_FOUND.getStatusCode(),
-								(Exception) error));
-					else
-						at.set(new DocumentClientException(500, (Exception) error));
-					
-					error.printStackTrace();
-					
-					completionLatch.countDown();
-				});
-
-		// Wait till document creation completes
-		try {
-			completionLatch.await();
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}
-
-		DocumentClientException e = at.get();
-		if (e != null) {
-			throw e;
-		}
-	}
-
+	
 	public static <T> String getByName(String container_name, String name) {
 		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
@@ -276,7 +247,7 @@ public class CosmosClient {
 		List<String> list = new LinkedList<String>();
 
 		while (it.hasNext()) {
-			List<String> l = it.next().getResults().parallelStream().map(d -> d.toJson()).collect(Collectors.toList());
+			List<String> l = it.next().getResults().stream().map(d -> d.toJson()).collect(Collectors.toList());
 			list.addAll(l);
 		}
 
@@ -299,7 +270,7 @@ public class CosmosClient {
 
 		List<T> list = new LinkedList<T>();
 		while (it.hasNext()) {
-			List<T> l = it.next().getResults().parallelStream().map(d -> GSON.fromJson(d.toJson(), class_))
+			List<T> l = it.next().getResults().stream().map(d -> GSON.fromJson(d.toJson(), class_))
 					.collect(Collectors.toList());
 			list.addAll(l);
 		}
@@ -327,7 +298,7 @@ public class CosmosClient {
 		List<T> list = new LinkedList<T>();
 		if(it.hasNext()) {
 			FeedResponse<Document> page = it.next();
-			List<T> l = page.getResults().parallelStream().map(d -> GSON.fromJson(d.toJson(), class_))
+			List<T> l = page.getResults().stream().map(d -> GSON.fromJson(d.toJson(), class_))
 					.collect(Collectors.toList());
 			list.addAll(l);
 			
@@ -354,5 +325,82 @@ public class CosmosClient {
 
 		return it;
 	}
+	
+	public static int delete(String container_name, String query, String partition_key) {
+		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
+		
+		String final_query = String.format(query, container_name);
+		
+		FeedOptions queryOptions = new FeedOptions();
+		queryOptions.setEnableCrossPartitionQuery(true);
+		queryOptions.setMaxDegreeOfParallelism(-1);
+
+		Observable<FeedResponse<Document>> queryObservable = cosmosClient.queryDocuments(collectionLink, final_query, queryOptions);
+
+		// Observable to Iterator
+		Iterator<FeedResponse<Document>> it = queryObservable.toBlocking().getIterator();
+		
+		int deleted = 0;
+		while (it.hasNext()) {
+			List<Document> docs = it.next().getResults();
+			for(Document d : docs) {
+//				Community c = GSON.fromJson(d.toJson(), Community.class);
+//				String documentLink = getDocumentLink(cosmosDatabase, container_name, d.getResourceId());
+				
+				Resource r = GSON.fromJson(d.toJson(), Resource.class);
+				
+				Logger logger = LoggerFactory.getLogger(CosmosClient.class);
+				logger.info(r.getId());
+				logger.info(d.getString(partition_key));
+				
+				if(deleteDocument(container_name, r.getId(), d.getString(partition_key)))
+					deleted++;
+			}
+		}
+		
+		return deleted;
+	}
+	
+	public static boolean deleteDocument(String container_name, String id, String partition_key) /*throws DocumentClientException*/ {
+
+		String documentLink = getDocumentLink(cosmosDatabase, container_name, id);
+		
+		RequestOptions options = new RequestOptions();
+		options.setPartitionKey(new PartitionKey(partition_key));
+		Observable<ResourceResponse<Document>> createDocumentObservable = cosmosClient.deleteDocument(documentLink, options);
+
+		final CountDownLatch completionLatch = new CountDownLatch(1);
+		AtomicReference<DocumentClientException> at = new AtomicReference<>();
+
+		createDocumentObservable.single() // we know there will be one response
+				.subscribe(documentResourceResponse -> {
+					completionLatch.countDown();
+				}, error -> {
+					if (error instanceof DocumentClientException)
+						at.set(new DocumentClientException(Response.Status.NOT_FOUND.getStatusCode(),
+								(Exception) error));
+					else
+						at.set(new DocumentClientException(500, (Exception) error));
+					
+					// error.printStackTrace();
+					
+					completionLatch.countDown();
+				});
+
+		// Wait till document creation completes
+		try {
+			completionLatch.await();
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+
+		DocumentClientException e = at.get();
+		if (e != null) {
+//			throw e;
+			return false;
+		} else
+			return true;
+	}
+
 
 }

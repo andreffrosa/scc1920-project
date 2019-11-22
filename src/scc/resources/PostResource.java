@@ -26,7 +26,7 @@ import scc.utils.Config;
 import scc.utils.GSON;
 import scc.utils.MyBase64;
 
-public class PostResource extends Resource {
+public class PostResource {
 
 	public static boolean exists(String post_id) {
 		try {
@@ -129,19 +129,23 @@ public class PostResource extends Resource {
 		if (!PostResource.existsLike(like_id))
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("User %s have not yet liked that post %s", username, post_id)).build());
 
-		try {
-			CosmosClient.delete(Config.LIKES_CONTAINER, like_id);
+//		try {
+			boolean deleted = CosmosClient.delete(Config.LIKES_CONTAINER, like_id, like_id) > 0;
 
 			// If in cache, set dirty bit to true
 			Redis.LRUSetDirtyBit(Config.TOTAL_LIKES, post_id, true);
 			Redis.LRUSetDirtyBit(Config.DAYLY_LIKES, post_id, true);
 
-		} catch (DocumentClientException e) {
-			if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
+			if(!deleted)
 				throw new WebApplicationException(Response.status(Status.CONFLICT).entity(String.format("User %s have already disliked post %s", username, post_id)).build());
-			else
-				throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
-		}
+			
+			
+//		} catch (DocumentClientException e) {
+//			if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
+//				throw new WebApplicationException(Response.status(Status.CONFLICT).entity(String.format("User %s have already disliked post %s", username, post_id)).build());
+//			else
+//				throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
+//		}
 	}
 
 	public static long getTotalLikes(String post_id) {

@@ -12,7 +12,7 @@ import scc.storage.Redis;
 import scc.utils.Config;
 import scc.utils.GSON;
 
-public class UserResource extends Resource {
+public class UserResource {
 
 	public static String create(User user){
 		if(!user.isValid())

@@ -12,7 +12,7 @@ import scc.storage.Redis;
 import scc.utils.Config;
 import scc.utils.GSON;
 
-public class CommunityResource extends Resource {
+public class CommunityResource {
 
 	public static String create(Community c) {
 		if(!c.isValid())

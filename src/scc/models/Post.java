@@ -1,19 +1,20 @@
 package scc.models;
 
-public class Post {
+public class Post extends Resource {
 
-	private String id;
 	private String title;
 	private String author;
 	private String community;
-	private Long _ts;
 	private String message;
 	private String multiMediaObject;
 	private String parent;
 
-	public Post() {}
+	public Post() {
+		super("/community");
+	}
 
 	public Post(String title, String author, String community, String message, String multiMediaObject, String parent) {
+		super(null, null, "/community");
 		this.id = null;
 		this.title = title;
 		this.author = author;
@@ -21,11 +22,6 @@ public class Post {
 		this.message = message;
 		this.multiMediaObject = multiMediaObject;
 		this.parent = parent;
-		this._ts = null;
-	}
-
-	public String getId() {
-		return id;
 	}
 
 	public String getTitle() {
@@ -40,10 +36,6 @@ public class Post {
 		return community;
 	}
 
-	public long getCreationTime() {
-		return _ts == null ? -1 : _ts.longValue();
-	}
-
 	public String getMessage() {
 		return message;
 	}
@@ -56,10 +48,6 @@ public class Post {
 		return parent;
 	}
 
-	public void setId(String id) {
-		this.id = id;
-	}
-
 	public void setTitle(String title) {
 		this.title = title;
 	}
@@ -70,10 +58,6 @@ public class Post {
 
 	public void setCommunity(String community) {
 		this.community = community;
-	}
-
-	public void setCreationTime(long creation_time){
-		this._ts = creation_time;
 	}
 
 	public void setMessage(String message) {

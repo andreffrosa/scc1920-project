@@ -12,7 +12,7 @@ import scc.utils.Config;
 import scc.utils.Encryption;
 import scc.utils.MyBase64;
 
-public class ImageResource extends Resource {
+public class ImageResource {
 	
 	public static byte[] download(String img_id) {
 		try {
