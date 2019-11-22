@@ -24,6 +24,16 @@ public class Post {
 		this._ts = null;
 	}
 
+	public String toString(){
+		return "title: " + title + "\n"+
+				"author: " + author + "\n" +
+				"community: " + community + "\n" +
+				"message: " + message + "\n" +
+				"multiMediaObject: " + ( multiMediaObject != null ? multiMediaObject : "null" ) + "\n" +
+				"parent: " + (parent != null ? parent : "null");
+
+ 	}
+
 	public String getId() {
 		return id;
 	}

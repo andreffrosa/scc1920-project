@@ -17,6 +17,9 @@ import com.microsoft.azure.cosmosdb.Document;
 import com.microsoft.azure.cosmosdb.DocumentClientException;
 import com.microsoft.azure.cosmosdb.FeedResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import scc.endpoints.DebugEndpoint;
 import scc.models.Like;
 import scc.models.Post;
 import scc.models.PostWithReplies;
@@ -27,6 +30,8 @@ import scc.utils.GSON;
 import scc.utils.MyBase64;
 
 public class PostResource extends Resource {
+
+	static Logger logger = LoggerFactory.getLogger(PostResource.class);
 
 	public static boolean exists(String post_id) {
 		try {
@@ -43,9 +48,10 @@ public class PostResource extends Resource {
 
 	public static String create(Post post) {
 		try {
-			if (!post.validPost())
-				throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Invalid Parameters").build());
-
+			if (!post.validPost()) {
+				logger.info(post.toString());
+				throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity(post).build());
+			}
 			if (!UserResource.exists(post.getAuthor()))
 				throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Username %s does not exist", post.getAuthor())).build());
 
