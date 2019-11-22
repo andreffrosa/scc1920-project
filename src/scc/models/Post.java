@@ -10,12 +10,11 @@ public class Post extends Resource {
 	private String parent;
 
 	public Post() {
-		super("/community");
+		super();
 	}
 
 	public Post(String title, String author, String community, String message, String multiMediaObject, String parent) {
-		super(null, null, "/community");
-		this.id = null;
+		super();
 		this.title = title;
 		this.author = author;
 		this.community = community;
@@ -32,7 +31,7 @@ public class Post extends Resource {
 				"multiMediaObject: " + ( multiMediaObject != null ? multiMediaObject : "null" ) + "\n" +
 				"parent: " + (parent != null ? parent : "null");
 
- 	}
+	}
 
 	public String getTitle() {
 		return title;
@@ -86,10 +85,14 @@ public class Post extends Resource {
 		return community!= null && !community.equals("") && author != null && !author.equals("") && title != null && !title.equals("") && message != null && !message.equals("");
 	}
 
-	public boolean validReply(){
-		return author != null && !author.equals("") && parent != null && !parent.equals("") && message != null && !message.equals("");
+	public boolean hasValidParent(){
+		return parent != null && !parent.equals("");
 	}
 
 	public boolean isReply(){ return parent != null; }
+
+	public void correctParent(){
+		parent = null;
+	}
 
 }

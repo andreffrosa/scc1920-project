@@ -50,7 +50,9 @@ public class PageEndpoint {
 		
 		if(page_number == null)
 			page_number = Integer.parseInt(Config.getSystemProperty(Config.DEFAULT_INITIAL_PAGE_NUMBER));
-		
+
+		logger.info("Page Size: " + page_size + ";\nPage Number: " + page_number +";\n");
+
 		List<PostWithReplies> requested_page = PageResource.getInitialPage(page_size, page_number);
 		return GSON.toJson(requested_page);
 	}

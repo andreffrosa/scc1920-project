@@ -1,15 +1,13 @@
 package scc.models;
 
-public class User extends Resource {
+public class User extends Resource{
 
 	private String name;
 
-	public User() {
-		super("/name");
-	}
+	public User() {}
 
 	public User(String name) {
-		super(null, null, "/name");
+		super();
 		this.name = name;
 	}
 
