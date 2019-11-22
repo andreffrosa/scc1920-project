@@ -5,18 +5,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.microsoft.azure.cosmosdb.Document;
 import com.microsoft.azure.cosmosdb.FeedResponse;
@@ -24,6 +29,8 @@ import com.microsoft.azure.cosmosdb.FeedResponse;
 import scc.models.Like;
 import scc.storage.CosmosClient;
 import scc.storage.Redis;
+import scc.storage.SearchClient;
+import scc.storage.Exceptions.SearchException;
 import scc.utils.Config;
 import scc.utils.GSON;
 import scc.utils.Config.PropType;
@@ -33,7 +40,7 @@ public class DebugEndpoint {
 
 	public static final String PATH = "/debug";
 
-	public static final String VERSION = "84.0.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX-Vanilla Edition";
+	public static final String VERSION = "92.0.0-r2 alfa-snapshot-0.0.0.0.0.1 SilkyX-Vanilla Edition";
 
 	static Logger logger = LoggerFactory.getLogger(DebugEndpoint.class);
 	
@@ -41,9 +48,23 @@ public class DebugEndpoint {
 	@Path("/version")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getVersion(){
-		
 	    logger.info(VERSION);
 		return Response.ok(VERSION).build();
+	}
+	
+	@POST
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response search(String search_settings_json){
+		JsonObject search_settings = GSON.fromJson(search_settings_json, JsonObject.class);
+		
+		try {
+			List<JsonElement> results = SearchClient.search(search_settings);
+			return Response.ok(GSON.toJson(results)).build();
+		} catch (SearchException e) {
+			  throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
 	}
 	
 	@DELETE

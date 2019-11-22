@@ -41,6 +41,8 @@ public class PageResource {
 			PostWithReplies current_post = queue.poll();
 			amount_posts_current_level--;
 
+			logger.info(GSON.toJson(current_post));
+			
 			String post_id = current_post.getId();
 
 			Entry<String, List<PostWithReplies>> entry = PostResource.getReplies(post_id, continuation_token, page_size);

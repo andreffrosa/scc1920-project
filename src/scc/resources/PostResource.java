@@ -155,6 +155,9 @@ public class PostResource {
     }
 
     public static long getTotalLikes(String post_id) {
+    	
+		logger.info("getTotalLikes " + post_id);
+    	
         Long total_likes = Redis.LRUHyperLogGet(Config.TOTAL_LIKES, post_id);
         if (total_likes == null) {
             if (Redis.ACTIVE) {

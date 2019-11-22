@@ -52,15 +52,22 @@ public class Config {
 	public static final String DEFAULT_INITIAL_PAGE_SIZE = "DEFAULT_INITIAL_PAGE_SIZE";//10;
 	public static final String DEFAULT_INITIAL_PAGE_NUMBER = "DEFAULT_INITIAL_PAGE_NUMBER"; //1;
 
+	// SEARCH
+	public static final String SEARCH_SERVICE_NAME = "SearchServiceName";
+	public static final String SEARCH_ADMIN_KEY = "SearchServiceAdminKey";
+	public static final String SEARCH_QUERY_KEY = "SearchServiceQueryKey";
+	public static final String SEARCH_INDEX = "cosmosdb-index";
+	
 	// FILES
 	public static final String AZURE_PROPS_FILE = "azurekeys.props";
 	public static final String REDIS_PROPS_FILE = "redis.props";
 	public static final String SYSTEM_PROPS_FILE = "system.props";
+	public static final String SEARCH_PROPS_FILE = "azure-search.props";
 
-	private static Properties azureProperties, redisProperties, systemProperties;
+	private static Properties azureProperties, redisProperties, systemProperties, searchProperties;
 
 	public enum PropType {
-		AZURE, REDIS, SYSTEM
+		AZURE, REDIS, SYSTEM, SEARCH
 	};
 
 	public static synchronized void load() throws IOException {
@@ -96,6 +103,13 @@ public class Config {
 				systemProperties.load(is);
 			}
 			to_return = systemProperties;
+		} else if(type == PropType.SEARCH) {
+			if( searchProperties == null || searchProperties.size() == 0) {
+				searchProperties = new Properties();
+				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(SEARCH_PROPS_FILE);
+				searchProperties.load(is);
+			}
+			to_return = searchProperties;
 		}
 
 		return to_return;
@@ -122,6 +136,15 @@ public class Config {
 	public static synchronized String getSystemProperty(String key) {
 		try {
 			return Config.getProperties(PropType.SYSTEM).getProperty(key);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public static synchronized String getSearchProperty(String key) {
+		try {
+			return Config.getProperties(PropType.SEARCH).getProperty(key);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;

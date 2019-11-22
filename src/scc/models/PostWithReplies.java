@@ -14,6 +14,8 @@ public class PostWithReplies extends Post {
     
     public PostWithReplies(Post p) {
     	super(p.getTitle(), p.getAuthor(), p.getCommunity(), p.getMessage(), p.getMultiMediaObject(), p.getParent());
+    	this.id = p.id;
+    	this._ts = p._ts;
     }
 
 	public List<PostWithReplies> getReplies() {

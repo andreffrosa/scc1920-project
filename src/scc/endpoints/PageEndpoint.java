@@ -2,18 +2,28 @@ package scc.endpoints;
 
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import scc.models.PostWithReplies;
 import scc.resources.PageResource;
+import scc.storage.SearchClient;
+import scc.storage.Exceptions.SearchException;
 import scc.utils.Config;
 import scc.utils.GSON;
 
@@ -55,6 +65,21 @@ public class PageEndpoint {
 
 		List<PostWithReplies> requested_page = PageResource.getInitialPage(page_size, page_number);
 		return GSON.toJson(requested_page);
+	}
+	
+	@POST
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response search(String search_settings_json) {
+		JsonObject search_settings = GSON.fromJson(search_settings_json, JsonObject.class);
+		
+		try {
+			List<JsonElement> results = SearchClient.search(search_settings);
+			return Response.ok(GSON.toJson(results)).build();
+		} catch (SearchException e) {
+			  throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
 	}
 	
 }

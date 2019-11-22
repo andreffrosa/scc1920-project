@@ -22,9 +22,9 @@ public class Redis {
 
 	public static final boolean ACTIVE = true;
 
-	private static final int TIMEOUT = 2000;
+	private static final int TIMEOUT = 5000;
 
-	Logger logger = LoggerFactory.getLogger(Redis.class);
+	static Logger logger = LoggerFactory.getLogger(Redis.class);
 
 	private static JedisPool jedisPool;
 
