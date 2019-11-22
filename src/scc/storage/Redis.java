@@ -21,9 +21,9 @@ import redis.clients.jedis.params.SetParams;
 public class Redis {
 
 	public static final boolean ACTIVE = true;
-	
+
 	private static final int TIMEOUT = 2000;
-	
+
 	Logger logger = LoggerFactory.getLogger(Redis.class);
 
 	private static JedisPool jedisPool;
@@ -48,11 +48,11 @@ public class Redis {
 		poolConfig.setBlockWhenExhausted(true);
 		return poolConfig;
 	}
-	
+
 	private static String parse(String value) {
 		return value == null ? "null" : value;
 	}
-	
+
 	private static String unparse(String value) {
 		return value == null ? null : value.equals("null") ? null : value;
 	}
@@ -90,11 +90,11 @@ public class Redis {
 	public static List<String> getPaginatedList(String key, int page_size, int page_number){
 		return (List<String>) executeOperation(jedis -> jedis.lrange(key, (page_number-1)*page_size, page_size));
 	}
-	
+
 	public static void del(String key) {
 		executeOperation(jedis -> jedis.del(key));
 	}
-	
+
 	public static void del(List<String> keys) {
 		executeOperation(jedis -> {
 			Transaction tx = jedis.multi();
@@ -132,20 +132,20 @@ public class Redis {
 		return (String) executeOperation(jedis -> jedis.hget(dictionary_key, key));
 	}*/
 
-	
+
 	public static void set(String key, String value) {
 		executeOperation(jedis -> {
 			jedis.set(key, parse(value));
 			return null;
 		});
 	}
-	
+
 	public static String get(String key) {
 		return (String) executeOperation(jedis -> {
 			return unparse(jedis.get(key));
 		});
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static List<String> getMatchingKeys(String pattern) {
 		Set<String> keys = (Set<String>) executeOperation( jedis -> jedis.keys(pattern));
@@ -154,7 +154,7 @@ public class Redis {
 		else
 			return null;
 	}
-	
+
 	// LRU Set
 
 	public interface PutOperation {
@@ -175,7 +175,7 @@ public class Redis {
 			List<Object> results = tx.exec();
 
 			Iterator<String> it = ( (Set<String>) results.get(1) ).iterator();
-			
+
 			String lowest_id = it.hasNext() ? it.next() : null;
 			int current_size = (int)((Long)results.get(2)).longValue();
 
@@ -236,25 +236,55 @@ public class Redis {
 
 	public static void LRUSetDirtyBit(String set_key, String item_key, boolean dirty) {
 		executeOperation(jedis -> 
-			jedis.set("dirty_bit:" + set_key + ":" + item_key, Boolean.toString(dirty), SetParams.setParams().xx())
-		);
+		jedis.set("dirty_bit:" + set_key + ":" + item_key, Boolean.toString(dirty), SetParams.setParams().xx())
+				);
 	}
-	
+
 	public static void LRUSetUpdateDirty(String set_key, PutOperation op) {
 		executeOperation(jedis -> {
 			Set<String> dirty = jedis.keys("dirty_bit:" + set_key + ":*");
-			
+
 			Transaction tx = jedis.multi();
 			for(String d : dirty) {
-				String[] s = d.split(":");
-				op.execute(jedis, tx, set_key, s[2]);
-				tx.set("dirty_bit:" + set_key + ":" + s[2], Boolean.FALSE.toString(), SetParams.setParams());
+				tx.get(d);
+			}
+			Boolean[] results = (Boolean[]) tx.exec().stream().map(o -> Boolean.parseBoolean((String)o)).toArray();
+			String[] keys = (String[]) dirty.stream().map(d -> d.replace("dirty_bit:" + set_key + ":", "")).toArray();
+
+			tx = jedis.multi();
+			for(int i = 0; i < results.length; i++) {
+				if(results[i]) {
+					op.execute(jedis, tx, set_key, keys[i]);
+					tx.set("dirty_bit:" + set_key + ":" + keys[i], Boolean.FALSE.toString(), SetParams.setParams());
+				}
 			}
 			tx.exec();
 			return null;
 		});
 	}
-	
+
+	@SuppressWarnings("unchecked")
+	public static List<String> LRUSetGetDirty(String set_key) {
+		return (List<String>) executeOperation(jedis -> {
+			Set<String> dirty = jedis.keys("dirty_bit:" + set_key + ":*");
+
+			Transaction tx = jedis.multi();
+			for(String d : dirty) {
+				tx.get(d);
+			}
+			Boolean[] results = (Boolean[]) tx.exec().stream().map(o -> Boolean.parseBoolean((String)o)).toArray();
+			String[] keys = (String[]) dirty.stream().map(d -> d.replace("dirty_bit:" + set_key + ":", "")).toArray();
+			
+			List<String> toReturn = new ArrayList<String>(results.length);
+			for(int i = 0; i < results.length; i++) {
+				if(results[i]) {
+					toReturn.add(keys[i]);
+				}
+			}
+			return toReturn;
+		});
+	}
+
 
 	public interface LRUMapOP {
 		public Object execute(Jedis jedis, Transaction tx, String set_key, String item_key);
@@ -292,7 +322,7 @@ public class Redis {
 				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> {
 					for(String value : values)
 						tx.pfadd("pf:" + set_key + ":" + item_key, parse(value));
-					}, 
+				}, 
 				(Jedis jedis, Transaction tx, String set_key_, String lowest_id) -> tx.del("pf:" + set_key + ":" + item_key));
 	}
 
@@ -300,7 +330,7 @@ public class Redis {
 		return LRUSetUpdate(set_key, item_key, 
 				jedis -> jedis.pfadd("pf:" + set_key + ":" + item_key, parse(value)) , dirty );
 	}
-	
+
 	public static boolean LRUHyperLogUpdate(String set_key, String item_key, List<String> values, boolean dirty) {
 		return LRUSetUpdate(set_key, item_key, 
 				jedis -> {
@@ -311,26 +341,26 @@ public class Redis {
 					return null;
 				} , dirty );
 	}
-	
+
 	public interface Op {
 		public Object execute(String arg);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static void LRUHyperLogUpdateDirty(String set_key, Op op) {
 		LRUSetUpdateDirty(set_key, (Jedis jedis, Transaction tx, String set_key_, String item_key) -> {
 			List<String> new_values = (List<String>) op.execute(item_key);
-				tx.del("pf:" + set_key + ":" + item_key);
-				for(String value : new_values)
-					tx.pfadd("pf:" + set_key + ":" + item_key, parse(value));
-			});
+			tx.del("pf:" + set_key + ":" + item_key);
+			for(String value : new_values)
+				tx.pfadd("pf:" + set_key + ":" + item_key, parse(value));
+		});
 	}
 
 	public static Long LRUHyperLogGet(String set_key, String item_key) {
 		return (Long) LRUSetGet(set_key, item_key, (Jedis jedis) -> {
 			long result = jedis.pfcount("pf:" + set_key + ":" + item_key);
 			return result == 0 ? null : result;
-			});
+		});
 	}
 
 	public static void LRUListPut(String set_key, int max_size, String item_key, List<String> values) {
@@ -338,44 +368,44 @@ public class Redis {
 				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> tx.lpush("list:" + set_key + ":" + item_key, (String[])(values.stream().map(v -> parse(v)).toArray())), 
 				(Jedis jedis, Transaction tx, String set_key_, String lowest_id) -> tx.del("list:" + set_key + ":" + item_key));
 	}
-	
+
 	public static boolean LRUListUpdate(String set_key, String item_key, String value, boolean dirty) {
 		return LRUSetUpdate(set_key, item_key, 
 				jedis -> jedis.lpushx("list:" + set_key + ":" + item_key, parse(value)), dirty );
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static List<String> LRUListGet(String set_key, String item_key) {
 		return (List<String>) LRUSetGet(set_key, item_key, (Jedis jedis) -> jedis.lrange("list:" + set_key + ":" + item_key, 0, -1).stream().map( v -> unparse(v) ).collect(Collectors.toList()));
 	}
-	
+
 	public static void LRUStringPut(String set_key, int max_size, String item_key, String value) {
 		LRUSetPut(set_key, max_size, item_key, 
 				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> tx.set("str:" + set_key + ":" + item_key, parse(value)), 
 				(Jedis jedis, Transaction tx, String set_key_, String lowest_id) -> tx.del("str:" + set_key + ":" + item_key));
 	}
-	
+
 	public static boolean LRUStringUpdate(String set_key, String item_key, String value, boolean dirty) {
 		return LRUSetUpdate(set_key, item_key, 
 				jedis -> jedis.set("str:" + set_key + ":" + item_key, parse(value)), dirty );
 	}
-	
+
 	public static String LRUStringGet(String set_key, String item_key) {
 		return (String) LRUSetGet(set_key, item_key, (Jedis jedis) -> unparse(jedis.get("str:" + set_key + ":" + item_key)) );
 	}
-	
+
 	public static void LRUPairPut(String set_key, int max_size, String item_key, String value1, String value2) {
 		LRUSetPut(set_key, max_size, item_key, 
 				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> {
 					tx.set("pair:" + set_key + ":" + item_key + ":x", parse(value1));
 					tx.set("pair:" + set_key + ":" + item_key + ":y", parse(value2));
-					}, 
+				}, 
 				(Jedis jedis, Transaction tx, String set_key_, String lowest_id) -> {
 					tx.del("pair:" + set_key + ":" + item_key + ":x");
 					tx.del("pair:" + set_key + ":" + item_key + ":y");
-					});
+				});
 	}
-	
+
 	public static boolean LRUPairUpdate(String set_key, String item_key, String value1, String value2, boolean dirty) {
 		return LRUSetUpdate(set_key, item_key, 
 				jedis -> {
@@ -384,9 +414,9 @@ public class Redis {
 					tx.set("pair:" + set_key + ":" + item_key + ":y", parse(value2));
 					tx.exec();
 					return null;
-					}, dirty );
+				}, dirty );
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static Entry<String,String> LRUPairGet(String set_key, String item_key) {
 		List<Object> result = (List<Object>) LRUSetGet(set_key, item_key, (Jedis jedis) -> {
@@ -395,41 +425,41 @@ public class Redis {
 			tx.get("pair:" + set_key + ":" + item_key + ":y");
 			return tx.exec();
 		});
-		
+
 		if(result.get(0) != null && result.get(1) != null)
 			return new AbstractMap.SimpleEntry<String, String>(unparse((String)result.get(0)), unparse((String)result.get(1)));
 		return null;
 	}
-	
+
 	@SuppressWarnings("unchecked")
-public static List<Entry<String,Entry<String,String>>> LRUPairGetAll(String set_key, String pattern) {
+	public static List<Entry<String,Entry<String,String>>> LRUPairGetAll(String set_key, String pattern) {
 		return (List<Entry<String, Entry<String, String>>>) executeOperation( jedis -> {
 			Set<String> keys = (Set<String>) jedis.keys("pair:"+ set_key + ":" + pattern + ":x").stream().map(k -> k.replace(":x", "")).collect(Collectors.toSet());
-			
+
 			Transaction tx = jedis.multi();
 			for(String k : keys) {
 				tx.get(k + ":x");
 				tx.get(k + ":y");
 			}
 			List<Object> results = tx.exec();
-			
+
 			List<Entry<String,Entry<String,String>>> result = new ArrayList<>(results.size()/2);
-			
+
 			java.util.Iterator<Object> it = results.iterator();
 			java.util.Iterator<String> it2 = keys.iterator();
 			while(it.hasNext()) {
 				String x = unparse((String) it.next());
 				String y = unparse((String) it.next());
-				
+
 				result.add(new AbstractMap.SimpleEntry<String, Entry<String, String>>(it2.next(), new AbstractMap.SimpleEntry<String, String>(x, y)));
 			}
-			
+
 			return result;
 		} );
 	}
 
-	
-	
+
+
 	//TODO: fazer rawDictionary para as imagens
 
 

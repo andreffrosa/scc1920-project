@@ -100,7 +100,7 @@ public class PageResource {
 
 		logger.info("Computing initial page: " + page_size + " posts/page p=" + page_number);
 
-		int queue_size = page_size*page_number;
+		int queue_size = Math.min(page_size*page_number, Integer.parseInt(Config.getSystemProperty(Config.MAX_INITIAL_PAGE_POSTS)));
 		Comparator<Entry<Integer, PostWithReplies>> comp = (x, y) -> x.getKey().compareTo(y.getKey());
 		Queue<Entry<Integer, PostWithReplies>> queue = new PriorityQueue<Entry<Integer, PostWithReplies>>(queue_size, comp);
 

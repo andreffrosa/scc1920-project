@@ -10,6 +10,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
@@ -17,9 +20,6 @@ import com.microsoft.azure.cosmosdb.Document;
 import com.microsoft.azure.cosmosdb.DocumentClientException;
 import com.microsoft.azure.cosmosdb.FeedResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import scc.endpoints.DebugEndpoint;
 import scc.models.Like;
 import scc.models.Post;
 import scc.models.PostWithReplies;
