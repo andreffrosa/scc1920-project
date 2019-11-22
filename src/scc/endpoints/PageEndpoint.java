@@ -73,13 +73,9 @@ public class PageEndpoint {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response search(String search_settings_json) {
 		JsonObject search_settings = GSON.fromJson(search_settings_json, JsonObject.class);
-		
-		try {
-			List<JsonElement> results = SearchClient.search(search_settings);
-			return Response.ok(GSON.toJson(results)).build();
-		} catch (SearchException e) {
-			  throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
-		}
+
+		JsonObject results = SearchClient.search(search_settings);
+		return Response.ok(GSON.toJson(results)).build();
 	}
 	
 }

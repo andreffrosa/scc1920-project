@@ -14,10 +14,10 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import scc.storage.Exceptions.SearchException;
 import scc.utils.Config;
 import scc.utils.GSON;
 
@@ -29,7 +29,7 @@ public class SearchClient {
 		return "https://" + Config.getSearchProperty(Config.SEARCH_SERVICE_NAME) + ".search.windows.net/";
 	}
 
-	public static List<JsonElement> search(JsonObject search_settings) throws SearchException {
+	public static JsonObject search(JsonObject search_settings) {
 		String hostname = getHostname();
 
 		Client client = new ResteasyClientBuilder().build();
@@ -51,31 +51,35 @@ public class SearchClient {
 		JsonObject resultObj = GSON.fromJson(resultStr, JsonObject.class);
 
 		if(resultObj.has("error")) {
-			logger.info(resultStr);
-			throw new SearchException(resultStr);
+			return resultObj;
 		} else {
 			int number_of_results = resultObj.get("@odata.count") == null ? -1 : resultObj.get("@odata.count").getAsInt();
-			List<JsonElement> result = new ArrayList<JsonElement>(number_of_results > 0 ? number_of_results : 1);
+
+			JsonObject result = new JsonObject();
 
 			logger.info("Number of results : " + number_of_results);
 
+			List<JsonElement> results = new ArrayList<JsonElement>(number_of_results > 0 ? number_of_results : 1);
+
 			for( JsonElement el: resultObj.get("value").getAsJsonArray()) {
 				JsonObject elObj = el.getAsJsonObject();
-				
+
 				if(search_settings.has("select")) {
 					String[] members = GSON.fromJson(search_settings.get("select").toString(), String.class).split(",");
-					
+
 					JsonObject selected = new JsonObject();
 					for(int i = 0; i < members.length; i++) {
 						selected.add(members[i], elObj.get(members[i]));
 					}
-					result.add(selected);
+					results.add(selected);
+
 				} else {
-					//elObj.remove("@search.score");
-					result.add(elObj);
+					elObj.remove("@search.score");
+					results.add(elObj);
 				}
 			}
-			
+			result.addProperty("n_results", number_of_results);
+			result.add("results", GSON.fromJson(GSON.toJson(results), JsonArray.class));
 			return result;
 		}
 	}
