@@ -71,7 +71,7 @@ public class SearchClient {
 					}
 					result.add(selected);
 				} else {
-					elObj.remove("@search.score");
+					//elObj.remove("@search.score");
 					result.add(elObj);
 				}
 			}
