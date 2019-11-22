@@ -24,6 +24,16 @@ public class Post extends Resource {
 		this.parent = parent;
 	}
 
+	public String toString(){
+		return "title: " + title + "\n"+
+				"author: " + author + "\n" +
+				"community: " + community + "\n" +
+				"message: " + message + "\n" +
+				"multiMediaObject: " + ( multiMediaObject != null ? multiMediaObject : "null" ) + "\n" +
+				"parent: " + (parent != null ? parent : "null");
+
+ 	}
+
 	public String getTitle() {
 		return title;
 	}
