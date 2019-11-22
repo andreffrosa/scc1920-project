@@ -347,13 +347,13 @@ public class CosmosClient {
 //				Community c = GSON.fromJson(d.toJson(), Community.class);
 //				String documentLink = getDocumentLink(cosmosDatabase, container_name, d.getResourceId());
 				
-				Resource r = GSON.fromJson(d.toJson(), Resource.class);
+//				Resource r = GSON.fromJson(d.toJson(), Resource.class);
 				
 				Logger logger = LoggerFactory.getLogger(CosmosClient.class);
-				logger.info(r.getId());
+				logger.info(d.getString("id"));
 				logger.info(d.getString(partition_key));
 				
-				if(deleteDocument(container_name, r.getId(), d.getString(partition_key)))
+				if(deleteDocument(container_name, d.getString("id"), d.getString(partition_key)))
 					deleted++;
 			}
 		}
