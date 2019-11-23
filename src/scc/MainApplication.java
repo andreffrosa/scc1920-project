@@ -1,14 +1,19 @@
 package scc;
 
-import scc.endpoints.*;
-
-import scc.utils.Config;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+
+import scc.endpoints.CommunityEndpoint;
+import scc.endpoints.DebugEndpoint;
+import scc.endpoints.ImageEndpoint;
+import scc.endpoints.PageEndpoint;
+import scc.endpoints.PostEndpoint;
+import scc.endpoints.UserEndpoint;
+import scc.utils.Config;
 
 @ApplicationPath("/")
 public class MainApplication extends Application {

@@ -6,7 +6,7 @@ public class Post extends Resource {
 	private String author;
 	private String community;
 	private String message;
-	private String multiMediaObject;
+	private String image;
 	private String parent;
 
 	public Post() {
@@ -19,7 +19,7 @@ public class Post extends Resource {
 		this.author = author;
 		this.community = community;
 		this.message = message;
-		this.multiMediaObject = multiMediaObject;
+		this.image = multiMediaObject;
 		this.parent = parent;
 	}
 
@@ -28,7 +28,7 @@ public class Post extends Resource {
 				"author: " + author + "\n" +
 				"community: " + community + "\n" +
 				"message: " + message + "\n" +
-				"multiMediaObject: " + ( multiMediaObject != null ? multiMediaObject : "null" ) + "\n" +
+				"image: " + ( image != null ? image : "null" ) + "\n" +
 				"parent: " + (parent != null ? parent : "null");
 
 	}
@@ -49,8 +49,8 @@ public class Post extends Resource {
 		return message;
 	}
 
-	public String getMultiMediaObject() {
-		return multiMediaObject;
+	public String getImage() {
+		return image;
 	}
 
 	public String getParent() {
@@ -73,8 +73,8 @@ public class Post extends Resource {
 		this.message = message;
 	}
 
-	public void setMultiMediaObject(String multiMediaObject) {
-		this.multiMediaObject = multiMediaObject;
+	public void setImage(String image) {
+		this.image = image;
 	}
 
 	public void setParent(String parent) {

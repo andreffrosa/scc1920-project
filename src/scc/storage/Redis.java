@@ -66,31 +66,24 @@ public class Redis {
 		if(ACTIVE) {
 			try (Jedis jedis = jedisPool.getResource()) {
 				result = op.execute(jedis);
-				//jedis.close();
 			}
 		}
 		return result;
 	}
+	
+	public static String clear() {
+		return (String) executeOperation(jedis -> jedis.flushAll());
+	}
 
 	// Strings
-	/*public static String getKey(String key) {
-		return (String) executeOperation(jedis -> jedis.get(key));
-	}*/
-
-	/*public static void setKey(String key, String value){
-		executeOperation(jedis -> jedis.set(key, value));
-	}*/
-
-	// List
-	public static void putInList(String key, String... values) {
-		executeOperation(jedis -> jedis.lpush(key, values));
+	public static void set(String key, String value) {
+		executeOperation(jedis -> jedis.set(key, parse(value)));
 	}
 
-	@SuppressWarnings("unchecked")
-	public static List<String> getPaginatedList(String key, int page_size, int page_number){
-		return (List<String>) executeOperation(jedis -> jedis.lrange(key, (page_number-1)*page_size, page_size));
+	public static String get(String key) {
+		return (String) executeOperation(jedis -> unparse(jedis.get(key)));
 	}
-
+	
 	public static void del(String key) {
 		executeOperation(jedis -> jedis.del(key));
 	}
@@ -104,48 +97,6 @@ public class Redis {
 		});
 	}
 
-	/*public static void putInBoundedList(String key, int max_size, String... values) {
-		executeOperation(jedis -> {
-			Long count = jedis.lpush(key, values);
-			if(count > max_size)
-				jedis.ltrim(key, 0, max_size);
-
-			return null;
-			});
-	}
-
-	//HyperLogLog operations
-	public static void addToHyperLog(String hyperlog_id, String value){
-		executeOperation(jedis -> jedis.pfadd(hyperlog_id, value));
-	}
-
-	public static Long getProbabilisticCount(String hyperlog_id) {
-		return (Long) executeOperation(jedis -> jedis.pfcount(hyperlog_id));
-	}
-
-	// Dictionary
-	public static void addToDictionary(String dictionary_key, String key, String value) {
-		executeOperation(jedis -> jedis.hset(dictionary_key, key, value));
-	}
-
-	public static String getFromDictionary(String dictionary_key, String key) {
-		return (String) executeOperation(jedis -> jedis.hget(dictionary_key, key));
-	}*/
-
-
-	public static void set(String key, String value) {
-		executeOperation(jedis -> {
-			jedis.set(key, parse(value));
-			return null;
-		});
-	}
-
-	public static String get(String key) {
-		return (String) executeOperation(jedis -> {
-			return unparse(jedis.get(key));
-		});
-	}
-
 	@SuppressWarnings("unchecked")
 	public static List<String> getMatchingKeys(String pattern) {
 		Set<String> keys = (Set<String>) executeOperation( jedis -> jedis.keys(pattern));
@@ -154,9 +105,18 @@ public class Redis {
 		else
 			return null;
 	}
+	
+	// List
+	public static void putInList(String key, String... values) {
+		executeOperation(jedis -> jedis.lpush(key, values));
+	}
+
+	@SuppressWarnings("unchecked")
+	public static List<String> getPaginatedList(String key, int page_size, int page_number){
+		return (List<String>) executeOperation(jedis -> jedis.lrange(key, (page_number-1)*page_size, page_size));
+	}
 
 	// LRU Set
-
 	public interface PutOperation {
 		public void execute(Jedis jedis, Transaction tx, String set_key, String item_key);
 	}

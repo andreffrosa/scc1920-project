@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import scc.storage.BlobStorageClient;
 import scc.storage.CosmosClient;
 import scc.storage.Redis;
@@ -70,6 +73,8 @@ public class Config {
 		AZURE, REDIS, SYSTEM, SEARCH
 	};
 
+	static Logger logger = LoggerFactory.getLogger(Config.class);
+	
 	public static synchronized void load() throws IOException {
 		getProperties(PropType.AZURE);
 		CosmosClient.init(azureProperties.getProperty(COSMOSDB_DATABASE), azureProperties.getProperty(COSMOS_DB_MASTER_KEY), azureProperties.getProperty(COSMOS_DB_ENDPOINT));
@@ -78,6 +83,8 @@ public class Config {
 
 		getProperties(PropType.REDIS);
 		getProperties(PropType.SYSTEM);
+		
+		logger.info("Loaded configuration files!");
 	}
 
 	public static synchronized Properties getProperties(PropType type) throws IOException {
@@ -110,7 +117,8 @@ public class Config {
 				searchProperties.load(is);
 			}
 			to_return = searchProperties;
-		}
+		} else
+			logger.error("Unrecognized properties type");
 
 		return to_return;
 	}

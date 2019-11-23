@@ -13,7 +13,7 @@ public class PostWithReplies extends Post {
     }
     
     public PostWithReplies(Post p) {
-    	super(p.getTitle(), p.getAuthor(), p.getCommunity(), p.getMessage(), p.getMultiMediaObject(), p.getParent());
+    	super(p.getTitle(), p.getAuthor(), p.getCommunity(), p.getMessage(), p.getImage(), p.getParent());
     	this.id = p.id;
     	this._ts = p._ts;
     }
