@@ -42,8 +42,8 @@ public class DebugEndpoint {
 		return Response.ok("Deleted: " + deleted).build();
 	}
 
-	@GET
-	@Path("/clear_cache")
+	@DELETE
+	@Path("/cache")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response clearCache() {
 		String result = Redis.clear();
