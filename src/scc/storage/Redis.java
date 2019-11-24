@@ -208,8 +208,12 @@ public class Redis {
 			for(String d : dirty) {
 				tx.get(d);
 			}
-			Boolean[] results = (Boolean[]) tx.exec().stream().map(o -> Boolean.parseBoolean((String)o)).toArray();
-			String[] keys = (String[]) dirty.stream().map(d -> d.replace("dirty_bit:" + set_key + ":", "")).toArray();
+
+			List<Object> result = tx.exec();
+			result.forEach(o -> logger.info((String) o));
+
+			Boolean[] results = (Boolean[]) result.stream().map(o -> new Boolean(Boolean.parseBoolean((String)o))).collect(Collectors.toList()).toArray(new Boolean[result.size()]);
+			String[] keys = (String[]) dirty.stream().map(d -> d.replace("dirty_bit:" + set_key + ":", "")).collect(Collectors.toList()).toArray(new String[dirty.size()]);
 
 			tx = jedis.multi();
 			for(int i = 0; i < results.length; i++) {
@@ -232,8 +236,12 @@ public class Redis {
 			for(String d : dirty) {
 				tx.get(d);
 			}
-			Boolean[] results = (Boolean[]) tx.exec().stream().map(o -> Boolean.parseBoolean((String)o)).toArray();
-			String[] keys = (String[]) dirty.stream().map(d -> d.replace("dirty_bit:" + set_key + ":", "")).toArray();
+
+			List<Object> result = tx.exec();
+			result.forEach(o -> logger.info((String) o));
+
+			Boolean[] results = (Boolean[]) result.stream().map(o -> new Boolean(Boolean.parseBoolean((String)o))).collect(Collectors.toList()).toArray(new Boolean[result.size()]);
+			String[] keys = (String[]) dirty.stream().map(d -> d.replace("dirty_bit:" + set_key + ":", "")).collect(Collectors.toList()).toArray(new String[dirty.size()]);
 			
 			List<String> toReturn = new ArrayList<String>(results.length);
 			for(int i = 0; i < results.length; i++) {
@@ -325,7 +333,7 @@ public class Redis {
 
 	public static void LRUListPut(String set_key, int max_size, String item_key, List<String> values) {
 		LRUSetPut(set_key, max_size, item_key, 
-				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> tx.lpush("list:" + set_key + ":" + item_key, (String[])(values.stream().map(v -> parse(v)).toArray())), 
+				(Jedis jedis, Transaction tx, String set_key_, String item_key_) -> tx.lpush("list:" + set_key + ":" + item_key, (String[])(values.stream().map(v -> parse(v)).collect(Collectors.toList()).toArray(new String[values.size()]))),
 				(Jedis jedis, Transaction tx, String set_key_, String lowest_id) -> tx.del("list:" + set_key + ":" + item_key));
 	}
 
