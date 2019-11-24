@@ -48,35 +48,32 @@ public class PostResource {
 
     public static String create(Post post) {
         try {
-            if (!post.validPost()) {
-                logger.info(post.toString());
+            if (!post.validPost())
                 throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity(post).build());
-            }
+            
             if (!UserResource.exists(post.getAuthor()))
                 throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Username %s does not exist", post.getAuthor())).build());
 
             if (!CommunityResource.exists(post.getCommunity()))
                 throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("Community %s does not exist", post.getCommunity())).build());
 
+            String post_id = CosmosClient.insert(Config.POSTS_CONTAINER, post);
+            
+            post.correntPost();
+            
             if (post.isReply()) {
-                if (!post.hasValidParent())
-                    post.correctParent();
-
-                String post_id = CosmosClient.insert(Config.POSTS_CONTAINER, post);
-
                 // Update cache
-                if (post.getParent() != null) {
+//                if (post.getParent() != null) {
 					Redis.LRUHyperLogUpdate(Config.TOTAL_REPLIES, post.getParent(), post_id, false);
 					Redis.LRUHyperLogUpdate(Config.DAYLY_REPLIES, post.getParent(), post_id, false);
 
 					List<Entry<String, Entry<String, String>>> pages = Redis.LRUPairGetAll(Config.TOP_REPLIES, post.getParent() + ":*");
 					List<String> toDelete = pages.stream().filter(p -> p.getValue().getValue() == null).map(p -> p.getKey()).collect(Collectors.toList());
 					Redis.del(toDelete);
-				}
-
-                return post_id;
-            } else
-                return CosmosClient.insert(Config.POSTS_CONTAINER, post);
+//				}
+            }
+            
+            return post_id;
         } catch (DocumentClientException e) {
             if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
                 throw new WebApplicationException(Response.status(Status.CONFLICT).entity("Post with that ID already exists").build());

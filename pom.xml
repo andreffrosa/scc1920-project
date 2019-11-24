@@ -145,8 +145,8 @@
 								</resource> --> 
             </resources> 
           </deployment>  
-          <resourceGroup>scc-backend-euwest-47134</resourceGroup>  
-          <appName>scc-backend-euwest-app-47134</appName> 
+          <resourceGroup>scc-backend-euwest-48043</resourceGroup>  
+          <appName>scc-backend-euwest-app-48043</appName> 
         </configuration> 
       </plugin> 
     </plugins> 

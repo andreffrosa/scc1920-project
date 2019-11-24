@@ -91,8 +91,15 @@ public class Post extends Resource {
 
 	public boolean isReply(){ return parent != null; }
 
-	public void correctParent(){
-		parent = null;
+	public void correntPost() {
+        if(this.parent.equals(""))
+            this.parent = null;
+        
+        if(this.title.equals(""))
+        	this.title = null;
+		
+        if(this.image.equals(""))
+        	this.image = null;
 	}
 
 }
