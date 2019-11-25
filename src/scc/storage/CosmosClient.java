@@ -79,7 +79,7 @@ public class CosmosClient {
 
 		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
-		Observable<ResourceResponse<Document>> createDocumentObservable = cosmosClient.createDocument(collectionLink, GSON.toJson(o), null, false);
+		Observable<ResourceResponse<Document>> createDocumentObservable = cosmosClient.createDocument(collectionLink, o, null, false);
 
 		final CountDownLatch completionLatch = new CountDownLatch(1);
 

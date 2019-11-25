@@ -5,4 +5,3 @@ REDIS_URL=scc-redis-euwest-48043.redis.cache.windows.net
 COSMOSDB_KEY=aZvBkg4McDSFvbSNtSVsGbuMCTCoiWqbQTmd23CU65aoyqzpfdeUmksMAd7log2txknqZpSCIjsjCsgoIno93g==
 COSMOSDB_URL=https://scc-cosmos-48043.documents.azure.com:443/
 COSMOSDB_DATABASE=scc-cosmosdb-48043
-

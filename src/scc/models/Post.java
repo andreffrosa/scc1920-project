@@ -89,16 +89,18 @@ public class Post extends Resource {
 		return parent != null && !parent.equals("");
 	}
 
-	public boolean isReply(){ return parent != null; }
+	public boolean isReply(){ 
+		return parent != null; 
+	}
 
-	public void correntPost() {
-        if(this.parent.equals(""))
+	public void correctPost() {
+        if( this.parent != null && this.parent.equals("") )
             this.parent = null;
         
-        if(this.title.equals(""))
+        if( this.title != null &&this.title.equals("") )
         	this.title = null;
 		
-        if(this.image.equals(""))
+        if( this.image != null && this.image.equals("") )
         	this.image = null;
 	}
 
