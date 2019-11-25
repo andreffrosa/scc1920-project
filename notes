@@ -1,7 +1,0 @@
-
-cache:
-- guardar os threads da página inicial (?)
-
-Meter para carregar as configs da cache de um ficheiro em vez de ficar martelado
-
-APAGAR Classes vazias

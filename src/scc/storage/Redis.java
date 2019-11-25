@@ -28,8 +28,6 @@ public class Redis {
 
 	private static JedisPool jedisPool;
 
-	//public Redis(){ }
-
 	public static void init(String redisHostName, String password) {
 		jedisPool = new JedisPool(getJedisPoolConfig(), redisHostName, 6380, TIMEOUT, password, true);
 	}
@@ -153,14 +151,7 @@ public class Redis {
 
 	public static Boolean LRUSetUpdate( String set_key, String item_key, Operation op, boolean dirty ) {
 		return (Boolean) executeOperation(jedis -> {
-			//long score = System.currentTimeMillis();
-
-			/*Transaction tx = jedis.multi();
-			tx.zadd("zset:" + set_key, score, item_key, ZAddParams.zAddParams().xx().ch());
-			tx.set("dirty_bit:" + set_key + ":" + item_key, Boolean.toString(dirty), SetParams.setParams().xx());*/
 			Boolean wasUpdated = jedis.set("dirty_bit:" + set_key + ":" + item_key, Boolean.toString(dirty), SetParams.setParams().xx()) != null;
-
-			//boolean wasUpdated = jedis.zadd("zset:" + set_key, score, item_key, ZAddParams.zAddParams().xx().ch()).longValue() == 1;
 
 			if(wasUpdated)
 				op.execute(jedis);
@@ -188,7 +179,7 @@ public class Redis {
 			String result = jedis.get("dirty_bit:" + set_key + ":" + item_key);
 
 			if(result == null)
-				return null; // TODO: Enviar excepção ou null em vez?
+				return null;
 
 			return Boolean.parseBoolean(result);
 		});
@@ -196,8 +187,7 @@ public class Redis {
 
 	public static void LRUSetDirtyBit(String set_key, String item_key, boolean dirty) {
 		executeOperation(jedis -> 
-		jedis.set("dirty_bit:" + set_key + ":" + item_key, Boolean.toString(dirty), SetParams.setParams().xx())
-				);
+			jedis.set("dirty_bit:" + set_key + ":" + item_key, Boolean.toString(dirty), SetParams.setParams().xx()));
 	}
 
 	public static void LRUSetUpdateDirty(String set_key, PutOperation op) {
@@ -252,7 +242,6 @@ public class Redis {
 			return toReturn;
 		});
 	}
-
 
 	public interface LRUMapOP {
 		public Object execute(Jedis jedis, Transaction tx, String set_key, String item_key);
@@ -426,27 +415,4 @@ public class Redis {
 		} );
 	}
 
-
-
-	//TODO: fazer rawDictionary para as imagens
-
-
-
-	/*
-    public static void putRaw(String key, byte[] data){
-        try (Jedis jedis = jedisPool.getResource()) {
-            jedis.set(key.getBytes(), data);
-        }
-    }
-
-    public static byte[] getRaw(String key){
-        try (Jedis jedis = jedisPool.getResource()) {
-            return jedis.get(key.getBytes());
-        }
-    }
-
-    public static void set(String key, String jsonRepresentation){
-        putInList(key, new String[]{jsonRepresentation});
-    }
-	 */
 }
