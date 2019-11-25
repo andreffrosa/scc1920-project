@@ -82,7 +82,9 @@ public class Post extends Resource {
 	}
 
 	public boolean validPost(){
-		return community!= null && !community.equals("") && author != null && !author.equals("") && title != null && !title.equals("") && message != null && !message.equals("");
+		return community!= null && !community.equals("") 
+				&& author != null && !author.equals("") 
+				&& message != null && !message.equals("");
 	}
 
 	public boolean hasValidParent(){
