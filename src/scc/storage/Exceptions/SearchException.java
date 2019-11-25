@@ -17,16 +17,13 @@ public class SearchException extends Exception {
 	/**
 	 * 
 	 */
-	public SearchException() {
-		// TODO Auto-generated constructor stub
-	}
+	public SearchException() {}
 
 	/**
 	 * @param arg0
 	 */
 	public SearchException(String arg0) {
 		super(arg0);
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -34,7 +31,6 @@ public class SearchException extends Exception {
 	 */
 	public SearchException(Throwable arg0) {
 		super(arg0);
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -43,7 +39,6 @@ public class SearchException extends Exception {
 	 */
 	public SearchException(String arg0, Throwable arg1) {
 		super(arg0, arg1);
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -54,7 +49,6 @@ public class SearchException extends Exception {
 	 */
 	public SearchException(String arg0, Throwable arg1, boolean arg2, boolean arg3) {
 		super(arg0, arg1, arg2, arg3);
-		// TODO Auto-generated constructor stub
 	}
 
 }

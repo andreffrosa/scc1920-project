@@ -26,11 +26,11 @@
       <artifactId>javax.ws.rs-api</artifactId>  
       <version>2.1</version> 
     </dependency>  
-    <dependency> 
-      <groupId>org.glassfish.jersey.core</groupId>  
-      <artifactId>jersey-client</artifactId>  
-      <version>2.29.1</version> 
-    </dependency>  
+<!--     <dependency>  -->
+<!--       <groupId>org.glassfish.jersey.core</groupId>   -->
+<!--       <artifactId>jersey-client</artifactId>   -->
+<!--       <version>2.29.1</version>  -->
+<!--     </dependency>   -->
     <!-- <dependency> <groupId>org.glassfish.jersey.core</groupId> <artifactId>jersey-common</artifactId> 
 			<version>2.29.1</version> </dependency> <dependency> <groupId>org.glassfish.jersey.media</groupId> 
 			<artifactId>jersey-media-json-jackson</artifactId> <version>2.29.1</version> 
@@ -145,8 +145,8 @@
 								</resource> --> 
             </resources> 
           </deployment>  
-          <resourceGroup>scc-backend-euwest-48043</resourceGroup>  
-          <appName>scc-backend-euwest-app-48043</appName> 
+          <resourceGroup>scc-backend-uscentral-48043</resourceGroup>  
+          <appName>scc-backend-uscentral-app-48043</appName> 
         </configuration> 
       </plugin> 
     </plugins> 

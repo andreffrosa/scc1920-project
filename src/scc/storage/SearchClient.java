@@ -78,7 +78,7 @@ public class SearchClient {
 					results.add(elObj);
 				}
 			}
-			result.addProperty("n_results", number_of_results);
+			result.addProperty("total_results", number_of_results);
 			result.add("results", GSON.fromJson(GSON.toJson(results), JsonArray.class));
 			return result;
 		}

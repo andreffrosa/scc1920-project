@@ -35,8 +35,7 @@ public class CosmosClient {
 	private static AsyncDocumentClient cosmosClient;
 	private static String cosmosDatabase;
 
-	private CosmosClient() {
-	}
+	private CosmosClient() {}
 
 	public static AsyncDocumentClient getCosmosClient() {
 		return cosmosClient;
@@ -123,7 +122,6 @@ public class CosmosClient {
 	public static <T> String getByName(String container_name, String name) {
 		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
-		// try {
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
@@ -144,7 +142,6 @@ public class CosmosClient {
 	public static <T> T getByNameUnparse(String container_name, String name, Class<T> class_) {
 		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
-		// try {
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
@@ -167,7 +164,6 @@ public class CosmosClient {
 	public static String getById(String container_name, String id) {
 		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
-		// try {
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
@@ -189,7 +185,6 @@ public class CosmosClient {
 	public static <T> T getByIdUnparse(String container_name, String id, Class<T> class_) {
 		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
-		// try {
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
@@ -212,7 +207,6 @@ public class CosmosClient {
 	public static <T> List<String> getNewest(String container_name) {
 		String collectionLink = getColllectionLink(cosmosDatabase, container_name);
 
-		// try {
 		FeedOptions queryOptions = new FeedOptions();
 		queryOptions.setEnableCrossPartitionQuery(true);
 		queryOptions.setMaxDegreeOfParallelism(-1);
@@ -341,10 +335,6 @@ public class CosmosClient {
 		while (it.hasNext()) {
 			List<Document> docs = it.next().getResults();
 			for(Document d : docs) {
-//				Community c = GSON.fromJson(d.toJson(), Community.class);
-//				String documentLink = getDocumentLink(cosmosDatabase, container_name, d.getResourceId());
-				
-//				Resource r = GSON.fromJson(d.toJson(), Resource.class);
 				
 				Logger logger = LoggerFactory.getLogger(CosmosClient.class);
 				logger.info(d.getString("id"));
@@ -358,7 +348,7 @@ public class CosmosClient {
 		return deleted;
 	}
 	
-	public static boolean deleteDocument(String container_name, String id, String partition_key) /*throws DocumentClientException*/ {
+	public static boolean deleteDocument(String container_name, String id, String partition_key) {
 
 		String documentLink = getDocumentLink(cosmosDatabase, container_name, id);
 		
@@ -379,8 +369,6 @@ public class CosmosClient {
 					else
 						at.set(new DocumentClientException(500, (Exception) error));
 					
-					// error.printStackTrace();
-					
 					completionLatch.countDown();
 				});
 
@@ -393,7 +381,7 @@ public class CosmosClient {
 
 		DocumentClientException e = at.get();
 		if (e != null) {
-//			throw e;
+			e.printStackTrace();
 			return false;
 		} else
 			return true;

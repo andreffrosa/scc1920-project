@@ -50,10 +50,10 @@ public class Config {
 
 	// SYSTEM
 	public static final String DEFAULT_REPLIES_PAGE_SIZE = "DEFAULT_REPLIES_PAGE_SIZE";
-	public static final String DEFAULT_DEPTH = "DEFAULT_LEVEL"; //3;
+	public static final String DEFAULT_DEPTH = "DEFAULT_LEVEL";
 	public static final String MAX_INITIAL_PAGE_POSTS = "MAX_INITIAL_PAGE_POSTS";
-	public static final String DEFAULT_INITIAL_PAGE_SIZE = "DEFAULT_INITIAL_PAGE_SIZE"; //10;
-	public static final String DEFAULT_INITIAL_PAGE_NUMBER = "DEFAULT_INITIAL_PAGE_NUMBER"; //1;
+	public static final String DEFAULT_INITIAL_PAGE_SIZE = "DEFAULT_INITIAL_PAGE_SIZE";
+	public static final String DEFAULT_INITIAL_PAGE_NUMBER = "DEFAULT_INITIAL_PAGE_NUMBER";
 
 	// SEARCH
 	public static final String SEARCH_SERVICE_NAME = "SearchServiceName";
@@ -83,6 +83,7 @@ public class Config {
 
 		getProperties(PropType.REDIS);
 		getProperties(PropType.SYSTEM);
+		getProperties(PropType.SEARCH);
 		
 		logger.info("Loaded configuration files!");
 	}
