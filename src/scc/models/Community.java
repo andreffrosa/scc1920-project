@@ -3,8 +3,6 @@ package scc.models;
 public class Community extends Resource {
 
 	private String name;
-	//private String description;
-	//private String img;
 
 	public Community() {
 		super();

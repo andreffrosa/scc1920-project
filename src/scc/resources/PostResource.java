@@ -41,7 +41,6 @@ public class PostResource {
 		}
 	}
 
-	// TODO: Este não vale a pena ir à cache porque não é uma operação lá muito frequente
 	public static boolean existsLike(String like_id) {
 		return CosmosClient.getById(Config.LIKES_CONTAINER, like_id) != null;
 	}
@@ -144,7 +143,6 @@ public class PostResource {
 		if (!PostResource.existsLike(like_id))
 			throw new WebApplicationException(Response.status(Status.NOT_FOUND).entity(String.format("User %s have not yet liked that post %s", username, post_id)).build());
 
-		//		try {
 		boolean deleted = CosmosClient.delete(Config.LIKES_CONTAINER, like_id, like_id) > 0;
 
 		// If in cache, set dirty bit to true
@@ -153,14 +151,6 @@ public class PostResource {
 
 		if (!deleted)
 			throw new WebApplicationException(Response.status(Status.CONFLICT).entity(String.format("User %s have already disliked post %s", username, post_id)).build());
-
-
-		//		} catch (DocumentClientException e) {
-		//			if (e.getStatusCode() == Status.CONFLICT.getStatusCode())
-		//				throw new WebApplicationException(Response.status(Status.CONFLICT).entity(String.format("User %s have already disliked post %s", username, post_id)).build());
-		//			else
-		//				throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
-		//		}
 	}
 
 	public static long getTotalLikes(String post_id) {

@@ -76,7 +76,6 @@ public class PageResource {
 		if(page_number > max_page)
 			throw new WebApplicationException( Response.status(Status.BAD_REQUEST).entity("Invalid page!").build() );
 
-		// TODO: Porque não guardar apenas o Json da lista? -> para poder obter apenas parte da lista
 		try {
 			List<String> fromCache = Redis.getPaginatedList(Config.INITIAL_PAGE, page_size, page_number);
 			if(fromCache!= null && !fromCache.isEmpty()){
@@ -159,9 +158,6 @@ public class PageResource {
 		long total_likes = PostResource.getTotalLikes(p.getId());
 		p.setLikes(total_likes);
 
-		// In our data, these values are too low to use the logarithm.
-		//		total_likes = total_likes == 0 ? 0 : Math.log10(total_likes);
-		//		total_replies = total_replies == 0 ? 0 : Math.log10(total_replies);
 		int a = (int) Math.round(0.8 * total_likes + 0.2 * total_replies);
 		int b = (int) Math.round(0.2 * total_likes + 0.8 * total_replies);
 		int popularity = Math.max(a, b);
@@ -176,9 +172,6 @@ public class PageResource {
 
 		// Likes in last 24h
 		Long n_likes = PostResource.getRecentLikes(p.getId(), time);
-
-		//		n_likes = (n_likes == 0L ? 0L : (long)Math.log10(n_likes));
-		//		n_replies = (n_replies == 0L ? 0L : (long)Math.log10(n_replies));
 
 		int a = (int) Math.round(0.8 * n_likes + 0.2 * n_replies);
 		int b = (int) Math.round(0.2 * n_likes + 0.8 * n_replies);

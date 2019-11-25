@@ -47,7 +47,7 @@ public class CommunityResource {
 		return GSON.fromJson(community_json, Community.class);
 	}
 
-	public static boolean exists(String name) {
+	static boolean exists(String name) {
 		try {
 			return get(name) != null;
 		} catch(WebApplicationException e) {

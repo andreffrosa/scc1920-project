@@ -87,11 +87,7 @@ public class Post extends Resource {
 				&& message != null && !message.equals("");
 	}
 
-	public boolean hasValidParent(){
-		return parent != null && !parent.equals("");
-	}
-
-	public boolean isReply(){ 
+	public boolean isReply(){
 		return parent != null; 
 	}
 

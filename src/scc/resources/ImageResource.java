@@ -54,7 +54,7 @@ public class ImageResource {
 		}
 	}
 	
-	public static boolean exists(String image_id) {
+	static boolean exists(String image_id) {
 		try {
 			return BlobStorageClient.checkIfExists(Config.IMAGES_CONTAINER, image_id);
 		} catch (URISyntaxException | StorageException e) {
