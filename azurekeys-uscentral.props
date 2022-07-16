@@ -1,7 +1,0 @@
-# Date : 24-11-2019 11:53
-BLOB_KEY=DefaultEndpointsProtocol=https;AccountName=sccstorageuscentral48043;AccountKey=PZ2xrA9X2MStdJBgqKpUUbH3lWi/B9JHAif6D9SVnax6gcdTMW7XBbGmYVC6r4f33zES+zgNQP8b9MTarB9t5Q==;EndpointSuffix=core.windows.net
-REDIS_KEY=QdndObie+1ZO6wbNviFCFRp+CRp14kbB3RxOuWLUZeE=
-REDIS_URL=scc-redis-uscentral-48043.redis.cache.windows.net
-COSMOSDB_KEY=aZvBkg4McDSFvbSNtSVsGbuMCTCoiWqbQTmd23CU65aoyqzpfdeUmksMAd7log2txknqZpSCIjsjCsgoIno93g==
-COSMOSDB_URL=https://scc-cosmos-48043.documents.azure.com:443/
-COSMOSDB_DATABASE=scc-cosmosdb-48043
